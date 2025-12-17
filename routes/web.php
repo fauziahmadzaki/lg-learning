@@ -42,7 +42,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'verified', 'branch.check'])
-    ->prefix('cabang/{id}')
+    ->prefix('cabang/{branch}') // UBAH {id} MENJADI {branch}
     ->name('branch.')
     ->group(function(){
         Route::get('/dashboard', function(){
