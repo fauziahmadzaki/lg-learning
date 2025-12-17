@@ -18,7 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // $middleware->trustProxies(at: '*');
 
        $middleware->alias([
-           'central.admin' => CheckCentralAdmin::class,
+        'central.admin' => CheckCentralAdmin::class,
         'branch.check' => CheckBranchAccess::class,
        ]) ;
 
