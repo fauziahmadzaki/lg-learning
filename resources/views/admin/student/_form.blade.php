@@ -2,11 +2,12 @@
 
 {{--
     SETUP ALPINE JS 
-    Kita inisialisasi state 'status' di sini.
-    Prioritas nilai: 1. Old Input (Validasi Gagal) -> 2. Data Database (Edit) -> 3. Default 'pending'
+    Kita inisialisasi state untuk 'status' dan 'billing_cycle'.
+    Prioritas nilai: 1. Old Input (Validasi Gagal) -> 2. Data Database (Edit) -> 3. Default
 --}}
 <div x-data="{ 
-    status: '{{ old('status', $student?->status ?? 'pending') }}' 
+    status: '{{ old('status', $student?->status ?? 'pending') }}',
+    billing_cycle: '{{ old('billing_cycle', $student?->billing_cycle ?? 'monthly') }}'
 }" class="space-y-8">
 
     {{-- BAGIAN 1: DATA PRIBADI --}}
@@ -59,30 +60,8 @@
             <x-input-error :messages="$errors->get('grade')" class="mt-2" />
         </div>
 
-        {{-- PILIH PAKET BELAJAR --}}
-        <div>
-            <x-input-label for="package_id" :value="__('Pilih Paket Belajar (Kelas)')" />
-
-            <select id="package_id" name="package_id"
-                class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                <option value="" disabled selected>-- Pilih Paket Bimbel --</option>
-
-                @foreach($packages as $package)
-                <option value="{{ $package->id }}" {{-- Logika Selected: Cek old input ATAU Cek relasi packages siswa
-                    --}} @selected(old('package_id')==$package->id || ($student &&
-                    $student->packages->contains($package->id)))
-                    >
-                    {{ $package->name }} (Rp {{ number_format($package->price, 0, ',', '.') }})
-                </option>
-                @endforeach
-            </select>
-
-            <p class="text-xs text-gray-500 mt-1">Siswa akan didaftarkan ke kelas ini.</p>
-            <x-input-error :messages="$errors->get('package_id')" class="mt-2" />
-        </div>
-
         {{-- Tanggal Gabung --}}
-        <div class="col-span-1 md:col-span-2">
+        <div>
             <x-input-label for="join_date" :value="__('Tanggal Bergabung')" />
             <x-text-input id="join_date" class="block mt-1 w-full" type="date" name="join_date"
                 :value="old('join_date', $student?->join_date ? $student->join_date->format('Y-m-d') : date('Y-m-d'))"
@@ -92,26 +71,125 @@
 
     </div>
 
-    {{-- BAGIAN 2: STATUS PENDAFTARAN (ALPINE JS VERSION) --}}
+    {{-- BAGIAN 2: PENGATURAN BILLING & PAKET (BARU) --}}
+    <div class="bg-indigo-50 p-5 rounded-lg border border-indigo-100">
+        <h3 class="text-lg font-bold text-indigo-900 mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z">
+                </path>
+            </svg>
+            Pengaturan Tagihan & Paket
+        </h3>
+
+        {{-- A. Tipe Tagihan (Billing Cycle) --}}
+        <div class="mb-6">
+            <x-input-label :value="__('Siklus Pembayaran')" class="mb-2" />
+
+            @if($student)
+            {{-- MODE EDIT: Tampilkan Read-Only --}}
+            <div class="p-4 bg-gray-100 border border-gray-200 rounded-lg flex items-start gap-3">
+                <div class="bg-indigo-100 p-2 rounded-full text-indigo-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                        </path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Siklus Pembayaran Terpilih:</p>
+                    <p class="text-lg font-bold text-gray-900 uppercase tracking-wide">
+                        {{
+                                match($student->billing_cycle) {
+                                    'monthly' => 'Bulanan',
+                                    'weekly' => 'Mingguan',
+                                    'full' => 'Lunas / Full',
+                                    default => $student->billing_cycle
+                                }
+                            }}
+                    </p>
+                    <p class="text-xs text-red-500 mt-1">
+                        * Metode pembayaran tidak dapat diubah setelah pendaftaran.
+                    </p>
+                </div>
+            </div>
+            @else
+            {{-- MODE CREATE: Tampilkan Pilihan Radio --}}
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {{-- Opsi Monthly --}}
+                <label class="cursor-pointer relative">
+                    <input type="radio" name="billing_cycle" value="monthly" x-model="billing_cycle" class="sr-only">
+                    <div class="text-center p-3 rounded-lg border-2 transition-all"
+                        :class="billing_cycle === 'monthly' ? 'border-indigo-500 bg-white text-indigo-700 shadow-md' : 'border-indigo-200 text-gray-500 bg-indigo-50/50 hover:bg-white'">
+                        <div class="font-bold text-sm">Bulanan</div>
+                        <div class="text-[10px]">Bayar per Bulan</div>
+                    </div>
+                </label>
+
+                {{-- Opsi Weekly --}}
+                <label class="cursor-pointer relative">
+                    <input type="radio" name="billing_cycle" value="weekly" x-model="billing_cycle" class="sr-only">
+                    <div class="text-center p-3 rounded-lg border-2 transition-all"
+                        :class="billing_cycle === 'weekly' ? 'border-orange-500 bg-white text-orange-700 shadow-md' : 'border-indigo-200 text-gray-500 bg-indigo-50/50 hover:bg-white'">
+                        <div class="font-bold text-sm">Mingguan</div>
+                        <div class="text-[10px]">Dicicil 4x Sebulan</div>
+                    </div>
+                </label>
+
+                {{-- Opsi Full --}}
+                <label class="cursor-pointer relative">
+                    <input type="radio" name="billing_cycle" value="full" x-model="billing_cycle" class="sr-only">
+                    <div class="text-center p-3 rounded-lg border-2 transition-all"
+                        :class="billing_cycle === 'full' ? 'border-green-500 bg-white text-green-700 shadow-md' : 'border-indigo-200 text-gray-500 bg-indigo-50/50 hover:bg-white'">
+                        <div class="font-bold text-sm">Lunas / Full</div>
+                        <div class="text-[10px]">Bayar Langsung</div>
+                    </div>
+                </label>
+            </div>
+            <x-input-error :messages="$errors->get('billing_cycle')" class="mt-2" />
+            @endif
+        </div>
+        {{-- B. Pilih Paket --}}
+        <div>
+            <x-input-label for="package_id" :value="__('Pilih Paket Belajar')" />
+            <select id="package_id" name="package_id"
+                class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                <option value="" disabled selected>-- Pilih Paket Bimbel --</option>
+                @foreach($packages as $package)
+                <option value="{{ $package->id }}" @selected(old('package_id')==$package->id || ($student &&
+                    $student->packages->contains($package->id)))>
+                    {{ $package->name }}
+                    {{-- Tampilkan harga estimasi sesuai pilihan billing --}}
+                    <span x-show="billing_cycle === 'monthly'">(Rp
+                        {{ number_format($package->price, 0, ',', '.') }}/bln)</span>
+                    <span x-show="billing_cycle === 'weekly'">(~Rp
+                        {{ number_format($package->price / 4, 0, ',', '.') }}/mgg)</span>
+                </option>
+                @endforeach
+            </select>
+            <p class="text-xs text-gray-500 mt-1" x-show="billing_cycle === 'weekly'">
+                *Harga mingguan adalah estimasi (Harga Paket / 4).
+            </p>
+            <x-input-error :messages="$errors->get('package_id')" class="mt-2" />
+        </div>
+    </div>
+
+    {{-- BAGIAN 3: STATUS SISWA --}}
     <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
-        <x-input-label :value="__('Status Pembayaran & Pendaftaran')" class="mb-3 text-lg" />
+        <x-input-label :value="__('Status Keaktifan Siswa')" class="mb-3 text-lg" />
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
             {{-- Opsi 1: PENDING --}}
             <label class="cursor-pointer relative group">
                 <input type="radio" name="status" value="pending" x-model="status" class="sr-only">
-
                 <div class="h-full p-4 rounded-lg border-2 transition duration-200" :class="status === 'pending' 
                         ? 'border-yellow-400 bg-yellow-50 ring-1 ring-yellow-400' 
                         : 'border-gray-200 bg-white hover:bg-gray-50'">
-
                     <div class="flex items-center justify-between mb-2">
                         <span class="font-bold" :class="status === 'pending' ? 'text-yellow-800' : 'text-gray-700'">
-                            Pending (Belum Bayar)
+                            Pending (Baru Daftar)
                         </span>
-
-                        {{-- Icon Check --}}
                         <div x-show="status === 'pending'" class="text-yellow-500">
                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd"
@@ -120,27 +198,20 @@
                             </svg>
                         </div>
                     </div>
-                    <p class="text-xs text-gray-500">
-                        Siswa mendaftar tapi <strong>belum melakukan pembayaran</strong>. Sistem akan menunggu
-                        transaksi.
-                    </p>
+                    <p class="text-xs text-gray-500">Siswa baru mendaftar, belum ada pembayaran masuk.</p>
                 </div>
             </label>
 
             {{-- Opsi 2: ACTIVE --}}
             <label class="cursor-pointer relative group">
                 <input type="radio" name="status" value="active" x-model="status" class="sr-only">
-
                 <div class="h-full p-4 rounded-lg border-2 transition duration-200" :class="status === 'active' 
                         ? 'border-green-500 bg-green-50 ring-1 ring-green-500' 
                         : 'border-gray-200 bg-white hover:bg-gray-50'">
-
                     <div class="flex items-center justify-between mb-2">
                         <span class="font-bold" :class="status === 'active' ? 'text-green-800' : 'text-gray-700'">
-                            Active (Lunas / Siswa Lama)
+                            Active (Siswa Aktif)
                         </span>
-
-                        {{-- Icon Check --}}
                         <div x-show="status === 'active'" class="text-green-600">
                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd"
@@ -149,37 +220,23 @@
                             </svg>
                         </div>
                     </div>
-                    <p class="text-xs text-gray-500">
-                        Pilih ini untuk <strong>Siswa Lama</strong> atau pembayaran <strong>Tunai/Offline</strong> di
-                        tempat.
-                    </p>
+                    <p class="text-xs text-gray-500">Siswa aktif mengikuti kegiatan belajar.</p>
                 </div>
             </label>
 
-            {{-- Opsi 3: INACTIVE (Hanya saat Edit) --}}
+            {{-- Opsi 3: INACTIVE (Hanya muncul saat Edit atau jika statusnya memang inactive) --}}
             @if($student)
             <label class="cursor-pointer relative md:col-span-2 group">
                 <input type="radio" name="status" value="inactive" x-model="status" class="sr-only">
-
                 <div class="h-full p-4 rounded-lg border-2 transition duration-200" :class="status === 'inactive' 
                         ? 'border-gray-500 bg-gray-100 ring-1 ring-gray-500' 
                         : 'border-gray-200 bg-white hover:bg-gray-50'">
-
                     <div class="flex items-center justify-between mb-2">
                         <span class="font-bold" :class="status === 'inactive' ? 'text-gray-900' : 'text-gray-700'">
-                            Inactive (Non-Aktif/Cuti)
+                            Inactive (Cuti / Berhenti)
                         </span>
-
-                        {{-- Icon Check --}}
-                        <div x-show="status === 'inactive'" class="text-gray-600">
-                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                    clip-rule="evenodd"></path>
-                            </svg>
-                        </div>
                     </div>
-                    <p class="text-xs text-gray-500">Siswa berhenti atau cuti sementara.</p>
+                    <p class="text-xs text-gray-500">Tidak menerima tagihan dan tidak mengikuti kelas.</p>
                 </div>
             </label>
             @endif

@@ -19,7 +19,7 @@
                     @csrf
 
                     {{-- Panggil Partial --}}
-                    @include('student._form', [
+                    @include('admin.student._form', [
                     'submit_text' => 'Simpan & Daftarkan Siswa',
                     'packages' => $packages,
                     ])

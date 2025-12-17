@@ -17,13 +17,13 @@ class TutorController extends Controller
     {
         // Eager Load 'user' agar tidak N+1 query saat ambil nama & email
         $tutors = Tutor::with('user')->latest()->paginate(10);
-        return view('tutor.index', compact('tutors'));
+        return view('admin.tutor.index', compact('tutors'));
     }
 
     public function create()
 {
     $branches = Branch::all(); // Ambil semua cabang
-    return view('tutor.create', compact('branches'));
+    return view('admin.tutor.create', compact('branches'));
 }
 
     public function store(StoreTutorRequest $request)
@@ -62,7 +62,7 @@ class TutorController extends Controller
     public function edit(Tutor $tutor)
     {
         $branches = Branch::all();
-        return view('tutor.edit', compact('tutor', 'branches'));
+        return view('admin.tutor.edit', compact('tutor', 'branches'));
     }
 
 // ... imports tetap sama

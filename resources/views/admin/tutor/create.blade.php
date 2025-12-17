@@ -24,7 +24,7 @@
                         Pastikan path 'tutor._form' sesuai dengan lokasi file partial Anda sebenarnya.
                         (Biasanya di: admin.tutors.partials._form atau tutor._form sesuai struktur folder Anda)
                     --}}
-                    @include('tutor._form', [
+                    @include('admin.tutor._form', [
                     'submit_text' => 'Simpan & Tambah Tutor'
                     ])
 

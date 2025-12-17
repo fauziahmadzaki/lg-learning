@@ -17,7 +17,7 @@
                 {{-- Penting: enctype="multipart/form-data" wajib ada untuk upload gambar --}}
                 <form action="{{ route('packages.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
-                    @include('package._form', [
+                    @include('admin.package._form', [
                     'submit_text' => 'Simpan & Terbitkan Paket'
                     ])
 

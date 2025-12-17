@@ -47,7 +47,7 @@
                 class="group bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col relative">
 
                 {{-- Badge Cabang (Pojok Kanan Atas) --}}
-                <div class="absolute top-4 right-4 z-10">
+                <div class="absolute top-2 right-2 z-10">
                     @if($tutor->branch)
                     <span
                         class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-white/90 backdrop-blur border border-green-200 text-green-700 shadow-sm">

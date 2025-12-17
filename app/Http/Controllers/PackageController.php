@@ -19,14 +19,14 @@ $packages = Package::with('branch')->latest()->get();
     // 2. Ambil daftar Grade dari konstanta Model untuk bikin tombol Tabs
     // Kita pakai keys-nya saja (SD, SMP, SMA, dll)
     $grades = array_keys(Package::GRADES);
-        return view('package.index', compact('packages', 'grades'));
+        return view('admin.package.index', compact('packages', 'grades'));
     }
 
     public function create()
     {
         $branches = Branch::all();
         $tutors = Tutor::with('user')->get(); 
-        return view('package.create', compact('branches', 'tutors'));
+        return view('admin.package.create', compact('branches', 'tutors'));
     }
 
     public function store(StorePackageRequest $request)
@@ -70,7 +70,7 @@ $packages = Package::with('branch')->latest()->get();
         
         $package->load('tutors'); 
         
-        return view('package.edit', compact('package', 'branches', 'tutors'));
+        return view('admin.package.edit', compact('package', 'branches', 'tutors'));
     }
 
     public function update(UpdatePackageRequest $request, Package $package)

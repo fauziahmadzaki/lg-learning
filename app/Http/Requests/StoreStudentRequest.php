@@ -11,8 +11,7 @@ class StoreStudentRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Ubah jadi true agar request diizinkan
-        return true; 
+        return true;
     }
 
     /**
@@ -21,29 +20,21 @@ class StoreStudentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'          => ['required', 'string', 'max:255'],
-            'email'         => ['required', 'email', 'unique:students,email'], // Cek unik di tabel students
-            'parent_phone'  => ['required', 'numeric', 'digits_between:10,15'], // Tambahan validasi digit
-            'school'        => ['required', 'string', 'max:255'],
-            'grade'         => ['required', 'string'],
-            'status'        => ['required', 'in:pending,active,inactive'],
-            'join_date'     => ['required', 'date'],
-        ];
-    }
-
-    /**
-     * Mengubah nama atribut agar pesan error lebih manusiawi.
-     */
-    public function attributes(): array
-    {
-        return [
-            'name'          => 'Nama Siswa',
-            'email'         => 'Email Siswa',
-            'parent_phone'  => 'No. WhatsApp Orang Tua',
-            'school'        => 'Asal Sekolah',
-            'grade'         => 'Jenjang / Kelas',
-            'status'        => 'Status Pendaftaran',
-            'join_date'     => 'Tanggal Bergabung',
+            'name'           => ['required', 'string', 'max:255'],
+            'email'          => ['required', 'email', 'unique:students,email'],
+            'parent_phone'   => ['required', 'string', 'max:20'], // Tambah max biar aman
+            'school'         => ['nullable', 'string', 'max:255'],
+            'grade'          => ['nullable', 'string', 'max:50'],
+            
+            // PERBAIKAN BUG STATUS:
+            // Tambahkan 'pending' agar sesuai dengan opsi di form view
+            'status'         => ['required', 'in:active,inactive,pending'], 
+            
+            'billing_cycle'  => ['required', 'in:weekly,monthly,full'],
+            'package_id'     => ['required', 'exists:packages,id'],
+            
+            // TAMBAHAN:
+            'join_date'      => ['required', 'date'],
         ];
     }
 }

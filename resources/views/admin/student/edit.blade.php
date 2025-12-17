@@ -20,7 +20,7 @@
 
                     {{-- Panggil Partial --}}
                     {{-- Variable $packages dikirim dari controller --}}
-                    @include('student._form', [
+                    @include('admin.student._form', [
                     'student' => $student,
                     'packages' => $packages,
                     'submit_text' => 'Perbarui Data'

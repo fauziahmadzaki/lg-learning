@@ -28,7 +28,7 @@ $breadcrumbs = [
                     <form method="post" action="{{ route('branches.update', $branch) }}" class="mt-6 space-y-6">
                         @csrf
                         @method('patch')
-                        @include('branch._form')
+                        @include('admin.branch._form')
                     </form>
                 </section>
             </div>

@@ -20,7 +20,6 @@ return new class extends Migration
             $table->integer('duration');
             $table->string('image')->nullable();
             $table->foreignId('branch_id')->constrained('branches')->onDelete('cascade');
-            
         });
     }
 

@@ -14,12 +14,12 @@ class BranchController extends Controller
     {
         $branches = Branch::latest()->paginate(10);
 
-        return view('branch.index', compact('branches'));
+        return view('admin.branch.index', compact('branches'));
     }
 
     public function create()
     {
-        return view('branch.create');
+        return view('admin.branch.create');
     }
 
 
@@ -35,7 +35,7 @@ class BranchController extends Controller
 
     public function edit(Branch $branch)
     {
-        return view('branch.edit', compact('branch'));
+        return view('admin.branch.edit', compact('branch'));
     }
 
     public function update(UpdateBranchRequest $request, Branch $branch)

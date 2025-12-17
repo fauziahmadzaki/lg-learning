@@ -25,7 +25,7 @@
                         Variabel $tutor otomatis terkirim dari controller ke sini, lalu diteruskan ke partial
                         karena partial berada di scope yang sama.
                     --}}
-                    @include('tutor._form', [
+                    @include('admin.tutor._form', [
                     'submit_text' => 'Perbarui Data Tutor',
                     'tutor' => $tutor // Eksplisit mengirim variabel agar lebih aman & jelas
                     ])
