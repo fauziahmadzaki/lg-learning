@@ -1,4 +1,4 @@
-<x-app-layout :breadcrumbs="['Manajemen Siswa' => route('students.index'), 'Edit Data' => null]">
+<x-app-layout :breadcrumbs="['Manajemen Siswa' => route('admin.students.index'), 'Edit Data' => null]">
     <x-slot name="pageTitle">Edit Siswa: {{ $student->name }}</x-slot>
 
     <div class="max-w-4xl mx-auto">
@@ -14,7 +14,7 @@
                     </p>
                 </div>
 
-                <form action="{{ route('students.update', $student) }}" method="POST">
+                <form action="{{ route('admin.students.update', $student) }}" method="POST">
                     @csrf
                     @method('PUT')
 

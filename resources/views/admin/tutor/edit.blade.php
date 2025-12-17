@@ -1,4 +1,4 @@
-<x-app-layout :breadcrumbs="['Manajemen Tutor' => route('tutors.index'), 'Edit Data' => null]">
+<x-app-layout :breadcrumbs="['Manajemen Tutor' => route('admin.tutors.index'), 'Edit Data' => null]">
     <x-slot name="pageTitle">Edit Tutor: {{ $tutor->user->name }}</x-slot>
 
     <div class="max-w-4xl mx-auto">
@@ -16,7 +16,7 @@
                 </div>
 
                 {{-- FORM UPDATE --}}
-                <form action="{{ route('tutors.update', $tutor) }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('admin.tutors.update', $tutor) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
 

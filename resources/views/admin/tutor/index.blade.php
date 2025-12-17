@@ -1,11 +1,5 @@
 <x-app-layout :breadcrumbs="['Manajemen Tutor' => null]">
     <x-slot name="pageTitle">Data Pengajar</x-slot>
-
-    {{--
-        SETUP ALPINE JS
-        deleteUrl: Menyimpan route untuk form action
-        tutorName: Menyimpan nama tutor untuk ditampilkan di text konfirmasi
-    --}}
     <div x-data="{ deleteUrl: '', tutorName: '' }">
 
         {{-- SECTION: Header & Actions --}}
@@ -28,7 +22,7 @@
             </div>
 
             {{-- Kanan: Tombol Tambah --}}
-            <a href="{{ route('tutors.create') }}">
+            <a href="{{ route('admin.tutors.create') }}">
                 <x-primary-button class="flex items-center gap-2 shadow-lg shadow-indigo-200">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -161,7 +155,7 @@
 
                     <div class="flex items-center gap-2">
                         {{-- Edit Button --}}
-                        <a href="{{ route('tutors.edit', $tutor) }}"
+                        <a href="{{ route('admin.tutors.edit', $tutor) }}"
                             class="p-2 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition"
                             title="Edit Data">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,7 +167,7 @@
 
                         {{-- Delete Button (Trigger Modal) --}}
                         <button
-                            x-on:click.prevent="deleteUrl = '{{ route('tutors.destroy', $tutor) }}'; tutorName = '{{ addslashes($tutor->user->name) }}'; $dispatch('open-modal', 'confirm-tutor-deletion')"
+                            x-on:click.prevent="deleteUrl = '{{ route('admin.tutors.destroy', $tutor) }}'; tutorName = '{{ addslashes($tutor->user->name) }}'; $dispatch('open-modal', 'confirm-tutor-deletion')"
                             class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
                             title="Hapus Data">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -200,7 +194,7 @@
                 <h3 class="text-xl font-bold text-gray-900">Belum ada Tutor</h3>
                 <p class="text-gray-500 mt-2 mb-8 max-w-sm">Data pengajar masih kosong. Tambahkan tutor baru untuk mulai
                     mengelola kelas.</p>
-                <a href="{{ route('tutors.create') }}">
+                <a href="{{ route('admin.tutors.create') }}">
                     <x-primary-button class="px-6 py-2.5">Tambah Tutor Pertama</x-primary-button>
                 </a>
             </div>

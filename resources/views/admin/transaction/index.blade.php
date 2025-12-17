@@ -1,7 +1,7 @@
 @php
 $breadcrumbs = [
 'Keuangan' => null,
-'Riwayat Transaksi' => route('transactions.index'),
+'Riwayat Transaksi' => route('admin.transactions.index'),
 ];
 @endphp
 
@@ -19,7 +19,7 @@ $breadcrumbs = [
                 <h2 class="text-gray-800 font-bold text-lg hidden sm:block">Daftar Transaksi Masuk</h2>
 
                 {{-- Form Search (Opsional, jika controller mendukung) --}}
-                <form method="GET" action="{{ route('transactions.index') }}" class="relative mt-2 max-w-md">
+                <form method="GET" action="{{ route('admin.transactions.index') }}" class="relative mt-2 max-w-md">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -33,7 +33,7 @@ $breadcrumbs = [
             </div>
 
             {{-- Kanan: Tombol Tambah --}}
-            <a href="{{ route('transactions.create') }}">
+            <a href="{{ route('admin.transactions.create') }}">
                 <x-primary-button class="flex items-center gap-2 shadow-lg shadow-indigo-200">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -147,7 +147,7 @@ $breadcrumbs = [
 
                             {{-- Kolom 6: Aksi --}}
                             <td class="px-6 py-4 text-right whitespace-nowrap text-sm font-medium">
-                                <a href="{{ route('transactions.show', $transaction) }}"
+                                <a href="{{ route('admin.transactions.show', $transaction) }}"
                                     class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors duration-200">
                                     Detail
                                 </a>

@@ -1,6 +1,6 @@
 @php
 $breadcrumbs = [
-'Cabang' => route('branches.index')
+'Cabang' => route('admin.branches.index')
 ];
 @endphp
 
@@ -29,7 +29,7 @@ $breadcrumbs = [
             </div>
 
             {{-- Kanan: Tombol Tambah --}}
-            <a href="{{ route('branches.create') }}">
+            <a href="{{ route('admin.branches.create') }}">
                 <x-primary-button class="flex items-center gap-2 shadow-lg shadow-indigo-200">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -118,7 +118,7 @@ $breadcrumbs = [
                     {{-- Kanan: Action Icons --}}
                     <div class="flex items-center gap-2">
                         {{-- Edit Button --}}
-                        <a href="{{ route('branches.edit', $branch) }}"
+                        <a href="{{ route('admin.branches.edit', $branch) }}"
                             class="p-2 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition"
                             title="Edit Data">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,7 +130,7 @@ $breadcrumbs = [
 
                         {{-- Delete Button (Trigger Modal) --}}
                         <button
-                            x-on:click.prevent="deleteUrl = '{{ route('branches.destroy', $branch) }}'; branchName = '{{ addslashes($branch->name) }}'; $dispatch('open-modal', 'confirm-branch-deletion')"
+                            x-on:click.prevent="deleteUrl = '{{ route('admin.branches.destroy', $branch) }}'; branchName = '{{ addslashes($branch->name) }}'; $dispatch('open-modal', 'confirm-branch-deletion')"
                             class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
                             title="Hapus Data">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,7 +155,7 @@ $breadcrumbs = [
                 </div>
                 <h3 class="text-lg font-medium text-gray-900">Belum ada Cabang</h3>
                 <p class="text-gray-500 mt-1 mb-6">Tambahkan lokasi cabang bimbel Anda.</p>
-                <a href="{{ route('branches.create') }}">
+                <a href="{{ route('admin.branches.create') }}">
                     <x-primary-button>Tambah Cabang</x-primary-button>
                 </a>
             </div>

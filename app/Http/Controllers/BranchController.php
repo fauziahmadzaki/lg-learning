@@ -29,7 +29,7 @@ class BranchController extends Controller
 
         Branch::create($request->validated());
 
-        return redirect()->route('branches.index')
+        return redirect()->route('admin.branches.index')
                          ->with('success', 'Cabang berhasil ditambahkan!');
     }
 
@@ -42,7 +42,7 @@ class BranchController extends Controller
     {
         $branch->update($request->validated());
 
-        return redirect()->route('branches.index')
+        return redirect()->route('admin.branches.index')
                          ->with('success', 'Data cabang berhasil diperbarui!');
     }
 
@@ -52,7 +52,7 @@ class BranchController extends Controller
         $branch->delete();
 
 
-        return redirect()->route('branches.index')
+        return redirect()->route('admin.branches.index')
                          ->with('success', 'Cabang berhasil dihapus!');
     }
 }

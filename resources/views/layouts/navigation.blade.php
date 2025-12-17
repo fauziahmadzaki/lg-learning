@@ -94,18 +94,20 @@
         x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2">
 
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+            <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
 
             <div class="px-4 pt-2 pb-1 text-xs text-gray-400 font-bold uppercase">Master Data</div>
-            <x-responsive-nav-link :href="route('branches.index')" :active="request()->routeIs('branches.*')">
+            <x-responsive-nav-link :href="route('admin.branches.index')"
+                :active="request()->routeIs('admi.branches.*')">
                 {{ __('Kelola Cabang') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('tutors.index')" :active="request()->routeIs('tutors.*')">
+            <x-responsive-nav-link :href="route('admin.tutors.index')" :active="request()->routeIs('admi.tutors.*')">
                 {{ __('Kelola Tutor') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('packages.index')" :active="request()->routeIs('packages.*')">
+            <x-responsive-nav-link :href="route('admin.packages.index')"
+                :active="request()->routeIs('admi.packages.*')">
                 {{ __('Kelola Paket') }}
             </x-responsive-nav-link>
         </div>

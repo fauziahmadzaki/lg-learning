@@ -163,7 +163,7 @@
     </div>
 
     <div class="flex items-center justify-end gap-4 border-t pt-4">
-        <a href="{{ route('tutors.index') }}" class="text-gray-600 hover:text-gray-900">{{ __('Batal') }}</a>
+        <a href="{{ route('admin.tutors.index') }}" class="text-gray-600 hover:text-gray-900">{{ __('Batal') }}</a>
         <x-primary-button>
             {{ $submit_text ?? 'Simpan Data' }}
         </x-primary-button>

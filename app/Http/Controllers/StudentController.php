@@ -49,7 +49,7 @@ public function index(Request $request)
   
             $studentService->registerStudent($validatedData, $request->package_id);
 
-            return redirect()->route('students.index')
+            return redirect()->route('admin.students.index')
                 ->with('success', 'Siswa berhasil didaftarkan! Tagihan dan jadwal telah diatur otomatis.');
         }
 
@@ -76,7 +76,7 @@ public function update(UpdateStudentRequest $request, Student $student)
             $student->packages()->detach();
         }
 
-        return redirect()->route('students.index')
+        return redirect()->route('admin.students.index')
             ->with('success', 'Data siswa berhasil diperbarui!');
     }
 
@@ -100,6 +100,6 @@ public function update(UpdateStudentRequest $request, Student $student)
     public function destroy(Student $student)
     {
         $student->delete();
-        return redirect()->route('students.index')->with('success', 'Data siswa berhasil dihapus');
+        return redirect()->route('admin.students.index')->with('success', 'Data siswa berhasil dihapus');
     }
 }

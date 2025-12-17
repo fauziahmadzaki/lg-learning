@@ -46,7 +46,7 @@
                                 </div>
                             </div>
                             <div class="ml-4">
-                                <a href="{{ route('students.show', $student) }}"
+                                <a href="{{ route('admin.students.show', $student) }}"
                                     class="text-sm font-medium text-gray-900 hover:text-indigo-600 hover:underline">
                                     {{ $student->name }}
                                 </a>
@@ -141,7 +141,7 @@
                         <div class="flex items-center justify-end gap-2">
 
                             {{-- Tombol Detail (BARU) --}}
-                            <a href="{{ route('students.show', $student) }}"
+                            <a href="{{ route('admin.students.show', $student) }}"
                                 class="text-blue-600 hover:text-blue-900 bg-blue-50 p-1.5 rounded-lg hover:bg-blue-100 transition"
                                 title="Lihat Detail">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -153,7 +153,7 @@
                             </a>
 
                             {{-- Tombol Edit --}}
-                            <a href="{{ route('students.edit', $student) }}"
+                            <a href="{{ route('admin.students.edit', $student) }}"
                                 class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 p-1.5 rounded-lg hover:bg-indigo-100 transition"
                                 title="Edit Data">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,7 +165,7 @@
 
                             {{-- Tombol Hapus --}}
                             <button
-                                @click.prevent="$dispatch('trigger-delete-modal', { url: '{{ route('students.destroy', $student) }}', name: '{{ addslashes($student->name) }}' })"
+                                @click.prevent="$dispatch('trigger-delete-modal', { url: '{{ route('admin.students.destroy', $student) }}', name: '{{ addslashes($student->name) }}' })"
                                 class="text-red-600 hover:text-red-900 bg-red-50 p-1.5 rounded-lg hover:bg-red-100 transition"
                                 title="Hapus Data">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

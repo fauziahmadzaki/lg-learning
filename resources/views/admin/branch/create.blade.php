@@ -1,7 +1,7 @@
 @php
 $breadcrumbs = [
-'Cabang' => route('branches.index'),
-'Tambah' => route('branches.create')
+'Cabang' => route('admin.branches.index'),
+'Tambah' => route('admin.branches.create')
 ];
 @endphp
 
@@ -25,7 +25,7 @@ $breadcrumbs = [
                         @csrf
                     </form>
 
-                    <form method="post" action="{{ route('branches.store') }}" class="mt-6 space-y-6">
+                    <form method="post" action="{{ route('admin.branches.store') }}" class="mt-6 space-y-6">
                         @csrf
                         @method('post')
 

@@ -173,15 +173,15 @@
         <div class="pt-4 border-t border-gray-100">
             <h3 class="text-gray-800 font-bold mb-4 text-sm uppercase tracking-wide">Akses Cepat</h3>
             <div class="flex gap-3 overflow-x-auto pb-2">
-                <a href="{{ route('branches.create') }}"
+                <a href="{{ route('admin.branches.create') }}"
                     class="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium hover:bg-indigo-100 transition whitespace-nowrap">
                     + Tambah Cabang
                 </a>
-                <a href="{{ route('tutors.create') }}"
+                <a href="{{ route('admin.tutors.create') }}"
                     class="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-100 transition whitespace-nowrap">
                     + Tambah Tutor
                 </a>
-                <a href="{{ route('packages.create') }}"
+                <a href="{{ route('admin.packages.create') }}"
                     class="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition whitespace-nowrap">
                     + Buat Paket
                 </a>

@@ -1,7 +1,7 @@
 @php
 $breadcrumbs = [
 'Master Data' => null,
-'Siswa' => route('students.index'),
+'Siswa' => route('admin.students.index'),
 'Detail Siswa' => null,
 ];
 @endphp
@@ -19,11 +19,11 @@ $breadcrumbs = [
             </div>
 
             <div class="flex items-center gap-3">
-                <a href="{{ route('students.index') }}"
+                <a href="{{ route('admin.students.index') }}"
                     class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium transition">
                     &larr; Kembali
                 </a>
-                <a href="{{ route('students.edit', $student) }}"
+                <a href="{{ route('admin.students.edit', $student) }}"
                     class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium shadow-lg shadow-indigo-200 transition">
                     Edit Data
                 </a>

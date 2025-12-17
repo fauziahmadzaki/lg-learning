@@ -1,7 +1,7 @@
 @php
 $breadcrumbs = [
-'Cabang' => route('branches.index'),
-'Edit' => route('branches.edit', $branch)
+'Cabang' => route('admin.branches.index'),
+'Edit' => route('admin.branches.edit', $branch)
 ];
 @endphp
 
@@ -25,7 +25,7 @@ $breadcrumbs = [
                         @csrf
                     </form>
 
-                    <form method="post" action="{{ route('branches.update', $branch) }}" class="mt-6 space-y-6">
+                    <form method="post" action="{{ route('admin.branches.update', $branch) }}" class="mt-6 space-y-6">
                         @csrf
                         @method('patch')
                         @include('admin.branch._form')

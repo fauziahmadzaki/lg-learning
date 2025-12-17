@@ -62,8 +62,8 @@ public function store(Request $request)
             'invoice_duration' => 86400,
             
             // Redirect URL: User diarahkan ke sini setelah bayar di Xendit
-            'success_redirect_url' => route('transactions.show', $transaction),
-            'failure_redirect_url' => route('transactions.index'),
+            'success_redirect_url' => route('admin.transactions.show', $transaction),
+            'failure_redirect_url' => route('admin.transactions.index'),
             'currency' => 'IDR',
             'reminder_time' => 1
         ]);

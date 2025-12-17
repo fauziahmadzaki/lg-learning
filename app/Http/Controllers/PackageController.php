@@ -40,7 +40,6 @@ $packages = Package::with('branch')->latest()->get();
             Package::create([
                 'branch_id'     => $request->branch_id,
                 'name'          => $request->name,
-                // PERBAIKAN 2: Tambahkan category (PRIVATE/ROMBEL)
                 'category'      => $request->category, 
                 'grade'         => $request->grade,
                 'price'         => $request->price,
@@ -51,16 +50,13 @@ $packages = Package::with('branch')->latest()->get();
                 'image'         => $imagePath,
             ]);
 
-            // Simpan Relasi Tutor (Many-to-Many)
             if ($request->has('tutors')) {
-                // Ambil paket terakhir dibuat utk di-attach
-                // Karena Package::create mengembalikan object, lebih aman begini:
                 $package = Package::latest()->first(); 
                 $package->tutors()->attach($request->tutors);
             }
         });
 
-        return redirect()->route('packages.index')->with('success', 'Paket berhasil dibuat!');
+        return redirect()->route('admin.packages.index')->with('success', 'Paket berhasil dibuat!');
     }
 
     public function edit(Package $package)
@@ -100,7 +96,7 @@ $packages = Package::with('branch')->latest()->get();
             }
         });
 
-        return redirect()->route('packages.index')->with('success', 'Paket diperbarui!');
+        return redirect()->route('admin.packages.index')->with('success', 'Paket diperbarui!');
     }
 
     // PERBAIKAN 3: Method Hapus
@@ -114,6 +110,6 @@ $packages = Package::with('branch')->latest()->get();
         // Hapus Data (Relasi tutor di pivot table otomatis hilang karena onDelete cascade di migration)
         $package->delete();
 
-        return redirect()->route('packages.index')->with('success', 'Paket berhasil dihapus!');
+        return redirect()->route('admin.packages.index')->with('success', 'Paket berhasil dihapus!');
     }
 }

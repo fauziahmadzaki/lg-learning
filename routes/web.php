@@ -12,30 +12,43 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::middleware(['auth', 'verified', 'central.admin'])
+->prefix('admin')
+->name('admin.')
+->group(function(){
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+    Route::resource('cabang', BranchController::class)->names('branches')->parameters([
+        'cabang' => 'branch',
+    ]);
+    Route::resource('tutor', TutorController::class)->names('tutors');
+    Route::resource('paket', PackageController::class)->names('packages')->parameters([
+        'paket' => 'package'
+    ]);
+    Route::resource('siswa', StudentController::class)->names('students')->parameters([
+        'siswa' => 'student'
+    ]);
+    Route::resource('/transaksi', TransactionController::class)->names('transactions')->parameters([
+        'transaksi' => 'transaction'
+    ]);
+    });
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    Route::resource('/cabang', BranchController::class)->names('branches')->parameters([
-        'cabang' => 'branch',
-    ]);
-    Route::resource('/tutor', TutorController::class)->names('tutors');
-    Route::resource('/paket', PackageController::class)->names('packages')->parameters([
-        'paket' => 'package'
-    ]);
-    Route::resource('/siswa', StudentController::class)->names('students')->parameters([
-        'siswa' => 'student'
-    ]);
 });
 
-Route::resource('/transaksi', TransactionController::class)->names('transactions')->parameters([
-    'transaksi' => 'transaction'
-]);
+Route::middleware(['auth', 'verified', 'branch.check'])
+    ->prefix('cabang/{id}')
+    ->name('branch.')
+    ->group(function(){
+        Route::get('/dashboard', function(){
+            return view('tutor.dashboard');
+        })->name('dashboard');
+    });
 
 // Testing Route (Hapus nanti kalau production)
 Route::get('/test-payment', function () {

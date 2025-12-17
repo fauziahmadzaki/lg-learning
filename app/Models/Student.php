@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Branch;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Student extends Model
 {
@@ -21,6 +22,7 @@ class Student extends Model
         'billing_cycle',  // weekly, monthly, full
         'next_billing_date', // Kapan robot harus nagih
         'access_token',   // Token rahasia link portal
+        'branch_id'
     ];
 
     protected $casts = [
@@ -46,8 +48,10 @@ class Student extends Model
         return $this->hasMany(Transaction::class);
     }
     
-    // Helper untuk Link Portal (Opsional)
-    // Cara pakai di blade: {{ $student->portal_link }}
+    public function branch(){
+        return $this->belongsTo(Branch::class);
+    }
+
     public function getPortalLinkAttribute()
     {
         return url('/portal/' . $this->access_token);

@@ -15,7 +15,6 @@ class TutorController extends Controller
 {
     public function index()
     {
-        // Eager Load 'user' agar tidak N+1 query saat ambil nama & email
         $tutors = Tutor::with('user')->latest()->paginate(10);
         return view('admin.tutor.index', compact('tutors'));
     }
@@ -35,12 +34,12 @@ class TutorController extends Controller
                 'email'    => $request->email,
                 'password' => Hash::make($request->password),
                 'role'     => 'tutor',
+                'branch_id' => $request->branch_id,
             ]);
     
-            // 2. Handle Image Upload
             $imagePath = null;
             if ($request->hasFile('image')) {
-                // Simpan ke folder 'tutors' di storage public
+              
                 $imagePath = $request->file('image')->store('tutors', 'public');
             }
     
@@ -56,7 +55,7 @@ class TutorController extends Controller
             ]);
         });
     
-        return redirect()->route('tutors.index')->with('success', 'Tutor berhasil ditambahkan!');
+        return redirect()->route('admin.tutors.index')->with('success', 'Tutor berhasil ditambahkan!');
     }
 
     public function edit(Tutor $tutor)
@@ -101,7 +100,7 @@ class TutorController extends Controller
             $tutor->update($tutorData);
         });
 
-    return redirect()->route('tutors.index')->with('success', 'Data tutor diperbarui!');
+    return redirect()->route('admin.tutors.index')->with('success', 'Data tutor diperbarui!');
     }
 
     public function destroy(Tutor $tutor)
@@ -115,7 +114,7 @@ class TutorController extends Controller
             $tutor->user->delete();
         });
 
-        return redirect()->route('tutors.index')->with('success', 'Tutor dihapus!');
+        return redirect()->route('admin.tutors.index')->with('success', 'Tutor dihapus!');
     }
 
 }

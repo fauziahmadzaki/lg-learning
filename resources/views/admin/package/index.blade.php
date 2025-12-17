@@ -27,7 +27,7 @@
             </div>
 
             {{-- Kanan: Tombol Tambah --}}
-            <a href="{{ route('packages.create') }}">
+            <a href="{{ route('admin.packages.create') }}">
                 <x-primary-button class="flex items-center gap-2 shadow-lg shadow-indigo-200">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -173,7 +173,7 @@
                     {{-- Kanan: Action Icons --}}
                     <div class="flex items-center gap-2">
                         {{-- Edit Button --}}
-                        <a href="{{ route('packages.edit', $package) }}"
+                        <a href="{{ route('admin.packages.edit', $package) }}"
                             class="p-2 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition"
                             title="Edit Paket">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,7 +185,7 @@
 
                         {{-- Delete Button (Trigger Modal) --}}
                         <button
-                            x-on:click.prevent="deleteAction = '{{ route('packages.destroy', $package) }}'; packageName = '{{ addslashes($package->name) }}'; $dispatch('open-modal', 'confirm-package-deletion')"
+                            x-on:click.prevent="deleteAction = '{{ route('admin.packages.destroy', $package) }}'; packageName = '{{ addslashes($package->name) }}'; $dispatch('open-modal', 'confirm-package-deletion')"
                             class="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
                             title="Hapus Paket">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,7 +208,7 @@
                 </div>
                 <h3 class="text-gray-900 font-bold text-lg">Belum ada paket tersedia</h3>
                 <p class="text-sm text-gray-500 mt-1 mb-6">Silakan tambahkan data paket baru untuk memulai.</p>
-                <a href="{{ route('packages.create') }}">
+                <a href="{{ route('admin.packages.create') }}">
                     <x-primary-button>Buat Paket Pertama</x-primary-button>
                 </a>
             </div>

@@ -22,13 +22,23 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+   public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $user = $request->user();
+
+        // LOGIKA REDIRECT BARU
+        
+        // 1. Jika punya Branch ID -> Lempar ke Dashboard Cabang
+        if ($user->branch_id) {
+            return redirect()->route('branch.dashboard', ['branch' => $user->branch_id]);
+        }
+
+        // 2. Jika Branch ID Kosong (Admin Pusat) -> Lempar ke Dashboard Admin
+        return redirect()->route('admin.dashboard');
     }
 
     /**

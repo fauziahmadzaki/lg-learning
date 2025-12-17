@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Foundation\Application;
+use App\Http\Middleware\CheckBranchAccess;
+use App\Http\Middleware\CheckCentralAdmin;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
@@ -14,6 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         //
         // $middleware->trustProxies(at: '*');
+
+       $middleware->alias([
+           'central.admin' => CheckCentralAdmin::class,
+        'branch.check' => CheckBranchAccess::class,
+       ]) ;
+
        $middleware->validateCsrfTokens(except: [
         'api/xendit/callback', // <--- PENTING! Izinkan route ini
     ]);

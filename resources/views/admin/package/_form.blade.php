@@ -290,7 +290,7 @@
 
     {{-- TOMBOL AKSI --}}
     <div class="flex items-center justify-end gap-4 border-t border-gray-200 pt-6">
-        <a href="{{ route('packages.index') }}" class="text-gray-600 hover:text-gray-900 font-medium text-sm">
+        <a href="{{ route('admin.packages.index') }}" class="text-gray-600 hover:text-gray-900 font-medium text-sm">
             {{ __('Batal') }}
         </a>
         <x-primary-button class="px-6">

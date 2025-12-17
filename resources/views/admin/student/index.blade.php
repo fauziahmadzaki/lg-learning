@@ -1,7 +1,7 @@
 @php
 $breadcrumbs = [
 'Master Data' => null,
-'Siswa' => route('students.index'),
+'Siswa' => route('admin.students.index'),
 ];
 @endphp
 
@@ -17,7 +17,7 @@ $breadcrumbs = [
             async performSearch() {
                 this.isLoading = true;
                 try {
-                    const response = await fetch(`{{ route('students.index') }}?search=${this.search}`, {
+                    const response = await fetch(`{{ route('admin.students.index') }}?search=${this.search}`, {
                         headers: { 'X-Requested-With': 'XMLHttpRequest' }
                     });
                     const html = await response.text();
@@ -63,7 +63,7 @@ $breadcrumbs = [
             </div>
 
             {{-- Button --}}
-            <a href="{{ route('students.create') }}">
+            <a href="{{ route('admin.students.create') }}">
                 <x-primary-button class="flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
