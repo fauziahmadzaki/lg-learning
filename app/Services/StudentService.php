@@ -175,8 +175,9 @@ class StudentService
      * 1. Advance next_billing_date
      * 2. Check if package finished
      * 3. Update status
+     * 4. Send WhatsApp (Optional)
      */
-    public function processPaymentSuccess(Student $student): void
+    public function processPaymentSuccess(Student $student, bool $sendNotification = true): void
     {
         $package = $student->package;
         if (!$package) return;
@@ -214,5 +215,49 @@ class StudentService
             'status' => $status,
             'next_billing_date' => $nextDate
         ]);
+
+        // SEND WHATSAPP NOTIFICATION
+        if ($sendNotification) {
+            // 1. Payment Success
+            try {
+                if ($student->parent_phone || $student->name) { // Fallback if phone stored in student table
+                    // Load latest transaction for invoice link
+                    $lastTransaction = $student->transactions()->latest()->first();
+                    $invoiceUrl = $lastTransaction ? $lastTransaction->payment_url : '-';
+                    // If payment url is '#' (manual), maybe use route to show payment
+                    if ($lastTransaction && $lastTransaction->payment_url == '#') {
+                        $invoiceUrl = route('landing.payment.show', ['invoice_code' => $lastTransaction->invoice_code, 'status' => 'success']);
+                    }
+
+                    $waService = app(\App\Services\WhatsApp\WhatsAppServiceInterface::class);
+                    $target = $student->parent_phone; 
+                    
+                    $portalLink = $student->portal_link;
+                    $msgPayment = "Pembayaran Diterima!\n\n"
+                        . "Halo {$student->name}, pembayaran untuk paket {$package->name} telah berhasil.\n"
+                        . "Invoice: {$invoiceUrl}\n"
+                        . "Portal Siswa: {$portalLink}\n\n"
+                        . "Terima kasih.";
+
+                    if ($target) {
+                        $waService->sendMessage($target, $msgPayment);
+                    }
+
+                    // 2. Course Finished
+                    if ($status === 'finished') {
+                        $msgFinish = "Selamat {$student->name}!\n\n"
+                            . "Anda telah menyelesaikan program {$package->name}.\n"
+                            . "Terima kasih telah belajar bersama LG Learning.\n"
+                            . "Akses sertifikat/raport di portal: {$portalLink}";
+                        
+                        if ($target) {
+                            $waService->sendMessage($target, $msgFinish);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Failed to send WA in Service: " . $e->getMessage());
+            }
+        }
     }
 }

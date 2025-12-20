@@ -102,8 +102,34 @@ class LandingController extends Controller
         // User minta "Live Search", paling enak Client-side kalau data dikit.
         // Kita preload slug untuk routing.
         $packages = Package::with('branch')->get(); 
+        
+        // Fetch Site Settings (Global)
+        $settings = \App\Models\SiteSetting::pluck('value', 'key'); // Added for view consistency
 
-        return view('landing.packages.index', compact('packages', 'branches', 'grades', 'categories'));
+        return view('landing.packages.index', compact('packages', 'branches', 'grades', 'categories', 'settings'));
+    }
+
+    public function gallery(\Illuminate\Http\Request $request)
+    {
+        $query = \App\Models\Content::whereNotNull('image'); // Base: Must have image (since it's a gallery)
+
+        // Filter Logic
+        $type = $request->query('type');
+        if ($type === 'Testimoni') {
+            $query->where('type', 'Testimoni');
+        } elseif ($type === 'Kegiatan') {
+            $query->whereIn('type', ['Kegiatan', 'Galeri']);
+        } else {
+            // Default "Semua": Kegiatan, Galeri, Testimoni
+            $query->whereIn('type', ['Kegiatan', 'Galeri', 'Testimoni']);
+        }
+
+        $galleries = $query->latest()->paginate(12)->withQueryString(); // Keep params in pagination links
+        
+        // Fetch Site Settings (Global)
+        $settings = \App\Models\SiteSetting::pluck('value', 'key');
+        
+        return view('landing.gallery.index', compact('galleries', 'settings'));
     }
 
     public function showPackage(Package $package)
@@ -181,7 +207,24 @@ class LandingController extends Controller
             'invoice_code' => $transaction->invoice_code,
             'status' => 'success'
         ]);
-        $failureUrl = route('landing.packages.index'); // Atau halaman lain jika gagal
+        $failureUrl = route('packages.index'); // Atau halaman lain jika gagal
+
+        // SEND WHATSAPP NOTIFICATION (Welcome)
+        try {
+            if ($request->filled('parent_phone') || $request->filled('phone')) {
+                $target = $request->parent_phone ?? $request->phone;
+                $waService = app(\App\Services\WhatsApp\WhatsAppServiceInterface::class);
+                $portalLink = $student->portal_link;
+                $message = "Halo {$student->name}!\n\n"
+                    . "Terima kasih telah mendaftar di LG Learning ({$package->name}).\n"
+                    . "Silakan akses portal siswa Anda di sini: {$portalLink}\n\n"
+                    . "Mohon selesaikan pembayaran untuk mengaktifkan akun.";
+                
+                $waService->sendMessage($target, $message);
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Failed to send WA: " . $e->getMessage());
+        }
 
         $result = $txService->createInvoice($transaction, $student, $description, $successUrl, $failureUrl);
 

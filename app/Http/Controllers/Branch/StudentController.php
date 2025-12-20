@@ -164,8 +164,40 @@ class StudentController extends Controller
             $amount = $package->price * ($months > 0 ? $months : 1);
         }
 
-        // 3. Tentukan Due Date
+        // 3. Tentukan Due Date & Check Validity
         $dueDate = $student->next_billing_date ?? now();
+        
+        // CHECK 1: MAX BILLS COUNT (Safeguard)
+        $maxBills = 999;
+        if ($student->billing_cycle === 'monthly') {
+            $maxBills = round($package->duration / 30);
+        } elseif ($student->billing_cycle === 'weekly') {
+            $maxBills = round($package->duration / 7);
+        }
+
+        if ($maxBills > 0 && $student->billing_cycle !== 'full') {
+            $billCount = $student->bills()->count();
+            if ($billCount >= $maxBills) {
+                 return back()->with('error', "Batas max tagihan ({$maxBills}x) sudah tercapai.");
+            }
+        }
+
+        // CHECK 2: End Date
+        if ($student->join_date) {
+            $endDate = $student->join_date->copy()->addDays($package->duration);
+            if ($dueDate->greaterThanOrEqualTo($endDate)) {
+                 return back()->with('error', 'Paket siswa ini SUDAH SELESAI (' . $endDate->format('d M Y') . '). Tidak bisa menagih lagi.');
+            }
+        }
+        
+        // CHECK DUPLICATE
+        $existingBill = \App\Models\Bill::where('student_id', $student->id)
+                                        ->whereDate('due_date', $dueDate)
+                                        ->first();
+        if ($existingBill) {
+             return back()->with('error', "Tagihan untuk periode " . $dueDate->format('d M Y') . " SUDAH ADA.");
+        }
+
         $title = "Tagihan " . $package->name . " - Periode " . $dueDate->format('d M Y');
 
         // 4. Buat Record 'Bill'
@@ -213,6 +245,31 @@ class StudentController extends Controller
             }
 
             $student->update(['next_billing_date' => $nextDate]);
+
+            $student->update(['next_billing_date' => $nextDate]);
+            
+            // SEND WHATSAPP NOTIFICATION
+            try {
+               if ($student->parent_phone || $student->name) {
+                   $waService = app(\App\Services\WhatsApp\WhatsAppServiceInterface::class);
+                   $target = $student->parent_phone;
+                   $portalLink = $student->portal_link;
+                   $amountRp = number_format($amount, 0, ',', '.');
+                   
+                   $msg = "Tagihan Baru (Cabang)\n\n"
+                        . "Halo Orang Tua {$student->name}, Cabang telah membuat tagihan baru: '{$title}'.\n"
+                        . "Jumlah: Rp{$amountRp}\n"
+                        . "Silakan cek dan bayar melalui portal siswa:\n"
+                        . "{$portalLink}\n\n"
+                        . "Terima kasih.";
+
+                   if ($target) {
+                        $waService->sendMessage($target, $msg);
+                   }
+               }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("WA Branch Manual Bill Failed: " . $e->getMessage());
+            }
 
             return back()->with('success', 'Tagihan berhasil dibuat! Invoice Xendit aktif.');
         } else {
@@ -269,8 +326,31 @@ class StudentController extends Controller
             'transaction_id' => $transaction->id
         ]);
 
-        // 4. Update Next Billing Date & Status
-        $studentService->processPaymentSuccess($student);
+        // 4. Update Next Billing Date & Status (Via Service)
+        $studentService->processPaymentSuccess($student, false);
+
+        // SEND WHATSAPP NOTIFICATION
+        try {
+           if ($student->parent_phone || $student->name) {
+               $waService = app(\App\Services\WhatsApp\WhatsAppServiceInterface::class);
+               $target = $student->parent_phone;
+               $portalLink = $student->portal_link;
+               $amountRp = number_format($amount, 0, ',', '.');
+               
+               $msg = "Pembayaran Tunai Diterima (Cabang)\n\n"
+                    . "Halo Orang Tua {$student->name}, pembayaran tunai untuk '{$title}' telah kami terima di Cabang {$branch->name}.\n"
+                    . "Jumlah: Rp{$amountRp}\n"
+                    . "Status: LUNAS\n"
+                    . "Portal Siswa: {$portalLink}\n\n"
+                    . "Terima kasih.";
+
+               if ($target) {
+                    $waService->sendMessage($target, $msg);
+               }
+           }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("WA Branch Manual Payment Failed: " . $e->getMessage());
+        }
 
         return back()->with('success', 'Pembayaran Tunai berhasil dicatat! Transaksi LUNAS.');
     }
@@ -288,7 +368,7 @@ class StudentController extends Controller
             return back()->with('error', 'Tagihan ini sudah lunas.');
         }
 
-        \Illuminate\Support\Facades\DB::transaction(function() use ($student, $bill) {
+        \Illuminate\Support\Facades\DB::transaction(function() use ($student, $bill, $branch) {
             // 1. Buat Transaksi Lunas
             $invoiceCode = 'INV-MANUAL-' . time() . '-' . $student->id . '-B' . $bill->id;
             
@@ -308,6 +388,30 @@ class StudentController extends Controller
                 'status' => 'PAID',
                 'transaction_id' => $transaction->id
             ]);
+
+            // SEND WHATSAPP NOTIFICATION (Inside Transaction to ensure data consistency? Or Outside? Outside is safer for API calls)
+            // But we can put it here inside closure if we use try-catch safely.
+            try {
+               if ($student->parent_phone || $student->name) {
+                   $waService = app(\App\Services\WhatsApp\WhatsAppServiceInterface::class);
+                   $target = $student->parent_phone;
+                   $portalLink = $student->portal_link;
+                   $amountRp = number_format($bill->amount, 0, ',', '.');
+                   
+                   $msg = "Pembayaran Manual Diterima (Cabang)\n\n"
+                        . "Halo Orang Tua {$student->name}, pembayaran untuk tagihan '{$bill->title}' telah diselesaikan secara manual oleh Cabang {$branch->name}.\n"
+                        . "Jumlah: Rp{$amountRp}\n"
+                        . "Status: LUNAS\n"
+                        . "Portal Siswa: {$portalLink}\n\n"
+                        . "Terima kasih.";
+
+                   if ($target) {
+                        $waService->sendMessage($target, $msg);
+                   }
+               }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("WA Branch Pay Bill Manually Failed: " . $e->getMessage());
+            }
 
             // 3. Logic Status
             if ($student->status === 'pending') {

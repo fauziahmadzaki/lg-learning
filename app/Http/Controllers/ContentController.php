@@ -21,7 +21,7 @@ class ContentController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'type'  => 'required|in:Kegiatan,Testimoni',
+            'type'  => 'required|in:Kegiatan,Testimoni,Galeri',
             'image' => 'nullable|image|max:2048', 
             'description' => 'required|string'
         ]);
@@ -48,7 +48,7 @@ class ContentController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'type'  => 'required|in:Kegiatan,Testimoni',
+            'type'  => 'required|in:Kegiatan,Testimoni,Galeri',
             'image' => 'nullable|image|max:2048',
             'description' => 'required|string'
         ]);

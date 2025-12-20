@@ -12,10 +12,11 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LandingController;
 
 Route::get('/', [LandingController::class, 'index'])->name('home');
-Route::get('/packages', [LandingController::class, 'packages'])->name('packages.index');
-Route::get('/packages/{package:slug}', [LandingController::class, 'showPackage'])->name('packages.show');
-Route::get('/packages/{package:slug}/register', [LandingController::class, 'registerPackage'])->name('packages.register');
-Route::get('/tutors', [LandingController::class, 'tutors'])->name('tutors.index');
+Route::get('/paket', [LandingController::class, 'packages'])->name('packages.index');
+Route::get('/paket/{package}', [LandingController::class, 'showPackage'])->name('packages.show');
+Route::get('/paket/{package}/daftar', [LandingController::class, 'registrationForm'])->name('packages.register');
+Route::get('/galeri', [LandingController::class, 'gallery'])->name('gallery.index');
+Route::get('/pengajar', [LandingController::class, 'tutors'])->name('tutors.index');
 Route::post('/daftar', [LandingController::class, 'storeRegistration'])->name('landing.packages.store');
 Route::get('/pembayaran/{invoice_code}', [LandingController::class, 'showPayment'])->name('landing.payment.show');
 Route::post('/pembayaran/process', [LandingController::class, 'processPayment'])->name('landing.payment.process');
@@ -34,16 +35,5 @@ Route::middleware('auth')->group(function () {
 
 
 
-// Testing Route (Hapus nanti kalau production)
-Route::get('/test-payment', function () {
-    // Hardcode data dummy (pastikan ID siswa 1 dan ID paket 1 ada di DB)
-    $student = \App\Models\Student::first(); 
-    $package = \App\Models\Package::first();
 
-    if (!$student || !$package) {
-        return "Data siswa atau paket kosong. Isi dulu master data.";
-    }
-
-    return view('test-payment', compact('student', 'package'));
-});
 require __DIR__.'/auth.php';

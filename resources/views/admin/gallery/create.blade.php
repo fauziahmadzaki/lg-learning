@@ -38,6 +38,7 @@
                             <select id="type" name="type" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
                                 <option value="Kegiatan">Kegiatan</option>
                                 <option value="Testimoni">Testimoni</option>
+                                <option value="Galeri">Galeri</option>
                             </select>
                             <x-input-error class="mt-2" :messages="$errors->get('type')" />
                         </div>
