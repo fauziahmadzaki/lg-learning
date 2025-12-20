@@ -36,7 +36,7 @@ class PackageSeeder extends Seeder
                 'name' => $name
             ], [
                 // Assign ke cabang yang ditemukan
-                'branch_id' => $defaultBranch->id, // <--- TAMBAHAN PENTING
+                'branch_id' => $defaultBranch->id, 
                 
                 'price' => 100000, 
                 'description' => 'Kelas bimbingan ' . $name,
@@ -44,5 +44,8 @@ class PackageSeeder extends Seeder
                 'session_count' => 8
             ]);
         }
+
+        // Generate Random Packages for All Branches
+        Package::factory(20)->create();
     }
 }

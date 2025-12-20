@@ -25,8 +25,6 @@ class AppServiceProvider extends ServiceProvider
             'create' => 'tambah',
         ]);
 
-        // if (str_contains(request()->url(), 'ngrok-free.app')) {
-        //     URL::forceScheme('https');
-        // }
+
     }
 }

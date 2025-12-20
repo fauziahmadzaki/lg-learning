@@ -1,4 +1,4 @@
-@props(['tutor' => null])
+@props(['tutor' => null, 'branches', 'packages' => []])
 
 {{--
     LOGIKA ALPINE JS (GABUNGAN)
@@ -9,6 +9,16 @@
 <div x-data="{ 
     jobs: {{ old('jobs') ? json_encode(old('jobs')) : ($tutor && $tutor->jobs ? json_encode($tutor->jobs) : json_encode([''])) }},
     
+    // State untuk filter paket berdasarkan cabang
+    branchId: '{{ old('branch_id', $tutor?->branch_id) }}',
+    allPackages: @js($packages), // Pass semua data paket ke Alpine
+    
+    // Computed: Paket yang tersedia sesuai cabang dipilih
+    get availablePackages() {
+        if (!this.branchId) return [];
+        return this.allPackages.filter(pkg => pkg.branch_id == this.branchId);
+    },
+
     imagePreview: '{{ $tutor && $tutor->image ? asset('storage/'.$tutor->image) : '' }}',
 
     previewImage(event) {
@@ -87,7 +97,7 @@
     <div class="mb-4">
         <x-input-label for="branch_id" :value="__('Penempatan Cabang')" />
 
-        <select id="branch_id" name="branch_id"
+        <select id="branch_id" name="branch_id" x-model="branchId"
             class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
             <option value="" disabled selected>-- Pilih Cabang --</option>
 
@@ -109,6 +119,37 @@
         <textarea id="bio" name="bio" rows="3"
             class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old('bio', $tutor?->bio) }}</textarea>
         <x-input-error class="mt-2" :messages="$errors->get('bio')" />
+    </div>
+
+    {{-- BAGIAN 3: PAKET YANG DIAMPU (BARU) --}}
+    <h3 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2 mt-8">Paket / Kelas yang Diampu</h3>
+    
+    <div class="mb-6">
+        <x-input-label for="packages" :value="__('Pilih Paket Belajar (Bisa Lebih dari 1)')" />
+        <div class="mt-1">
+            <select name="packages[]" id="packages" multiple
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-40">
+                
+                {{-- Opsi Default jika belum pilih cabang --}}
+                <option value="" disabled x-show="!branchId">-- Pilih Cabang Terlebih Dahulu --</option>
+                
+                {{-- Loop Paket via JS --}}
+                <template x-for="pkg in availablePackages" :key="pkg.id">
+                    <option :value="pkg.id" 
+                        {{-- Logic selected untuk JS agak tricky, kita gunakan server-side helper array di x-init atau biarkan user pilih ulang --}}
+                        {{-- Tapi karena ini ganti cabang = reset paket biasanya, jadi kita biarkan kosong kecuali ada logic complex --}}
+                        :selected="@js(old('packages') ?? ($tutor ? $tutor->packages->pluck('id')->toArray() : [])).includes(pkg.id)"
+                    >
+                        <span x-text="pkg.name"></span> (<span x-text="pkg.grade"></span>)
+                    </option>
+                </template>
+            </select>
+            <p class="mt-1 text-xs text-gray-500">
+                💡 Tips: Tahan tombol <strong>CTRL</strong> (Windows) atau <strong>CMD</strong> (Mac) untuk memilih
+                beberapa paket sekaligus.
+            </p>
+            <x-input-error class="mt-2" :messages="$errors->get('packages')" />
+        </div>
     </div>
 
     {{-- FITUR DYNAMIC INPUT (PEKERJAAN/JOBS) --}}

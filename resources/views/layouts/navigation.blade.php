@@ -1,5 +1,5 @@
 <nav x-data="{ open: false }"
-    class="bg-white border-b border-gray-100 fixed top-0 w-full z-30 lg:pl-64 transition-all duration-300">
+    class="bg-white border-b border-gray-100 fixed top-0 w-full z-30 {{ (Auth::user()->isCentralAdmin() || Auth::user()->branch_id) ? 'lg:pl-64' : '' }} transition-all duration-300">
     <div class="px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-20">
             <div class="flex items-center gap-4">
@@ -45,14 +45,21 @@
                         <x-slot name="trigger">
                             <button
                                 class="inline-flex items-center gap-2 px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-full text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                                {{-- Avatar Kecil --}}
-                                <div
-                                    class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs">
-                                    {{ substr(Auth::user()->name, 0, 1) }}
-                                </div>
+                                {{-- Avatar Logic --}}
+                                @if(Auth::user()->tutor?->image)
+                                    <div class="shrink-0">
+                                         <img src="{{ asset('storage/' . Auth::user()->tutor->image) }}" alt="Foto" class="w-8 h-8 rounded-full object-cover border border-gray-200">
+                                    </div>
+                                @else
+                                    <div
+                                        class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs">
+                                        {{ substr(Auth::user()->name, 0, 1) }}
+                                    </div>
+                                @endif
+
                                 <div class="hidden sm:block text-left">
                                     <div class="text-gray-800 font-semibold">{{ Auth::user()->name }}</div>
-                                    <div class="text-[10px] text-gray-400">Admin</div>
+                                    <div class="text-[10px] text-gray-400">{{ Auth::user()->role_label ?? 'User' }}</div>
                                 </div>
                                 <div class="ms-1 hidden sm:block">
                                     <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg"
@@ -94,30 +101,58 @@
         x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2">
 
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                {{ __('Dashboard') }}
-            </x-responsive-nav-link>
+            @if(Auth::user()->isCentralAdmin())
+                <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
+                    {{ __('Dashboard') }}
+                </x-responsive-nav-link>
 
-            <div class="px-4 pt-2 pb-1 text-xs text-gray-400 font-bold uppercase">Master Data</div>
-            <x-responsive-nav-link :href="route('admin.branches.index')"
-                :active="request()->routeIs('admi.branches.*')">
-                {{ __('Kelola Cabang') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('admin.tutors.index')" :active="request()->routeIs('admi.tutors.*')">
-                {{ __('Kelola Tutor') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('admin.packages.index')"
-                :active="request()->routeIs('admi.packages.*')">
-                {{ __('Kelola Paket') }}
-            </x-responsive-nav-link>
+                <div class="px-4 pt-2 pb-1 text-xs text-gray-400 font-bold uppercase">Master Data</div>
+                <x-responsive-nav-link :href="route('admin.branches.index')"
+                    :active="request()->routeIs('admi.branches.*')">
+                    {{ __('Kelola Cabang') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.tutors.index')" :active="request()->routeIs('admi.tutors.*')">
+                    {{ __('Kelola Tutor') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.packages.index')"
+                    :active="request()->routeIs('admi.packages.*')">
+                    {{ __('Kelola Paket') }}
+                </x-responsive-nav-link>
+
+                <div class="px-4 pt-2 pb-1 text-xs text-gray-400 font-bold uppercase">Keuangan & Laporan</div>
+                <x-responsive-nav-link :href="route('admin.transactions.index')"
+                    :active="request()->routeIs('admin.transactions.*')">
+                    {{ __('Riwayat Transaksi') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.reports.index')"
+                    :active="request()->routeIs('admin.reports.*')">
+                    {{ __('Laporan Keuangan') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.reports.students')"
+                    :active="request()->routeIs('admin.reports.students')">
+                    {{ __('Laporan Siswa') }}
+                </x-responsive-nav-link>
+
+           @elseif(Auth::user()->branch_id)
+                {{-- Tambahkan Menu Cabang jika perlu --}}
+                <x-responsive-nav-link :href="Auth::user()->dashboard_url">
+                    {{ __('Dashboard Cabang') }}
+                </x-responsive-nav-link>
+           @endif
         </div>
 
         <div class="pt-4 pb-4 border-t border-gray-200 bg-gray-50">
             <div class="px-4 flex items-center gap-3">
-                <div
-                    class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
-                    {{ substr(Auth::user()->name, 0, 1) }}
-                </div>
+                @if(Auth::user()->tutor?->image)
+                    <div class="shrink-0">
+                         <img src="{{ asset('storage/' . Auth::user()->tutor->image) }}" alt="Foto" class="w-10 h-10 rounded-full object-cover border border-gray-200">
+                    </div>
+                @else
+                    <div
+                        class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                        {{ substr(Auth::user()->name, 0, 1) }}
+                    </div>
+                @endif
                 <div>
                     <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
                     <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>

@@ -7,8 +7,11 @@ use App\Models\Branch;
 use App\Models\Student;
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 class Package extends Model
 {
+    use HasFactory;
     protected $fillable = [
             'branch_id', 'name', 'grade', 'category',
             'price', 'duration', 'session_count', 
@@ -18,6 +21,38 @@ class Package extends Model
     protected $casts =  [
         'benefits' => 'array'
     ];
+
+    // --- ACCESSORS ---
+
+    public function getDurationStringAttribute()
+    {
+        // Asumsi duration dalam Hari
+        $days = $this->duration;
+
+        if ($days % 30 == 0) {
+            return ($days / 30) . ' Bulan';
+        }
+        
+        return $days . ' Hari';
+    }
+
+    public function getImageUrlAttribute()
+    {
+        if ($this->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->image)) {
+            return \Illuminate\Support\Facades\Storage::url($this->image);
+        }
+        
+        // Return Placeholder based on Category
+        return match($this->category) {
+            'UTBK'   => 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=800',
+            'SMA'    => 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800',
+            'SMP'    => 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&q=80&w=800',
+            'SD'     => 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&q=80&w=800',
+            'UMUM'   => 'https://images.unsplash.com/photo-1513258496098-b05360482272?auto=format&fit=crop&q=80&w=800',
+            default  => 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=800',
+        };
+    }
+
 
     protected function badgeColor(): Attribute
     {
@@ -51,9 +86,9 @@ class Package extends Model
         return $this->belongsToMany(Tutor::class);
     }
 
-    public function student()
+    public function students()
     {
-        return $this->belongsToMany(Student::class);
+        return $this->hasMany(Student::class);
     }
 
 

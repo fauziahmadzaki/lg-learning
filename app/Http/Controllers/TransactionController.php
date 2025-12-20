@@ -4,21 +4,38 @@ namespace App\Http\Controllers;
 
 use App\Models\Package;
 use App\Models\Student;
-use Xendit\Configuration;
 use App\Models\Transaction;
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Xendit\Invoice\InvoiceApi;
-use Xendit\Invoice\CreateInvoiceRequest;
+use App\Services\TransactionService;
 
 class TransactionController extends Controller
 {
-    public function __construct(){
-        Configuration::setXenditKey(env('XENDIT_SECRET_KEY'));
+    protected $transactionService;
+
+    public function __construct(TransactionService $transactionService)
+    {
+        $this->transactionService = $transactionService;
     }
 
-    public function index(){
-        $transactions = Transaction::with(['student', 'package'])->latest()->paginate(10);
+    public function index(Request $request)
+    {
+        $search = $request->input('search');
+
+        $transactions = Transaction::with(['student', 'student.package']) // Eager load relations
+            ->when($search, function ($query, $search) {
+                $query->where('invoice_code', 'like', "%{$search}%")
+                      ->orWhereHas('student', function ($q) use ($search) {
+                          $q->where('name', 'like', "%{$search}%");
+                      });
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        if ($request->ajax()) {
+            return view('admin.transaction._list', compact('transactions'))->render();
+        }
+
         return view('admin.transaction.index', compact('transactions'));
     }
 
@@ -29,65 +46,24 @@ class TransactionController extends Controller
         return view('admin.transaction.create', compact('students', 'packages'));
     }
 
-public function store(Request $request)
+    public function store(Request $request)
     { 
         $validated = $request->validate([
             'student_id' => 'required|exists:students,id',
             'package_id' => 'required|exists:packages,id',
         ]);
         
-        $student = Student::findOrFail($validated['student_id']);
-        $package = Package::findOrFail($validated['package_id']);
+        $result = $this->transactionService->createTransaction($validated['student_id'], $validated['package_id']);
 
-        $invoiceCode = 'INV-'.date('Ymd').'-'.Str::upper(Str::random(5));
-        $amount = $package->price;
-
-        // 1. Simpan Transaksi Lokal (Status PENDING)
-        $transaction = Transaction::create([
-            'invoice_code' => $invoiceCode,
-            'student_id' => $student->id,
-            'package_id' => $package->id,
-            'package_name_snapshot' => $package->name,
-            'amount' => $amount,
-            'transaction_date' => now(),
-            'status' => 'PENDING'
-        ]);
-
-        // 2. Siapkan Request Xendit
-        $createInvoiceRequest = new CreateInvoiceRequest([
-            'external_id' => $invoiceCode,
-            'amount' => $amount,
-            'payer_email' => $student->email,
-            'description' => "Pembayaran bimbel paket ".$package->name,
-            'invoice_duration' => 86400,
-            
-            // Redirect URL: User diarahkan ke sini setelah bayar di Xendit
-            'success_redirect_url' => route('admin.transactions.show', $transaction),
-            'failure_redirect_url' => route('admin.transactions.index'),
-            'currency' => 'IDR',
-            'reminder_time' => 1
-        ]);
-
-        try {
-            // 3. Tembak API Xendit
-            $apiInstance = new InvoiceApi();
-            $xenditInvoice = $apiInstance->createInvoice($createInvoiceRequest);
-
-            // 4. Simpan Link Pembayaran ke Database
-            $transaction->payment_url = $xenditInvoice['invoice_url'];
-            $transaction->save();
-
-            // 5. Redirect User ke Xendit
-            return redirect($xenditInvoice['invoice_url']);
-
-        } catch (\Exception $e) {
-            // Jika error, kembalikan ke form dengan pesan
-            return back()->with('error', 'Gagal membuat transaksi Xendit: ' . $e->getMessage());
+        if ($result['success']) {
+            return redirect($result['redirect_url']);
         }
+
+        return back()->with('error', 'Gagal membuat transaksi Xendit: ' . $result['message']);
     }
+
     public function show(Transaction $transaction)
     {
-        // Halaman Detail / Thank You Page
         return view('admin.transaction.show', compact('transaction'));
     }
 

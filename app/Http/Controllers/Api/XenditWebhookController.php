@@ -51,11 +51,18 @@ class XenditWebhookController extends Controller
                 'paid_at'        => parse_xendit_date($data['paid_at']), // Perlu helper parsing tanggal
             ]);
 
-            // B. Update Status Siswa jadi ACTIVE
-            // Karena sudah bayar, siswa resmi aktif
+            // B. Update Status Siswa & Next Billing Date (Via Service)
             $student = Student::find($transaction->student_id);
             if ($student) {
-                $student->update(['status' => 'active']);
+                // Dependency Injection manual atau via constructor. Disini manual agar minim perubahan
+                $studentService = app(\App\Services\StudentService::class);
+                $studentService->processPaymentSuccess($student);
+            }
+
+            // C. Update Status Tagihan (Bill) jadi PAID jika ada
+            $bill = \App\Models\Bill::where('transaction_id', $transaction->id)->first();
+            if ($bill) {
+                $bill->update(['status' => 'PAID']);
             }
 
             DB::commit();

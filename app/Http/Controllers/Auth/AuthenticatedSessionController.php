@@ -32,13 +32,8 @@ class AuthenticatedSessionController extends Controller
 
         // LOGIKA REDIRECT BARU
         
-        // 1. Jika punya Branch ID -> Lempar ke Dashboard Cabang
-        if ($user->branch_id) {
-            return redirect()->route('branch.dashboard', ['branch' => $user->branch_id]);
-        }
-
-        // 2. Jika Branch ID Kosong (Admin Pusat) -> Lempar ke Dashboard Admin
-        return redirect()->route('admin.dashboard');
+        // Redirect using User helper (automatically handles Branch Slug vs ID)
+        return redirect($user->dashboard_url);
     }
 
     /**

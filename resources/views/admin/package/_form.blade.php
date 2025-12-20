@@ -1,4 +1,4 @@
-@props(['package' => null, 'branches', 'tutors'])
+@props(['package' => null, 'branches'])
 
 <div x-data="{
         benefits: @js(old('benefits') ?? ($package?->benefits ?? [''])),
@@ -168,11 +168,11 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <x-input-label for="duration" :value="__('Durasi Paket (Hari)')" />
+                <x-input-label for="duration" :value="__('Durasi Paket (Bulan)')" />
                 <div class="flex gap-2 items-center">
                     <x-text-input id="duration" name="duration" type="number" class="mt-1 block w-full"
-                        :value="old('duration', $package?->duration)" placeholder="30" />
-                    <span class="text-gray-500">Hari</span>
+                        :value="old('duration', $package?->duration ? $package->duration / 30 : '')" placeholder="6" />
+                    <span class="text-gray-500">Bulan</span>
                 </div>
                 <x-input-error class="mt-2" :messages="$errors->get('duration')" />
             </div>
@@ -229,30 +229,13 @@
                         </button>
                     </div>
                 </template>
+                {{-- Tampilkan Error Validasi Backend --}}
+                <x-input-error class="mt-2" :messages="$errors->get('benefits')" />
+                <x-input-error class="mt-1" :messages="$errors->get('benefits.*')" />
             </div>
         </div>
 
-        <div>
-            <x-input-label for="tutors" :value="__('Pilih Pengajar (Bisa Lebih dari 1)')" />
-            <div class="mt-1">
-                <select name="tutors[]" id="tutors" multiple
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-40">
-                    @foreach($tutors as $tutor)
-                    <option value="{{ $tutor->id }}" class="py-1" @selected( (old('tutors') && in_array($tutor->id,
-                        old('tutors'))) ||
-                        ($package && $package->tutors->contains($tutor->id))
-                        )
-                        >
-                        {{ $tutor->user->name }} ({{ $tutor->specialization ?? 'Umum' }})
-                    </option>
-                    @endforeach
-                </select>
-                <p class="mt-1 text-xs text-gray-500">
-                    💡 Tips: Tahan tombol <strong>CTRL</strong> (Windows) atau <strong>CMD</strong> (Mac) untuk memilih
-                    beberapa nama sekaligus.
-                </p>
-            </div>
-        </div>
+        {{-- Kolom Pengajar dihapus (dimindahkan ke Form Tutor) --}}
 
     </div>
 

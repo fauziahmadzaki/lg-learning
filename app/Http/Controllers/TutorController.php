@@ -10,19 +10,55 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\StoreTutorRequest;
 use App\Http\Requests\UpdateTutorRequest;
+use Illuminate\Http\Request;
 
 class TutorController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $tutors = Tutor::with('user')->latest()->paginate(10);
-        return view('admin.tutor.index', compact('tutors'));
+        $search = $request->input('search');
+        $branchId = $request->input('branch_id');
+        $job = $request->input('job');
+
+        $tutors = Tutor::with(['user', 'branch'])
+            ->when($search, function ($query, $search) {
+                return $query->whereHas('user', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%")
+                          ->orWhere('email', 'like', "%{$search}%");
+                    })
+                    ->orWhere('jobs', 'like', "%{$search}%");
+            })
+            ->when($branchId, function($q) use ($branchId) {
+                $q->where('branch_id', $branchId);
+            })
+            ->when($job, function($q) use ($job) {
+                // Filter JSON column 'jobs'
+                $q->whereJsonContains('jobs', $job);
+            })
+            ->latest()
+            ->paginate(12) // Show 12 cards per page
+            ->withQueryString();
+
+        // Data filter
+        $branches = Branch::all();
+        
+        // Ambil semua unique jobs untuk dropdown filter
+        // Catatan: Karena kolom JSON, kita bisa ambil simple pluck lalu unique di Collection
+        // atau query DB raw jika data sangat besar. Untuk sekarang Collection cukup.
+        $allJobs = Tutor::pluck('jobs')->collapse()->unique()->values()->sort();
+
+        if ($request->ajax()) {
+            return view('admin.tutor._list', compact('tutors'))->render();
+        }
+
+        return view('admin.tutor.index', compact('tutors', 'branches', 'allJobs'));
     }
 
     public function create()
 {
     $branches = Branch::all(); // Ambil semua cabang
-    return view('admin.tutor.create', compact('branches'));
+    $packages = \App\Models\Package::all(); // Load semua paket untuk opsi
+    return view('admin.tutor.create', compact('branches', 'packages'));
 }
 
     public function store(StoreTutorRequest $request)
@@ -44,7 +80,7 @@ class TutorController extends Controller
             }
     
             // 3. Create Tutor Profile
-            Tutor::create([
+            $tutor = Tutor::create([
                 'user_id' => $user->id,
                 'branch_id' => $request->branch_id,
                 'address' => $request->address, // Kolom baru
@@ -53,6 +89,11 @@ class TutorController extends Controller
                 'bio'     => $request->bio,     // Kolom baru
                 'image'   => $imagePath,        // Path gambar
             ]);
+
+            // 4. Attach Packages (Relasi Many-to-Many)
+            if ($request->has('packages')) {
+                $tutor->packages()->attach($request->packages);
+            }
         });
     
         return redirect()->route('admin.tutors.index')->with('success', 'Tutor berhasil ditambahkan!');
@@ -61,7 +102,9 @@ class TutorController extends Controller
     public function edit(Tutor $tutor)
     {
         $branches = Branch::all();
-        return view('admin.tutor.edit', compact('tutor', 'branches'));
+        $packages = \App\Models\Package::all();
+        $tutor->load('packages'); // Eager load relasi existing
+        return view('admin.tutor.edit', compact('tutor', 'branches', 'packages'));
     }
 
 // ... imports tetap sama
@@ -72,7 +115,11 @@ class TutorController extends Controller
         DB::transaction(function () use ($request, $tutor) {
             
             // 1. Update User
-            $userData = ['name' => $request->name, 'email' => $request->email];
+            $userData = [
+                'name' => $request->name, 
+                'email' => $request->email,
+                'branch_id' => $request->branch_id // <--- Correctly update User's branch_id
+            ];
             if ($request->filled('password')) {
                 $userData['password'] = Hash::make($request->password);
             }
@@ -98,6 +145,14 @@ class TutorController extends Controller
             }
 
             $tutor->update($tutorData);
+
+            // 4. Sync Packages
+            // Jika input ada, sync. Jika tidak, detach semua.
+            if ($request->has('packages')) {
+                $tutor->packages()->sync($request->packages);
+            } else {
+                $tutor->packages()->detach();
+            }
         });
 
     return redirect()->route('admin.tutors.index')->with('success', 'Data tutor diperbarui!');

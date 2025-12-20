@@ -34,6 +34,50 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
+        // Specific Logic for Tutor
+        if ($request->user()->role === 'tutor') {
+            $request->validate([
+                'phone' => 'nullable|string|max:20',
+                'address' => 'nullable|string|max:255',
+                'bio' => 'nullable|string',
+                'jobs' => 'nullable|string', 
+                'image' => 'nullable|image|max:2048', // Max 2MB
+            ]);
+
+            // Convert comma-separated string to array
+            $jobsArray = $request->input('jobs') 
+                ? array_map('trim', explode(',', $request->input('jobs'))) 
+                : [];
+
+            // Prepare Data
+            $tutorData = [
+                'phone' => $request->input('phone'),
+                'address' => $request->input('address'),
+                'bio' => $request->input('bio'),
+                'jobs' => $jobsArray,
+            ];
+
+            // Handle Image Upload
+            if ($request->hasFile('image')) {
+                // Get existing tutor profile
+                $tutor = $request->user()->tutor;
+                
+                // Delete old image if exists
+                if ($tutor && $tutor->image && \Illuminate\Support\Facades\Storage::disk('public')->exists($tutor->image)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($tutor->image);
+                }
+
+                // Store new image
+                $path = $request->file('image')->store('tutors', 'public');
+                $tutorData['image'] = $path;
+            }
+
+            $request->user()->tutor()->updateOrCreate(
+                ['user_id' => $request->user()->id],
+                $tutorData
+            );
+        }
+
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
 

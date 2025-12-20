@@ -66,14 +66,14 @@
                     {{-- 3. Paket (Badges) --}}
                     <td class="px-6 py-4">
                         <div class="flex flex-wrap gap-1 max-w-[200px]">
-                            @forelse($student->packages as $pkg)
+                            @if($student->package)
                             <span
                                 class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                                {{ $pkg->name }}
+                                {{ $student->package->name }}
                             </span>
-                            @empty
+                            @else
                             <span class="text-xs text-gray-400 italic">- Tidak ada paket -</span>
-                            @endforelse
+                            @endif
                         </div>
                     </td>
 
@@ -127,6 +127,11 @@
                         <span
                             class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                             Pending
+                        </span>
+                        @elseif($student->status == 'finished')
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            Selesai
                         </span>
                         @else
                         <span

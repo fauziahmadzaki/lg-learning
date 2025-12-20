@@ -19,8 +19,8 @@ class CheckCentralAdmin
         if(!Auth::check()){
             return redirect()->route('login');
         }
-        if(Auth::user()->branch_id != null){
-            abort(403, 'Akses anda ditolak');
+        if(!Auth::user()->isCentralAdmin()){
+            abort(403, 'Akses anda ditolak. Anda bukan Admin Pusat.');
         }
 
         return $next($request);

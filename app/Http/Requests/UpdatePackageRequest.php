@@ -14,11 +14,17 @@ class UpdatePackageRequest extends FormRequest
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
+    protected function prepareForValidation()
+    {
+        if ($this->has('benefits')) {
+            $this->merge([
+                'benefits' => array_values(array_filter($this->benefits, function ($value) {
+                    return !is_null($value) && trim($value) !== '';
+                })),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -37,6 +43,8 @@ class UpdatePackageRequest extends FormRequest
             // Validasi Multi-Select Tutor
             'tutors'        => 'nullable|array',
             'tutors.*'      => 'exists:tutors,id', // Pastikan ID tutor valid
+
+            'category' => ['required', 'string', 'in:PRIVATE,ROMBEL'],
             
             'image'         => 'nullable|image|max:2048',
         ];

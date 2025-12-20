@@ -25,8 +25,7 @@
                     @include('admin.package._form', [
                     'submit_text' => 'Simpan & Terbitkan Paket',
                     'package' => $package,
-                    'branches' => $branches,
-                    'tutors' => $tutors
+                    'branches' => $branches
                     ])
 
                 </form>
