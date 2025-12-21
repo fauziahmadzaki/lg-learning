@@ -149,7 +149,7 @@ class ReportController extends Controller
 
         $students = $query->latest()->paginate(20)->withQueryString();
         $branches = \App\Models\Branch::all();
-        $grades = array_keys(\App\Models\Package::GRADES ?? ['SD' => 'SD', 'SMP' => 'SMP', 'SMA' => 'SMA']);
+        $grades = \App\Models\PackageCategory::pluck('name', 'name');
 
         return view('admin.report.student', compact('students', 'branches', 'grades'));
     }

@@ -32,16 +32,18 @@ class PackageSeeder extends Seeder
         ];
 
         foreach ($packages as $name) {
+            $category = \App\Models\PackageCategory::inRandomOrder()->first();
             Package::firstOrCreate([
                 'name' => $name
             ], [
                 // Assign ke cabang yang ditemukan
                 'branch_id' => $defaultBranch->id, 
-                
+                'package_category_id' => $category?->id,
                 'price' => 100000, 
                 'description' => 'Kelas bimbingan ' . $name,
                 'duration' => 30,
-                'session_count' => 8
+                'session_count' => 8,
+                'category' => 'ROMBEL', // Default type
             ]);
         }
 

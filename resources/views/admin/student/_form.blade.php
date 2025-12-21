@@ -49,7 +49,7 @@
         <div>
             <x-input-label for="grade" :value="__('Kelas / Jenjang Sekolah')" />
             <x-text-input id="grade" class="block mt-1 w-full" type="text" name="grade"
-                :value="old('grade', $student?->grade)" required placeholder="Contoh: Kelas 5 SD, XII SMA" />
+                :value="old('grade', $student?->grade)" required placeholder="Contoh: 12 SMA" />
             <x-input-error :messages="$errors->get('grade')" class="mt-2" />
         </div>
 

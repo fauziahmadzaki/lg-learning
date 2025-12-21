@@ -47,14 +47,10 @@
                                 <div>
                                     <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-100 pb-2">Kontak & Alamat</h3>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <x-input-label for="phone" value="No. HP / WhatsApp Siswa" />
-                                            <x-text-input id="phone" class="block mt-1 w-full" type="text" name="phone" :value="old('phone')" required />
-                                            <x-input-error :messages="$errors->get('phone')" class="mt-2" />
-                                        </div>
-                                        <div>
-                                            <x-input-label for="parent_phone" value="No. HP Orang Tua / Wali" />
-                                            <x-text-input id="parent_phone" class="block mt-1 w-full" type="text" name="parent_phone" :value="old('parent_phone')" />
+                                        <div class="md:col-span-2">
+                                            <x-input-label for="parent_phone" value="Nomor WhatsApp Aktif" />
+                                            <x-text-input id="parent_phone" class="block mt-1 w-full" type="text" name="parent_phone" :value="old('parent_phone')" placeholder="08xxxxxxxxxx" required />
+                                            <p class="text-[10px] text-gray-500 mt-1">Nomor ini akan digunakan untuk menerima notifikasi tagihan dan info belajar.</p>
                                             <x-input-error :messages="$errors->get('parent_phone')" class="mt-2" />
                                         </div>
                                         <div class="md:col-span-2">

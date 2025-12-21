@@ -93,15 +93,16 @@ class LandingController extends Controller
     {
         // Data untuk Filter
         $branches = Branch::all();
-        $grades   = Package::select('grade')->distinct()->whereNotNull('grade')->pluck('grade');
-        // Kategori bisa diambil dari field 'category' atau hardcode jika belum konsisten
-        // Di migrasi sebelumnya: $table->string('category')->nullable();
+        // $grades   = Package::select('grade')->distinct()->whereNotNull('grade')->pluck('grade');
+        // REFACTOR: Use Dynamic Categories
+        $grades = \App\Models\PackageCategory::pluck('name', 'slug'); // Pass slug as key if needed for filter
+        
         $categories = Package::select('category')->distinct()->whereNotNull('category')->pluck('category');
 
         // Ambil SEMUA paket (untuk Client-side filtering) atau Paginate (untuk Server-side)
         // User minta "Live Search", paling enak Client-side kalau data dikit.
         // Kita preload slug untuk routing.
-        $packages = Package::with('branch')->get(); 
+        $packages = Package::with(['branch', 'packageCategory'])->get(); 
         
         // Fetch Site Settings (Global)
         $settings = \App\Models\SiteSetting::pluck('value', 'key'); // Added for view consistency
@@ -152,8 +153,7 @@ class LandingController extends Controller
             'package_id' => 'required|exists:packages,id',
             'name'       => 'required|string|max:255',
             'email'      => 'required|email', // Removed unique:students check to allow returning students or simple duplications for now
-            'phone'      => 'required|numeric',
-            'parent_phone' => 'nullable|numeric',
+            'parent_phone' => 'required|numeric', // Changed from nullable to required
             'school'     => 'nullable|string',
             'grade'      => 'nullable|string',
             'address'    => 'nullable|string',
@@ -166,7 +166,8 @@ class LandingController extends Controller
         $student = Student::create([
             'name' => $request->name,
             'email' => $request->email, // Email might be duplicated if we don't enforce unique. Using it for contact.
-            'parent_phone' => $request->parent_phone ?? $request->phone, // Fallback to student phone
+            'parent_phone' => $request->parent_phone,
+            'phone' => null, // Student phone is now optional/removed form
             'school' => $request->school,
             'grade'  => $request->grade,
             'address' => $request->address,
@@ -211,8 +212,8 @@ class LandingController extends Controller
 
         // SEND WHATSAPP NOTIFICATION (Welcome)
         try {
-            if ($request->filled('parent_phone') || $request->filled('phone')) {
-                $target = $request->parent_phone ?? $request->phone;
+            if ($request->filled('parent_phone')) {
+                $target = $request->parent_phone;
                 $waService = app(\App\Services\WhatsApp\WhatsAppServiceInterface::class);
                 $portalLink = $student->portal_link;
                 $message = "Halo {$student->name}!\n\n"
@@ -242,14 +243,15 @@ class LandingController extends Controller
         $transaction = \App\Models\Transaction::where('invoice_code', $invoice_code)->firstOrFail();
         
         // Cek Status Pembayaran ke Xendit jika local status masih PENDING
-        if ($transaction->status === 'PENDING') {
-            
-            // Coba cek ke Xendit (terutama jika baru redirect kembali dg status success)
-            $xenditInvoice = $txService->getInvoiceStatus($invoice_code);
+        // Gunakan Transaction & Lock untuk mencegah Race Condition dengan Webhook
+        DB::transaction(function() use ($invoice_code, $txService, $studentService) {
+            $transaction = \App\Models\Transaction::where('invoice_code', $invoice_code)->lockForUpdate()->firstOrFail();
 
-            if ($xenditInvoice && ($xenditInvoice['status'] === 'PAID' || $xenditInvoice['status'] === 'SETTLED')) {
-                // Update Local Data
-                DB::transaction(function() use ($transaction, $xenditInvoice, $studentService) {
+            if ($transaction->status === 'PENDING') {
+                // Coba cek ke Xendit
+                $xenditInvoice = $txService->getInvoiceStatus($invoice_code);
+
+                if ($xenditInvoice && ($xenditInvoice['status'] === 'PAID' || $xenditInvoice['status'] === 'SETTLED')) {
                     $transaction->update([
                         'status' => 'PAID',
                         'paid_at' => now(),
@@ -258,13 +260,15 @@ class LandingController extends Controller
                     ]);
                     
                     // Activate Student Logic
-                    $studentService->processPaymentSuccess($transaction->student);
-                });
-
-                session()->flash('success', 'Status Pembayaran Berhasil Diperbarui!');
-                $transaction->refresh();
+                    // Pass transaction to ensure idempotent next_billing_date calculation
+                    $studentService->processPaymentSuccess($transaction->student, $transaction);
+                    
+                    session()->flash('success', 'Status Pembayaran Berhasil Diperbarui!');
+                }
             }
-        }
+        });
+        
+        $transaction = \App\Models\Transaction::where('invoice_code', $invoice_code)->firstOrFail();
         
         // Cek jika ada parameter sukses dari redirect Xendit
         if (request('status') === 'success') {
@@ -307,5 +311,21 @@ class LandingController extends Controller
         ]);
 
         return redirect()->route('home')->with('success', 'Pembayaran Berhasil! Siswa telah aktif.');
+    }
+
+    public function schedules()
+    {
+        // Fetch all schedules with relations
+        $schedules = \App\Models\ClassSchedule::with(['branch', 'package'])
+            ->get()
+            ->sortBy(function($schedule) {
+                // Custom sort: Day (Mon-Sun) then Time
+                $days = ['monday' => 1, 'tuesday' => 2, 'wednesday' => 3, 'thursday' => 4, 'friday' => 5, 'saturday' => 6, 'sunday' => 7];
+                return [$days[strtolower($schedule->day_of_week)] ?? 8, $schedule->start_time];
+            });
+
+        $settings = \App\Models\SiteSetting::pluck('value', 'key');
+
+        return view('landing.schedules.index', compact('schedules', 'settings'));
     }
 }

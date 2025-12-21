@@ -59,6 +59,28 @@
             <span class="font-medium text-sm">Kelola Paket</span>
         </a>
 
+        {{-- Menu Kategori Paket (BARU) --}}
+        <a href="{{ route('admin.package-categories.index') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('admin.package-categories.*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('admin.package-categories.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+            <span class="font-medium text-sm">Kategori Paket</span>
+        </a>
+
+        {{-- Menu Jadwal Belajar (BARU) --}}
+        <a href="{{ route('admin.schedules.index') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('admin.schedules.*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('admin.schedules.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span class="font-medium text-sm">Jadwal Belajar</span>
+        </a>
+
         {{-- Menu Cabang --}}
         <a href="{{ route('admin.branches.index') }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('admin.branches.*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">

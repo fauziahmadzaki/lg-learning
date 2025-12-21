@@ -17,11 +17,13 @@ class PackageController extends Controller
     {
         $search = $request->input('search');
 
-        $packages = Package::with('branch')->withCount('students')
+        $packages = Package::with(['branch', 'packageCategory'])->withCount('students')
             ->when($search, function ($query, $search) {
                 return $query->where('name', 'like', "%{$search}%")
                              ->orWhere('category', 'like', "%{$search}%")
-                             ->orWhere('grade', 'like', "%{$search}%");
+                             ->orWhereHas('packageCategory', function($q) use($search){
+                                $q->where('name', 'like', "%{$search}%");
+                             });
             })
             // Filter Kategori (Strict)
             ->when($request->category, function ($query, $category) {
@@ -30,9 +32,8 @@ class PackageController extends Controller
             ->latest()
             ->get();
     
-        // 2. Ambil daftar Grade dari konstanta Model untuk bikin tombol Tabs
-        // Kita pakai keys-nya saja (SD, SMP, SMA, dll)
-        $grades = array_keys(Package::GRADES);
+        // 2. Ambil daftar Kategori dari DB
+        $grades = \App\Models\PackageCategory::pluck('name', 'id');
 
         if ($request->ajax()) {
             return view('admin.package._list', compact('packages', 'grades'))->render();
@@ -44,7 +45,8 @@ class PackageController extends Controller
     public function create()
     {
         $branches = Branch::all();
-        return view('admin.package.create', compact('branches'));
+        $categories = \App\Models\PackageCategory::all(); // Load dynamic categories
+        return view('admin.package.create', compact('branches', 'categories'));
     }
 
     public function store(StorePackageRequest $request)
@@ -57,9 +59,10 @@ class PackageController extends Controller
 
             Package::create([
                 'branch_id'     => $request->branch_id,
+                'package_category_id' => $request->package_category_id, // New Column
                 'name'          => $request->name,
                 'category'      => $request->category, 
-                'grade'         => $request->grade,
+                // 'grade'         => $request->grade, // Removed
                 'price'         => $request->price,
                 'duration'      => $request->duration * 30, // Convert Bulan ke Hari
                 'session_count' => $request->session_count,
@@ -67,8 +70,6 @@ class PackageController extends Controller
                 'benefits'      => $request->benefits,
                 'image'         => $imagePath,
             ]);
-
-
         });
 
         return redirect()->route('admin.packages.index')->with('success', 'Paket berhasil dibuat!');
@@ -77,10 +78,9 @@ class PackageController extends Controller
     public function edit(Package $package)
     {
         $branches = Branch::all();
-        $branches = Branch::all();
+        $categories = \App\Models\PackageCategory::all();
         
-        
-        return view('admin.package.edit', compact('package', 'branches'));
+        return view('admin.package.edit', compact('package', 'branches', 'categories'));
     }
 
     public function update(UpdatePackageRequest $request, Package $package)

@@ -42,9 +42,18 @@ class StudentService
             if ($data['status'] === 'pending') {
                 $dueDate = $joinDate->copy();
                 
-                // Set Next Billing Date to First Billing Date (Join Date)
-                // Logic processPaymentSuccess will advance it to next cycle upon payment.
-                $student->update(['next_billing_date' => $dueDate]);
+                // Set Next Billing Date to NEXT PERIOD (Month 2) immediately
+                // preventing duplicate bill generation for Month 1
+                $nextPeriod = $dueDate->copy();
+                if ($data['billing_cycle'] == 'weekly') {
+                    $nextPeriod->addWeek();
+                } elseif ($data['billing_cycle'] == 'monthly') {
+                    $nextPeriod->addMonth();
+                } elseif ($data['billing_cycle'] == 'full') {
+                    $nextPeriod->addDays($package->duration);
+                }
+
+                $student->update(['next_billing_date' => $nextPeriod]);
 
                 // Buat Bill
                 $bill = Bill::create([
@@ -52,7 +61,7 @@ class StudentService
                     'branch_id' => $package->branch_id,
                     'title'      => 'Tagihan Pendaftaran - ' . $package->name,
                     'amount'     => $amount,
-                    'due_date'   => $today, // Harus bayar sekarang
+                    'due_date'   => $dueDate, // Match next_billing_date to prevent duplicates
                     'status'     => 'UNPAID',
                 ]);
 
@@ -177,22 +186,61 @@ class StudentService
      * 3. Update status
      * 4. Send WhatsApp (Optional)
      */
-    public function processPaymentSuccess(Student $student, bool $sendNotification = true): void
+    public function processPaymentSuccess(Student $student, /* ?Transaction */ $transaction = null, bool $sendNotification = true): void
     {
         $package = $student->package;
         if (!$package) return;
 
-        // 1. Advance Next Billing Date
-        // Jika null (transaksi pertama), mulai dari join_date atau now()
-        $currentDate = $student->next_billing_date ?? $student->join_date ?? now();
-        $nextDate = $currentDate->copy();
+        // Determine Base Date for calculation
+        // Default to current next_billing_date logic
+        $baseDate = $student->next_billing_date ?? $student->join_date ?? now();
 
+        // IDEMPOTENCY FIX:
+        // Try to derive base date from the Bill associated with this Transaction.
+        // This ensures that paying "Bill of Jan 20" ALWAYS results in "Next Bill = Feb 20",
+        // regardless of how many times this function runs (Race Condition Proof).
+        if ($transaction) {
+            // Load bills if not loaded
+            if (!$transaction->relationLoaded('bills')) {
+                $transaction->load('bills');
+            }
+            
+            $bill = $transaction->bills->first();
+            if ($bill) {
+                // Base date is the bill's due date
+                $baseDate = $bill->due_date->copy();
+            }
+        }
+
+        // Calculate Next Pending Date
+        $nextDate = $baseDate->copy();
+
+        // Advance Logic
         if ($student->billing_cycle === 'weekly') {
             $nextDate->addWeek();
         } elseif ($student->billing_cycle === 'monthly') {
             $nextDate->addMonth();
         } elseif ($student->billing_cycle === 'full') {
             $nextDate->addDays($package->duration);
+        }
+
+        // Logic check for Pending (Registration)
+        // If we used Bill Date (Dec 20), Next is Jan 20.
+        // If Register logic set next to Jan 20 already.
+        // Jan 20 = Jan 20. Update is fine.
+        
+        // Safety: Only update if nextDate is > current stored date
+        // (Prevent reverting if transactions come out of order, though unlikely for sequential bills)
+        $currentStoredDate = $student->next_billing_date;
+        
+        // Special Case: Initial Registration where we Pre-Advanced to Month 2.
+        // If paying Dec 20 Bill. Next = Jan 20.
+        // Current Stored = Jan 20.
+        // Result: Jan 20. No change. Correct.
+
+        $finalNextDate = $nextDate;
+        if ($currentStoredDate && $currentStoredDate->gt($nextDate)) {
+             $finalNextDate = $currentStoredDate;
         }
 
         // 2. Check Finish Condition
@@ -206,27 +254,23 @@ class StudentService
         $status = 'active';
 
         // Jika next billing sudah melewati atau sama dengan end date, berarti selesai
-        if ($endDate && $nextDate->gte($endDate)) {
-            $status = 'finished'; // Selesai
-            // Opsional: set next_billing_date ke null atau biarkan sebagai history kapan terakhir lunas
+        if ($endDate && $finalNextDate->gte($endDate)) {
+            $status = 'finished'; 
         }
 
         $student->update([
             'status' => $status,
-            'next_billing_date' => $nextDate
+            'next_billing_date' => $finalNextDate
         ]);
 
         // SEND WHATSAPP NOTIFICATION
         if ($sendNotification) {
-            // 1. Payment Success
             try {
-                if ($student->parent_phone || $student->name) { // Fallback if phone stored in student table
-                    // Load latest transaction for invoice link
-                    $lastTransaction = $student->transactions()->latest()->first();
-                    $invoiceUrl = $lastTransaction ? $lastTransaction->payment_url : '-';
-                    // If payment url is '#' (manual), maybe use route to show payment
-                    if ($lastTransaction && $lastTransaction->payment_url == '#') {
-                        $invoiceUrl = route('landing.payment.show', ['invoice_code' => $lastTransaction->invoice_code, 'status' => 'success']);
+                if ($student->parent_phone || $student->name) { 
+                    $invoiceUrl = $transaction ? $transaction->payment_url : '-';
+                    // If payment url is '#' (manual), maybe use route
+                    if ($transaction && $transaction->payment_url == '#') {
+                        $invoiceUrl = route('landing.payment.show', ['invoice_code' => $transaction->invoice_code, 'status' => 'success']);
                     }
 
                     $waService = app(\App\Services\WhatsApp\WhatsAppServiceInterface::class);
@@ -234,7 +278,7 @@ class StudentService
                     
                     $portalLink = $student->portal_link;
                     $msgPayment = "Pembayaran Diterima!\n\n"
-                        . "Halo {$student->name}, pembayaran untuk paket {$package->name} telah berhasil.\n"
+                        . "Halo {$student->name}, pembayaran untuk paket {$package->name} telah berhasil ({$baseDate->format('d M Y')}).\n"
                         . "Invoice: {$invoiceUrl}\n"
                         . "Portal Siswa: {$portalLink}\n\n"
                         . "Terima kasih.";

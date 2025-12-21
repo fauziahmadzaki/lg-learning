@@ -55,9 +55,8 @@ class StudentController extends Controller
         // Data untuk Filter Dropdown
         $branches = \App\Models\Branch::all();
         $packages = Package::all();
-        // Ambil list grade unik dari konstanta di Model Package, atau hardcode jika perlu
-        // Kita pakai yang konsisten dengan PackageController
-        $grades = array_keys(Package::GRADES ?? ['SD' => 'SD', 'SMP' => 'SMP', 'SMA' => 'SMA']);
+        // Ambil list grade unik dari PackageCategory
+        $grades = \App\Models\PackageCategory::pluck('name', 'name');
 
         // --- LOGIKA LIVE SEARCH ---
         if ($request->ajax()) {
@@ -70,7 +69,8 @@ class StudentController extends Controller
     public function create()
     {
         $packages = Package::with('branch')->get();
-        return view('admin.student.create', compact('packages'));
+        $grades = \App\Models\PackageCategory::pluck('name', 'name');
+        return view('admin.student.create', compact('packages', 'grades'));
     }
 
     public function store(StoreStudentRequest $request, StudentService $studentService)
@@ -86,8 +86,9 @@ class StudentController extends Controller
     public function edit(Student $student)
     {
         $packages = Package::with('branch')->get();
+        $grades = \App\Models\PackageCategory::pluck('name', 'name');
         // $student->load('package'); // Tidak perlu load pivot packages lagi
-        return view('admin.student.edit', compact('student', 'packages'));
+        return view('admin.student.edit', compact('student', 'packages', 'grades'));
     }
 
     public function update(UpdateStudentRequest $request, Student $student, StudentService $studentService)
@@ -121,7 +122,37 @@ class StudentController extends Controller
             }
         ]);
 
-        return view('admin.student.show', compact('student'));
+        // Check if Period Over
+        $isPeriodOver = false;
+        if ($student->package && $student->join_date) {
+            $endDate = $student->join_date->copy();
+            
+            // Logic Weekly/Monthly same as Service
+            if ($student->billing_cycle === 'weekly') {
+                 $weeks = floor($student->package->duration / 7);
+                 $weeks = ($weeks < 1) ? 1 : $weeks;
+                 $endDate->addWeeks($weeks);
+            } else {
+                 $endDate->addDays($student->package->duration);
+            }
+
+            // Condition: 
+            // 1. Status finished
+            // 2. Or Next Billing Date >= End Date
+            // 3. Or Next Billing Date is NULL (meaning finished usually, but could be error? No, logic says null = finished)
+            
+            if ($student->status === 'finished') {
+                $isPeriodOver = true;
+            } elseif ($student->next_billing_date && $student->next_billing_date->gte($endDate)) {
+                $isPeriodOver = true;
+            } elseif (is_null($student->next_billing_date) && $student->status !== 'pending') {
+                // If active but null date? Should not happen unless manual edit.
+                // Assuming null date + not pending = finished.
+                $isPeriodOver = true;
+            }
+        }
+
+        return view('admin.student.show', compact('student', 'isPeriodOver'));
     }
 
     public function destroy(Student $student)

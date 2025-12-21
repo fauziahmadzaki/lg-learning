@@ -27,7 +27,7 @@
                     'description' => $p->description,
                     'price' => $p->price,
                     'price_formatted' => number_format($p->price, 0, ',', '.'),
-                    'grade' => $p->grade,
+                    'grade' => $p->packageCategory->name ?? 'Umum',
                     'category' => $p->category,
                     'branch_id' => $p->branch_id,
                     'branch_name' => $p->branch->name ?? '',

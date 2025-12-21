@@ -11,6 +11,7 @@ use Database\Seeders\BranchSeeder;
 use Database\Seeders\PackageSeeder;
 use Database\Seeders\StudentSeeder;
 use Database\Seeders\TransactionSeeder;
+use Database\Seeders\PackageCategorySeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -53,6 +54,7 @@ class DatabaseSeeder extends Seeder
         // PackageSeeder needs to run BEFORE StudentSeeder
         $this->call([
             TutorSeeder::class,   // Tutors
+            PackageCategorySeeder::class, // Categories
             PackageSeeder::class, // Packages
             StudentSeeder::class, // Students + Attach Package
             TransactionSeeder::class, // Transactions

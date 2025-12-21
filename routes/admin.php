@@ -23,6 +23,7 @@ Route::middleware(['auth', 'verified', 'central.admin'])
     Route::resource('paket', PackageController::class)->names('packages')->parameters([
         'paket' => 'package'
     ]);
+    Route::resource('paket-kategori', \App\Http\Controllers\PackageCategoryController::class)->names('package-categories');
     Route::resource('siswa', StudentController::class)->names('students')->parameters([
         'siswa' => 'student'
     ]);
@@ -32,6 +33,11 @@ Route::middleware(['auth', 'verified', 'central.admin'])
     Route::post('/siswa/{student}/bill/{bill}/pay', [StudentController::class, 'payBillManually'])->name('students.bills.pay_manual');
     Route::resource('/transaksi', TransactionController::class)->names('transactions')->parameters([
         'transaksi' => 'transaction'
+    ]);
+    
+    // Manajemen Jadwal
+    Route::resource('jadwal', \App\Http\Controllers\Admin\ScheduleController::class)->names('schedules')->parameters([
+        'jadwal' => 'schedule'
     ]);
     
     Route::get('/laporan', [ReportController::class, 'index'])->name('reports.index');

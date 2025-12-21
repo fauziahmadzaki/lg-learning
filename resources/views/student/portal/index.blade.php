@@ -71,7 +71,58 @@
 
                 {{-- Tab Content: Bill --}}
                 <div x-show="activeTab === 'bills'" x-transition.opacity>
-                    @if($student->bills->where('status', '!=', 'PAID')->count() > 0)
+                    @if($student->status === 'finished')
+                        {{-- Finished State --}}
+                        <div class="bg-indigo-50 p-8 rounded-xl shadow-sm text-center border border-indigo-100 mb-6">
+                            <div class="w-16 h-16 bg-white p-2 rounded-full mx-auto mb-4 shadow-sm relative">
+                                <div class="w-full h-full bg-indigo-100 rounded-full flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                </div>
+                                <div class="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-1 border-2 border-white">
+                                    <svg class="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                </div>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-900">Program Selesai!</h3>
+                            <p class="text-gray-600 mt-2 max-w-sm mx-auto">
+                                Selamat! Ananda <strong>{{ $student->name }}</strong> telah menyelesaikan program belajar <strong>{{ $student->package->name ?? '' }}</strong>.
+                            </p>
+                        </div>
+
+                        {{-- Still show bills if any UNPAID exist, just in case --}}
+                        @if($student->bills->where('status', '!=', 'PAID')->count() > 0)
+                            <div class="mb-4">
+                                <h4 class="text-sm font-bold text-gray-500 uppercase mb-3 text-center">Tunggakan Tersisa</h4>
+                                @foreach($student->bills->where('status', '!=', 'PAID') as $bill)
+                                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 border-l-4 border-l-red-500 mb-3 opacity-75 grayscale hover:grayscale-0 transition">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <h3 class="font-bold text-gray-800">{{ $bill->title }}</h3>
+                                                <p class="text-xs text-gray-500 mt-1">Jatuh Tempo: {{ $bill->due_date->format('d M Y') }}</p>
+                                            </div>
+                                            <div class="text-right">
+                                                <p class="font-bold text-red-600">Rp {{ number_format($bill->amount, 0, ',', '.') }}</p>
+                                                <span class="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold uppercase">{{ $bill->status }}</span>
+                                            </div>
+                                        </div>
+                                        {{-- Action Pay --}}
+                                        <div class="mt-3 pt-3 border-t border-gray-100 text-right">
+                                            @if($bill->transaction && $bill->transaction->payment_url)
+                                                <a href="{{ $bill->transaction->payment_url }}" target="_blank" class="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center justify-end gap-1">
+                                                    Bayar Sekarang &rarr;
+                                                </a>
+                                            @else
+                                                <span class="text-xs text-gray-400 italic">Link pembayaran belum tersedia</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                           {{-- If no bills, show nothing more or a history prompt --}}
+                           <p class="text-center text-xs text-gray-400 mt-4">Semua administrasi telah lunas.</p> 
+                        @endif
+
+                    @elseif($student->bills->where('status', '!=', 'PAID')->count() > 0)
                         <div class="space-y-3">
                             @foreach($student->bills->where('status', '!=', 'PAID') as $bill)
                                 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 border-l-4 border-l-red-500">
@@ -105,6 +156,9 @@
                             </div>
                             <h3 class="font-bold text-gray-900">Tidak Ada Tagihan</h3>
                             <p class="text-sm text-gray-500">Semua administrasi aman terkendali 😎</p>
+                            @if($student->status == 'active')
+                                <p class="text-xs text-indigo-500 mt-2">Tagihan selanjutnya: {{ $student->next_billing_date ? $student->next_billing_date->format('d M Y') : '-' }}</p>
+                            @endif
                         </div>
                     @endif
                 </div>

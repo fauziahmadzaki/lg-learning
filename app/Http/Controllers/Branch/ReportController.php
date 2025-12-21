@@ -148,7 +148,7 @@ class ReportController extends Controller
         }
 
         $students = $query->latest()->paginate(20)->withQueryString();
-        $grades = array_keys(Package::GRADES);
+        $grades = \App\Models\PackageCategory::pluck('name', 'name');
 
         return view('branch.report.student', compact('branch', 'students', 'grades'));
     }

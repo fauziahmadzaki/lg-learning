@@ -16,6 +16,7 @@ Route::get('/paket', [LandingController::class, 'packages'])->name('packages.ind
 Route::get('/paket/{package}', [LandingController::class, 'showPackage'])->name('packages.show');
 Route::get('/paket/{package}/daftar', [LandingController::class, 'registrationForm'])->name('packages.register');
 Route::get('/galeri', [LandingController::class, 'gallery'])->name('gallery.index');
+Route::get('/info-jadwal', [LandingController::class, 'schedules'])->name('schedules.index');
 Route::get('/pengajar', [LandingController::class, 'tutors'])->name('tutors.index');
 Route::post('/daftar', [LandingController::class, 'storeRegistration'])->name('landing.packages.store');
 Route::get('/pembayaran/{invoice_code}', [LandingController::class, 'showPayment'])->name('landing.payment.show');

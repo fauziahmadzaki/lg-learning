@@ -107,13 +107,13 @@
                     Semua Paket
                 </button>
 
-                {{-- Loop Tab Jenjang (SD, SMP, SMA, dll) --}}
-                @foreach($grades as $gradeKey)
-                <button @click="activeTab = '{{ $gradeKey }}'" :class="activeTab === '{{ $gradeKey }}' 
+                {{-- Loop Tab Jenjang (Dynamic Categories) --}}
+                @foreach($grades as $id => $name)
+                <button @click="activeTab = '{{ $id }}'" :class="activeTab == '{{ $id }}' 
                             ? 'border-indigo-500 text-indigo-600' 
                             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                     class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200">
-                    Jenjang {{ $gradeKey }}
+                    {{ $name }}
                 </button>
                 @endforeach
             </nav>

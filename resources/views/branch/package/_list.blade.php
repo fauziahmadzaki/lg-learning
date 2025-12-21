@@ -2,7 +2,7 @@
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
     @forelse ($packages as $package)
-    <div x-show="activeTab === 'SEMUA' || activeTab === '{{ $package->grade }}'"
+            <div x-show="activeTab === 'SEMUA' || activeTab == '{{ $package->package_category_id }}'"
         x-transition.opacity.duration.300ms
         class="group bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col relative">
 
@@ -32,7 +32,7 @@
             <div class="absolute bottom-3 left-3">
                 <span
                     class="bg-gray-900/60 backdrop-blur text-white text-[10px] font-bold px-2 py-0.5 rounded border border-white/20">
-                    {{ $package->grade }}
+                    {{ $package->packageCategory->name ?? 'Umum' }}
                 </span>
             </div>
 

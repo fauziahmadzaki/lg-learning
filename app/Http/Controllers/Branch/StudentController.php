@@ -51,7 +51,7 @@ class StudentController extends Controller
         // Data for Filters
         // Only packages from this branch
         $packages = Package::where('branch_id', $branch->id)->get();
-        $grades = array_keys(Package::GRADES ?? ['SD' => 'SD', 'SMP' => 'SMP', 'SMA' => 'SMA']);
+        $grades = \App\Models\PackageCategory::pluck('name', 'name');
 
         if ($request->ajax()) {
             return view('branch.student._list', compact('students', 'branch'))->render();
@@ -64,7 +64,8 @@ class StudentController extends Controller
     {
         // Only packages from this branch
         $packages = Package::where('branch_id', $branch->id)->with('branch')->get();
-        return view('branch.student.create', compact('branch', 'packages'));
+        $grades = \App\Models\PackageCategory::pluck('name', 'name');
+        return view('branch.student.create', compact('branch', 'packages', 'grades'));
     }
 
     public function store(StoreStudentRequest $request, Branch $branch, StudentService $studentService)
@@ -95,7 +96,8 @@ class StudentController extends Controller
         }
 
         $packages = Package::where('branch_id', $branch->id)->with('branch')->get();
-        return view('branch.student.edit', compact('branch', 'student', 'packages'));
+        $grades = \App\Models\PackageCategory::pluck('name', 'name');
+        return view('branch.student.edit', compact('branch', 'student', 'packages', 'grades'));
     }
 
     public function update(UpdateStudentRequest $request, Branch $branch, Student $student, StudentService $studentService)

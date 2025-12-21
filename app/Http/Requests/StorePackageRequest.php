@@ -30,7 +30,7 @@ class StorePackageRequest extends FormRequest
         return [
             'name'          => 'required|string|max:255',
             'branch_id'     => 'required|exists:branches,id',
-            'grade'         => 'required|string|max:50', // Misal: 12 SMA
+            'package_category_id' => 'required|exists:package_categories,id',
             'price'         => 'required|numeric|min:0',
             'duration'      => 'required|integer|min:1', // Dalam Hari
             'session_count' => 'required|integer|min:1', // Jumlah Pertemuan

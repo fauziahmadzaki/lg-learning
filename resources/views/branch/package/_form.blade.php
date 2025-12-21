@@ -1,4 +1,4 @@
-@props(['package' => null, 'branch'])
+@props(['package' => null, 'branch', 'categories'])
 
 <div x-data="{
         benefits: @js(old('benefits') ?? ($package?->benefits ?? [''])),
@@ -122,16 +122,17 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
             <div>
-                <x-input-label for="grade" :value="__('Jenjang Pendidikan')" />
-                <select id="grade" name="grade"
+                <x-input-label for="package_category_id" :value="__('Jenjang Pendidikan')" />
+                <select id="package_category_id" name="package_category_id"
                     class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                    @foreach(\App\Models\Package::GRADES as $value => $label)
-                    <option value="{{ $value }}" @selected(old('grade', $package?->grade) == $value)>
-                        {{ $label }}
+                    <option value="" disabled selected>-- Pilih Jenjang --</option>
+                    @foreach($categories as $cat)
+                    <option value="{{ $cat->id }}" @selected(old('package_category_id', $package?->package_category_id) == $cat->id)>
+                        {{ $cat->name }}
                     </option>
                     @endforeach
                 </select>
-                <x-input-error class="mt-2" :messages="$errors->get('grade')" />
+                <x-input-error class="mt-2" :messages="$errors->get('package_category_id')" />
             </div>
 
             <div>

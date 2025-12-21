@@ -23,13 +23,15 @@ class PackageController extends Controller
                 return $query->where(function($q) use ($search) {
                      $q->where('name', 'like', "%{$search}%")
                        ->orWhere('category', 'like', "%{$search}%")
-                       ->orWhere('grade', 'like', "%{$search}%");
+                       ->orWhereHas('packageCategory', function($qc) use ($search){
+                            $qc->where('name', 'like', "%{$search}%");
+                       });
                 });
             })
             ->latest()
             ->paginate(10); // Use pagination for branch view
     
-        $grades = array_keys(Package::GRADES);
+        $grades = \App\Models\PackageCategory::pluck('name', 'id');
 
         if ($request->ajax()) {
             return view('branch.package._list', compact('packages', 'grades', 'branch'))->render();
@@ -40,7 +42,8 @@ class PackageController extends Controller
 
     public function create(Branch $branch)
     {
-        return view('branch.package.create', compact('branch'));
+        $categories = \App\Models\PackageCategory::all();
+        return view('branch.package.create', compact('branch', 'categories'));
     }
 
     public function store(StorePackageRequest $request, Branch $branch)
@@ -53,9 +56,10 @@ class PackageController extends Controller
 
             Package::create([
                 'branch_id'     => $branch->id, // Force Branch ID
+                'package_category_id' => $request->package_category_id,
                 'name'          => $request->name,
                 'category'      => $request->category, 
-                'grade'         => $request->grade,
+                // 'grade'         => $request->grade,
                 'price'         => $request->price,
                 'duration'      => $request->duration * 30, // Convert Bulan ke Hari
                 'session_count' => $request->session_count,
@@ -73,8 +77,10 @@ class PackageController extends Controller
         if ($package->branch_id !== $branch->id) {
             abort(403);
         }
+        
+        $categories = \App\Models\PackageCategory::all();
 
-        return view('branch.package.edit', compact('package', 'branch'));
+        return view('branch.package.edit', compact('package', 'branch', 'categories'));
     }
 
     public function update(UpdatePackageRequest $request, Branch $branch, Package $package)
