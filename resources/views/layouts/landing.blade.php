@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    @php
+        $siteSettingsLogo = \App\Models\SiteSetting::get('site_logo');
+        $siteFavicon = $siteSettingsLogo ? asset('storage/' . $siteSettingsLogo) : asset('img/image.png');
+    @endphp
+    <link rel="icon" href="{{ $siteFavicon }}">
     <title>{{ isset($title) ? $title . ' - ' . config('app.name', 'L-G Learning') : config('app.name', 'L-G Learning') . ' - Bimbel Terbaik' }}</title>
 
     <!-- Fonts -->
@@ -28,8 +33,13 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center">
                 {{-- Logo --}}
+                {{-- Logo --}}
                 <a href="{{ route('home') }}" class="flex items-center gap-2 group">
-                    <img src="{{ asset('img/image.png') }}" class="w-10 h-10 object-contain" alt="Logo">
+                    @php
+                        $siteLogo = \App\Models\SiteSetting::get('site_logo');
+                        $logoUrl = $siteLogo ? asset('storage/' . $siteLogo) : asset('img/image.png');
+                    @endphp
+                    <img src="{{ $logoUrl }}" class="w-10 h-10 object-contain" alt="Logo">
                     <span class="text-xl font-bold tracking-tight text-gray-900 group-hover:text-orange-600 transition">
                         L-G <span class="text-orange-500">Learning</span>
                     </span>
@@ -166,7 +176,7 @@
                 {{-- Brand --}}
                 <div class="col-span-1 md:col-span-1">
                     <div class="flex items-center gap-2 mb-4">
-                        <img src="{{ asset('img/image.png') }}" class="w-8 h-8 object-contain" alt="Logo">
+                        <img src="{{ $logoUrl }}" class="w-8 h-8 object-contain" alt="Logo">
                         <span class="text-lg font-bold text-gray-900">L-G Learning</span>
                     </div>
                     <p class="text-sm text-gray-500 leading-relaxed mb-6">

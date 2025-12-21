@@ -60,7 +60,7 @@
                         @endif
                         <div class="absolute top-3 right-3">
                             <span class="bg-white/90 backdrop-blur px-2 py-1 rounded-md text-xs font-bold shadow-sm text-gray-700 border border-gray-100">
-                                {{ $package->grade }}
+                                {{ $package->packageCategory->name ?? '-' }}
                             </span>
                         </div>
                     </div>

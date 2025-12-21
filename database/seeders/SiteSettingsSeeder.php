@@ -14,6 +14,15 @@ class SiteSettingsSeeder extends Seeder
     public function run(): void
     {
         $settings = [
+            // GENERAL / IDENTITY
+            [
+                'key' => 'site_logo',
+                'value' => null, // Default null, will use fallback in view
+                'type' => 'image',
+                'group' => 'general',
+                'hint' => 'Upload logo website (Format: PNG/JPG). Jika kosong, akan menggunakan logo default.'
+            ],
+
             // HERO SECTION
             [
                 'key' => 'hero_title',

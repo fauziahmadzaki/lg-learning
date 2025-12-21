@@ -152,7 +152,13 @@
                             </td>
                             <td class="px-6 py-4 text-right font-medium text-green-600">Rp {{ number_format($trx->total_amount, 0, ',', '.') }}</td>
                             <td class="px-6 py-4">
-                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold">{{ $trx->status }}</span>
+                                @if($trx->status == 'PAID')
+                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold">LUNAS</span>
+                                @elseif($trx->status == 'PENDING')
+                                    <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-bold">PENDING</span>
+                                @else
+                                    <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-bold">{{ $trx->status }}</span>
+                                @endif
                             </td>
                         </tr>
                         @empty

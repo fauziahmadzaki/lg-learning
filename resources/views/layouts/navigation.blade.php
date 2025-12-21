@@ -30,7 +30,8 @@
 
             <div class="flex items-center gap-2 sm:gap-4">
 
-                <button
+                {{-- NOTIFICATION DISABLED --}}
+                {{-- <button
                     class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition relative">
                     <span class="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -38,8 +39,17 @@
                             d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
                         </path>
                     </svg>
-                </button>
-
+                </button> --}}
+                <!-- Logo -->
+                <div class="shrink-0 flex items-center">
+                    <a href="{{ Auth::user()->dashboard_url }}">
+                        @php
+                            $siteLogo = \App\Models\SiteSetting::get('site_logo');
+                            $logoUrl = $siteLogo ? asset('storage/' . $siteLogo) : asset('img/image.png');
+                        @endphp
+                        <img src="{{ $logoUrl }}" alt="Logo" class="block h-10 w-auto fill-current text-gray-800" />
+                    </a>
+                </div>
                 <div class="relative ms-3">
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
@@ -85,7 +95,7 @@
                                 <x-dropdown-link :href="route('logout')"
                                     onclick="event.preventDefault(); this.closest('form').submit();"
                                     class="text-red-600 hover:bg-red-50">
-                                    {{ __('Log Out') }}
+                                    {{ __('Keluar') }}
                                 </x-dropdown-link>
                             </form>
                         </x-slot>
@@ -95,10 +105,11 @@
         </div>
     </div>
 
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden lg:hidden border-t border-gray-100 bg-white shadow-lg max-h-[calc(100vh-5rem)] overflow-y-auto"
-        x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2"
+    <div :class="{'block': open, 'hidden': ! open}" 
+        class="hidden lg:hidden border-t border-gray-100 bg-white shadow-lg fixed bottom-0 left-0 right-0 top-20 overflow-y-auto z-40"
+        x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2"
         x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150"
-        x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2">
+        x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-2">
 
 @php
             $isBranchRoute = request()->routeIs('branch.*');
@@ -241,7 +252,7 @@
                     <x-responsive-nav-link :href="route('logout')"
                         onclick="event.preventDefault(); this.closest('form').submit();"
                         class="text-red-600 rounded-md">
-                        {{ __('Log Out') }}
+                        {{ __('Keluar') }}
                     </x-responsive-nav-link>
                 </form>
             </div>

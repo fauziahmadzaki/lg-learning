@@ -69,7 +69,7 @@
         </div>
 
         {{-- SECTION: Data Table Container --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
             id="transaction-list-container">
             @include('branch.transaction._list')
         </div>

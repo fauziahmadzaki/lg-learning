@@ -183,7 +183,7 @@
                 <div class="flex gap-2 items-center">
                     <x-text-input id="session_count" name="session_count" type="number" class="mt-1 block w-full"
                         :value="old('session_count', $package?->session_count)" placeholder="8" />
-                    <span class="text-gray-500">Sesi</span>
+                    <span class="text-gray-500 text-sm whitespace-nowrap">Sesi / Minggu</span>
                 </div>
                 <x-input-error class="mt-2" :messages="$errors->get('session_count')" />
             </div>

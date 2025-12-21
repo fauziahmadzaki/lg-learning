@@ -30,7 +30,16 @@ class DashboardController extends Controller
             ->whereYear('paid_at', $currentYear)
             ->sum('total_amount');
 
-        return view('branch.dashboard', compact('branch', 'totalStudents', 'activePackages', 'monthlyIncome'));
+        // Schedules Today
+        $today = strtolower(now()->locale('en')->dayName);
+        $todaysSchedules = \App\Models\ClassSchedule::where('branch_id', $branch->id)
+            ->where('day_of_week', $today)
+            ->with('package')
+            ->orderBy('start_time')
+            ->limit(5)
+            ->get();
+
+        return view('branch.dashboard', compact('branch', 'totalStudents', 'activePackages', 'monthlyIncome', 'todaysSchedules'));
     }
 
     public function courses(Branch $branch)

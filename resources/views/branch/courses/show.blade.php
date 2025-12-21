@@ -53,9 +53,17 @@
                         {{ $student->join_date ? $student->join_date->format('d M Y') : '-' }}
                     </td>
                     <td class="px-6 py-4">
-                        @if($student->status == 'ACTIVE')
+                        @if($student->status == 'active')
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Active
+                                Aktif
+                            </span>
+                        @elseif($student->status == 'pending')
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                Pending
+                            </span>
+                        @elseif($student->status == 'finished')
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                Selesai
                             </span>
                         @else
                              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">

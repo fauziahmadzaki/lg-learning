@@ -149,6 +149,15 @@
                 beberapa paket sekaligus.
             </p>
             <x-input-error class="mt-2" :messages="$errors->get('packages')" />
+            @if($errors->has('packages.*'))
+                <ul class="mt-2 text-sm text-red-600 space-y-1">
+                    @foreach($errors->get('packages.*') as $errorsArray)
+                        @foreach($errorsArray as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    @endforeach
+                </ul>
+            @endif
         </div>
     </div>
 
@@ -158,21 +167,36 @@
 
         {{-- Loop input berdasarkan state Alpine 'jobs' --}}
         <template x-for="(job, index) in jobs" :key="index">
-            <div class="flex gap-2 mb-2">
-                <x-text-input name="jobs[]" type="text" class="block w-full"
-                    placeholder="Contoh: Guru Matematika SMAN 1" x-model="jobs[index]" />
+            <div class="flex flex-col mb-2">
+                <div class="flex gap-2">
+                    <x-text-input name="jobs[]" type="text" class="block w-full"
+                        placeholder="Contoh: Guru Matematika SMAN 1" x-model="jobs[index]" />
 
-                <button type="button" @click="removeJob(index)"
-                    class="text-red-500 hover:text-red-700 px-2 border border-red-200 rounded hover:bg-red-50"
-                    title="Hapus baris">
-                    &times;
-                </button>
+                    <button type="button" @click="removeJob(index)"
+                        class="text-red-500 hover:text-red-700 px-2 border border-red-200 rounded hover:bg-red-50"
+                        title="Hapus baris">
+                        &times;
+                    </button>
+                </div>
+                {{-- Show error for specific index if possible (Alpine logic vs Blade logic is tricky here) --}}
+                {{-- Since we can't easily map JS index to Blade error bag dynamically without complex JS, we display general errors below --}}
             </div>
         </template>
 
         <button type="button" @click="addJob()" class="text-sm text-blue-600 hover:underline mt-1">
             + Tambah Pekerjaan Lain
         </button>
+        
+        <x-input-error class="mt-2" :messages="$errors->get('jobs')" />
+        @if($errors->has('jobs.*'))
+            <ul class="mt-2 text-sm text-red-600 space-y-1">
+                @foreach($errors->get('jobs.*') as $errorsArray)
+                    @foreach($errorsArray as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                @endforeach
+            </ul>
+        @endif
     </div>
 
     {{-- FITUR PREVIEW IMAGE --}}

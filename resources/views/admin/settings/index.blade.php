@@ -9,7 +9,7 @@
 <x-app-layout :breadcrumbs="$breadcrumbs">
     <x-slot name="pageTitle">Pengaturan Website</x-slot>
 
-    <div class="py-12" x-data="{ activeTab: 'hero' }">
+    <div class="py-12" x-data="{ activeTab: 'general' }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
             @if(session('success'))
@@ -25,6 +25,11 @@
                     {{-- Tabs Navigation --}}
                     <div class="border-b border-gray-200 mb-6">
                         <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                            <button @click="activeTab = 'general'" 
+                                :class="activeTab === 'general' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                                class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                                Identitas Website
+                            </button>
                             <button @click="activeTab = 'hero'" 
                                 :class="activeTab === 'hero' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                                 class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
@@ -56,6 +61,45 @@
                     <form action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                         @csrf
                         @method('PUT')
+
+                        {{-- Tab: General / Identity --}}
+                        <div x-show="activeTab === 'general'" class="space-y-4">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">Identitas Website</h3>
+                            
+                            @foreach($settings['general'] ?? [] as $setting)
+                                <div>
+                                    <x-input-label :for="$setting->key" :value="ucwords(str_replace(['site_', '_'], ['',' '], $setting->key))" />
+                                    
+                                    @if($setting->type === 'image')
+                                        <div class="mt-2" x-data="{ preview: '{{ $setting->value ? (str_contains($setting->value, 'http') ? $setting->value : asset('storage/' . $setting->value)) : '' }}' }">
+                                            <input type="file" id="{{ $setting->key }}" name="{{ $setting->key }}" 
+                                                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                                                @change="preview = URL.createObjectURL($event.target.files[0])">
+                                            
+                                            <div class="mt-2 text-xs text-gray-500">Logo saat ini:</div>
+                                            {{-- Show Preview or Default --}}
+                                            <div class="mt-2 relative inline-block p-2 bg-gray-100 rounded border border-gray-200">
+                                                <img :src="preview ? preview : '{{ asset('img/image.png') }}'" class="h-20 w-auto object-contain">
+                                            </div>
+
+                                            @if($setting->value)
+                                                <div class="mt-2 flex items-center">
+                                                    <input type="checkbox" id="delete_{{ $setting->key }}" name="delete_buttons[]" value="{{ $setting->key }}" 
+                                                        class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500">
+                                                    <label for="delete_{{ $setting->key }}" class="ml-2 text-sm text-red-600 font-medium">Hapus Logo & Gunakan Default</label>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <x-text-input id="{{ $setting->key }}" name="{{ $setting->key }}" type="text" class="mt-1 block w-full" :value="old($setting->key, $setting->value)" />
+                                    @endif
+
+                                    @if($setting->hint)
+                                        <p class="mt-1 text-sm text-gray-500">{{ $setting->hint }}</p>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
 
                         {{-- Tab: Hero --}}
                         <div x-show="activeTab === 'hero'" class="space-y-4">

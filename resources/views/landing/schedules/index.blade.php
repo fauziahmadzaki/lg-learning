@@ -22,7 +22,7 @@
                 <div class="text-sm text-gray-500">
                     <span class="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800">
                         <span class="w-2 h-2 mr-2 bg-green-400 rounded-full animate-pulse"></span>
-                        Status: Updated
+                        Status: Terupdate
                     </span>
                 </div>
             </div>
@@ -36,7 +36,7 @@
                             <th class="px-6 py-4 font-bold">Kelas / Paket</th>
                             <th class="px-6 py-4 font-bold">Cabang</th>
                             <th class="px-6 py-4 font-bold">Status</th>
-                            <th class="px-6 py-4 font-bold text-right">Action</th>
+                            <th class="px-6 py-4 font-bold text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100">

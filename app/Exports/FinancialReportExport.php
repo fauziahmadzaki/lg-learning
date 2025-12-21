@@ -89,7 +89,7 @@ class FinancialReportExport implements FromCollection, WithHeadings, WithMapping
             'B' => 18, // No. Invoice
             'C' => 25, // Nama Siswa
             'D' => 15, // Cabang
-            'E' => 15, // Paket
+            'E' => 23, // Paket
             'F' => 18, // Nominal
             'G' => 20, // Metode Pembayaran
             'H' => 15, // Waktu Pembayaran

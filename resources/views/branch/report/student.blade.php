@@ -79,7 +79,11 @@
                             </td>
                             <td class="px-6 py-4">
                                 @if($student->status == 'active')
-                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold">Active</span>
+                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold">Aktif</span>
+                                @elseif($student->status == 'inactive')
+                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-bold">Tidak Aktif</span>
+                                @elseif($student->status == 'pending')
+                                    <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-bold">Pending</span>
                                 @else
                                     <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-bold">{{ ucfirst($student->status) }}</span>
                                 @endif

@@ -1,29 +1,53 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Profile') }}
-        </h2>
-    </x-slot>
+@php
+    $breadcrumbs = [
+        'Profil' => null,
+    ];
+@endphp
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-profile-information-form')
-                </div>
-            </div>
+<x-app-layout pageTitle="Profil Saya" :breadcrumbs="$breadcrumbs">
+    
+    <div class="space-y-10">
+        {{-- Profile Information --}}
+        <section>
+            <header class="mb-4">
+                <h2 class="text-lg font-medium text-gray-900">
+                    {{ __('Informasi Profil') }}
+                </h2>
+                <p class="mt-1 text-sm text-gray-600">
+                    {{ __('Perbarui informasi profil dan alamat email akun Anda.') }}
+                </p>
+            </header>
+            @include('profile.partials.update-profile-information-form')
+        </section>
 
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.update-password-form')
-                </div>
-            </div>
+        <x-section-border />
 
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <div class="max-w-xl">
-                    @include('profile.partials.delete-user-form')
-                </div>
-            </div>
-        </div>
+        {{-- Update Password --}}
+        <section>
+            <header class="mb-4">
+                <h2 class="text-lg font-medium text-gray-900">
+                    {{ __('Perbarui Kata Sandi') }}
+                </h2>
+                <p class="mt-1 text-sm text-gray-600">
+                    {{ __('Pastikan akun Anda menggunakan kata sandi yang panjang dan acak agar tetap aman.') }}
+                </p>
+            </header>
+            @include('profile.partials.update-password-form')
+        </section>
+
+        <x-section-border />
+
+        {{-- Delete User --}}
+        <section>
+            <header class="mb-4">
+                <h2 class="text-lg font-medium text-gray-900">
+                    {{ __('Hapus Akun') }}
+                </h2>
+                <p class="mt-1 text-sm text-gray-600">
+                    {{ __('Setelah akun Anda dihapus, semua sumber daya dan datanya akan dihapus secara permanen.') }}
+                </p>
+            </header>
+            @include('profile.partials.delete-user-form')
+        </section>
     </div>
 </x-app-layout>

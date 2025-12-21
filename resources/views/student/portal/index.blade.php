@@ -32,7 +32,7 @@
                          @else
                             <span class="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold uppercase rounded-full">Tidak Aktif</span>
                          @endif
-                         <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold uppercase rounded-full">{{ $student->package->name ?? 'No Package' }}</span>
+                         <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold uppercase rounded-full">{{ $student->package->name ?? 'Tanpa Paket' }}</span>
                     </div>
 
                      {{-- Tombol Lihat Jadwal (Future Feature) --}}
@@ -180,7 +180,7 @@
                                 <div class="flex justify-between items-end">
                                     <div>
                                         <p class="text-sm text-gray-600">{{ $trx->transaction_date->format('d M Y') }}</p>
-                                        <p class="text-xs text-gray-400">{{ $trx->payment_method ?? 'Unknown Method' }}</p>
+                                        <p class="text-xs text-gray-400">{{ $trx->payment_method ?? 'Metode Tidak Diketahui' }}</p>
                                     </div>
                                     <p class="font-bold text-gray-900">Rp {{ number_format($trx->total_amount, 0, ',', '.') }}</p>
                                 </div>

@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot name="pageTitle">Overview</x-slot>
+    <x-slot name="pageTitle">Ringkasan</x-slot>
 
     <div class="space-y-6">
 
