@@ -134,7 +134,29 @@ class StudentController extends Controller
             }
         ]);
 
-        return view('branch.student.show', compact('branch', 'student'));
+        // Check if Period Over (Copy logic from Central Admin)
+        $isPeriodOver = false;
+        if ($student->package && $student->join_date) {
+            $endDate = $student->join_date->copy();
+            
+            if ($student->billing_cycle === 'weekly') {
+                 $weeks = floor($student->package->duration / 7);
+                 $weeks = ($weeks < 1) ? 1 : $weeks;
+                 $endDate->addWeeks($weeks);
+            } else {
+                 $endDate->addDays($student->package->duration);
+            }
+
+            if ($student->status === 'finished') {
+                $isPeriodOver = true;
+            } elseif ($student->next_billing_date && $student->next_billing_date->gte($endDate)) {
+                $isPeriodOver = true;
+            } elseif (is_null($student->next_billing_date) && $student->status !== 'pending') {
+                $isPeriodOver = true;
+            }
+        }
+
+        return view('branch.student.show', compact('branch', 'student', 'isPeriodOver'));
     }
 
     /**
@@ -258,12 +280,20 @@ class StudentController extends Controller
                    $portalLink = $student->portal_link;
                    $amountRp = number_format($amount, 0, ',', '.');
                    
-                   $msg = "Tagihan Baru (Cabang)\n\n"
-                        . "Halo Orang Tua {$student->name}, Cabang telah membuat tagihan baru: '{$title}'.\n"
-                        . "Jumlah: Rp{$amountRp}\n"
-                        . "Silakan cek dan bayar melalui portal siswa:\n"
-                        . "{$portalLink}\n\n"
-                        . "Terima kasih.";
+                   // Schedule Link
+                   $scheduleLink = route('schedules.index');
+
+                   $msg = "🔔 *TAGIHAN BARU DITERBITKAN* 🔔\n\n"
+                        . "Halo Orang Tua *{$student->name}*,\n"
+                        . "Tagihan baru telah diterbitkan oleh Cabang *{$branch->name}*.\n\n"
+                        . "📝 *Detail Tagihan:*\n"
+                        . "🏷️ Judul: {$title}\n"
+                        . "💰 Jumlah: Rp {$amountRp}\n\n"
+                        . "Silakan cek dan bayar melalui Portal Siswa:\n"
+                        . "👉 Portal: {$portalLink}\n"
+                        . "📅 Jadwal: {$scheduleLink}\n\n"
+                        . "ℹ️ *Info:* Klik link di atas untuk melihat detail tagihan.\n\n"
+                        . "Terima kasih! 🙏";
 
                    if ($target) {
                         $waService->sendMessage($target, $msg);
@@ -339,12 +369,18 @@ class StudentController extends Controller
                $portalLink = $student->portal_link;
                $amountRp = number_format($amount, 0, ',', '.');
                
-               $msg = "Pembayaran Tunai Diterima (Cabang)\n\n"
-                    . "Halo Orang Tua {$student->name}, pembayaran tunai untuk '{$title}' telah kami terima di Cabang {$branch->name}.\n"
-                    . "Jumlah: Rp{$amountRp}\n"
-                    . "Status: LUNAS\n"
-                    . "Portal Siswa: {$portalLink}\n\n"
-                    . "Terima kasih.";
+                // Schedule Link
+                $scheduleLink = route('schedules.index');
+                
+                $msg = "✅ *PEMBAYARAN TUNAI DITERIMA!* ✅\n\n"
+                     . "Halo Orang Tua *{$student->name}*,\n"
+                     . "Pembayaran tunai untuk tagihan *{$title}* telah kami terima di Cabang {$branch->name}.\n\n"
+                     . "💰 Jumlah: Rp {$amountRp}\n"
+                     . "✅ Status: *LUNAS*\n\n"
+                     . "Bukti pembayaran & jadwal belajar dapat dilihat di Portal Siswa:\n"
+                     . "👉 Portal: {$portalLink}\n"
+                     . "📅 Jadwal: {$scheduleLink}\n\n"
+                     . "Terima kasih! 🙏";
 
                if ($target) {
                     $waService->sendMessage($target, $msg);
@@ -400,12 +436,18 @@ class StudentController extends Controller
                    $portalLink = $student->portal_link;
                    $amountRp = number_format($bill->amount, 0, ',', '.');
                    
-                   $msg = "Pembayaran Manual Diterima (Cabang)\n\n"
-                        . "Halo Orang Tua {$student->name}, pembayaran untuk tagihan '{$bill->title}' telah diselesaikan secara manual oleh Cabang {$branch->name}.\n"
-                        . "Jumlah: Rp{$amountRp}\n"
-                        . "Status: LUNAS\n"
-                        . "Portal Siswa: {$portalLink}\n\n"
-                        . "Terima kasih.";
+                   // Schedule Link
+                   $scheduleLink = route('schedules.index');
+
+                   $msg = "✅ *PEMBAYARAN DITERIMA!* ✅\n\n"
+                        . "Halo Orang Tua *{$student->name}*,\n"
+                        . "Pembayaran untuk tagihan *{$bill->title}* telah diselesaikan secara manual oleh Cabang {$branch->name}.\n\n"
+                        . "💰 Jumlah: Rp {$amountRp}\n"
+                        . "✅ Status: *LUNAS*\n\n"
+                        . "Bukti pembayaran & jadwal belajar dapat dilihat di Portal Siswa:\n"
+                        . "👉 Portal: {$portalLink}\n"
+                        . "📅 Jadwal: {$scheduleLink}\n\n"
+                        . "Terima kasih! 🙏";
 
                    if ($target) {
                         $waService->sendMessage($target, $msg);

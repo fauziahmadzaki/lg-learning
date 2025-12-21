@@ -1,4 +1,4 @@
-<x-landing-layout :settings="$settings">
+<x-landing-layout :settings="$settings" title="Galeri Kegiatan">
     
     {{-- Header Section --}}
     <section class="relative pt-32 pb-12 bg-orange-50 overflow-hidden">
@@ -6,7 +6,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
             <h1 class="text-4xl font-extrabold text-gray-900 mb-4">Galeri Kegiatan</h1>
             <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                Dokumentasi keseruan dan aktivitas belajar mengajar di LG Learning.
+                Dokumentasi keseruan dan aktivitas belajar mengajar di L-G Learning.
             </p>
         </div>
     </section>

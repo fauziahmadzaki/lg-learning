@@ -1,4 +1,11 @@
-<x-app-layout :breadcrumbs="['Manajemen Tutor' => null]">
+@php
+    $breadcrumbs = [
+        'Master Data' => null,
+        'Data Tutor' => route('admin.tutors.index'),
+    ];
+@endphp
+
+<x-app-layout :breadcrumbs="$breadcrumbs">
     <x-slot name="pageTitle">Data Pengajar</x-slot>
     <div x-data="{ 
             deleteUrl: '', 

@@ -1,4 +1,11 @@
-<x-app-layout>
+@php
+    $breadcrumbs = [
+        'Master Data' => null,
+        'Jadwal Belajar' => route('admin.schedules.index'),
+    ];
+@endphp
+
+<x-app-layout :breadcrumbs="$breadcrumbs">
     <x-slot name="pageTitle">Manajemen Jadwal</x-slot>
 
     <div class="space-y-6" x-data="{ showAddModal: false }">

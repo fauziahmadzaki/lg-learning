@@ -1,4 +1,4 @@
-<x-landing-layout :settings="$settings">
+<x-landing-layout :settings="$settings" title="Tim Pengajar">
 
     <div class="h-20 bg-white"></div>
 

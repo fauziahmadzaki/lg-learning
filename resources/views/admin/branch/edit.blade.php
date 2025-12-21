@@ -1,7 +1,8 @@
 @php
 $breadcrumbs = [
-'Cabang' => route('admin.branches.index'),
-'Edit' => route('admin.branches.edit', $branch)
+    'Master Data' => null,
+    'Data Cabang' => route('admin.branches.index'),
+    'Edit' => route('admin.branches.edit', $branch)
 ];
 @endphp
 

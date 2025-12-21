@@ -154,6 +154,59 @@ class StudentService
                 $student->update(['next_billing_date' => $currentDate]);
             }
 
+
+            // --- SEND WHATSAPP NOTIFICATION (REGISTRATION) ---
+            try {
+                if ($student->parent_phone || $student->name) {
+                    $waService = app(\App\Services\WhatsApp\WhatsAppServiceInterface::class);
+                    $target = $student->parent_phone;
+                    $portalLink = $student->portal_link; // Accessor must exist
+                    
+                    // Format Message
+                    $msg = "";
+                    $passwordDefault = $student->phone ?? $student->parent_phone; // Asumsi default password
+
+                    // Schedule Link
+                    $scheduleLink = route('schedules.index');
+
+                    if ($data['status'] === 'pending') {
+                         $amountRp = number_format($amount, 0, ',', '.');
+                         $msg = "🔔 *PENDAFTARAN BERHASIL!* 🔔\n\n"
+                              . "Halo Orang Tua *{$student->name}*,\n"
+                              . "Terima kasih telah mendaftar di *LG Learning - Cabang {$package->branch->name}*.\n\n"
+                              . "📝 *Detail Pendaftaran:*\n"
+                              . "👤 Siswa: {$student->name}\n"
+                              . "📦 Paket: {$package->name}\n"
+                              . "💰 Total Tagihan: Rp {$amountRp}\n\n"
+                              . "Silakan selesaikan pembayaran melalui Portal Siswa (Link Otomatis):\n"
+                              . "👉 {$portalLink}\n\n"
+                              . "ℹ️ *Info:* Portal ini login otomatis (tanpa password), cukup klik link di atas untuk melihat tagihan & jadwal.\n\n"
+                              . "Terima kasih telah mempercayakan pendidikan putra-putri Anda bersama kami! 🙏";
+                    } else {
+                         // Active
+                         $msg = "✅ *REGISTRASI BERHASIL & AKTIF!* ✅\n\n"
+                              . "Halo Orang Tua *{$student->name}*,\n"
+                              . "Selamat bergabung! Putra-putri Anda telah resmi terdaftar di *LG Learning - Cabang {$package->branch->name}*.\n\n"
+                              . "📚 *Detail Siswa:*\n"
+                              . "👤 Nama: {$student->name}\n"
+                              . "📦 Paket: {$package->name}\n"
+                              . "✅ Status: *AKTIF*\n\n"
+                              . "Anda dapat memantau jadwal belajar dan laporan perkembangan melalui link berikut:\n"
+                              . "👉 Portal: {$portalLink}\n"
+                              . "📅 Jadwal: {$scheduleLink}\n\n"
+                              . "ℹ️ *Info:* Portal ini login otomatis (tanpa password). Simpan link ini untuk akses kapan saja.\n\n"
+                              . "Terima kasih! 🙏";
+                    }
+
+                    if ($target) {
+                        $waService->sendMessage($target, $msg);
+                    }
+                }
+            } catch (\Exception $e) {
+                // Log error but don't fail the transaction
+                \Illuminate\Support\Facades\Log::error("WA Registration Notification Failed: " . $e->getMessage());
+            }
+
             return $student;
         });
     }
@@ -277,11 +330,18 @@ class StudentService
                     $target = $student->parent_phone; 
                     
                     $portalLink = $student->portal_link;
-                    $msgPayment = "Pembayaran Diterima!\n\n"
-                        . "Halo {$student->name}, pembayaran untuk paket {$package->name} telah berhasil ({$baseDate->format('d M Y')}).\n"
-                        . "Invoice: {$invoiceUrl}\n"
-                        . "Portal Siswa: {$portalLink}\n\n"
-                        . "Terima kasih.";
+                    
+                    $scheduleLink = route('schedules.index');
+
+                    $msgPayment = "✅ *PEMBAYARAN DITERIMA!* ✅\n\n"
+                        . "Halo Orang Tua *{$student->name}*,\n"
+                        . "Pembayaran untuk paket *{$package->name}* periode *{$baseDate->format('d M Y')}* telah berhasil.\n\n"
+                        . "✅ Status: *LUNAS*\n"
+                        . "🔗 Invoice: {$invoiceUrl}\n\n"
+                        . "Bukti pembayaran & jadwal belajar dapat dilihat di Portal Siswa:\n"
+                        . "👉 Portal: {$portalLink}\n"
+                        . "📅 Jadwal: {$scheduleLink}\n\n"
+                        . "Terima kasih! 🙏";
 
                     if ($target) {
                         $waService->sendMessage($target, $msgPayment);

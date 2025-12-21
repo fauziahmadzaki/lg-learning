@@ -1,4 +1,11 @@
-<x-app-layout>
+@php
+    $breadcrumbs = [
+        'Master Data' => null,
+        'Kategori Paket' => route('admin.package-categories.index'),
+    ];
+@endphp
+
+<x-app-layout :breadcrumbs="$breadcrumbs">
     <x-slot name="pageTitle">Manajemen Kategori Paket</x-slot>
 
     <div class="max-w-7xl mx-auto">

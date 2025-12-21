@@ -1,7 +1,7 @@
 @php
 $breadcrumbs = [
-'Dashboard' => route('admin.dashboard'),
-'Log Aktivitas' => null,
+    'Laporan & Log' => null,
+    'Log Aktivitas' => route('admin.activity-logs.index'),
 ];
 @endphp
 

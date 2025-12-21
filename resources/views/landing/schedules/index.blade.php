@@ -1,4 +1,4 @@
-<x-landing-layout>
+<x-landing-layout title="Info Jadwal">
     {{-- Header Section --}}
     <div class="h-20 bg-white"></div>
 
@@ -95,7 +95,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     @if($schedule->package)
-                                        <a href="{{ route('packages.show', $schedule->package->id) }}" class="text-indigo-600 hover:text-indigo-900 hover:underline">
+                                        <a href="{{ route('packages.show', $schedule->package->id) }}" class="text-orange-600 hover:text-orange-900 hover:underline">
                                             Detail Paket &rarr;
                                         </a>
                                     @endif

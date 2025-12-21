@@ -216,10 +216,21 @@ class LandingController extends Controller
                 $target = $request->parent_phone;
                 $waService = app(\App\Services\WhatsApp\WhatsAppServiceInterface::class);
                 $portalLink = $student->portal_link;
-                $message = "Halo {$student->name}!\n\n"
-                    . "Terima kasih telah mendaftar di LG Learning ({$package->name}).\n"
-                    . "Silakan akses portal siswa Anda di sini: {$portalLink}\n\n"
-                    . "Mohon selesaikan pembayaran untuk mengaktifkan akun.";
+                $portalLink = $student->portal_link;
+                $scheduleLink = route('schedules.index');
+                $amountRp = number_format($amount, 0, ',', '.');
+                $message = "🔔 *PENDAFTARAN BERHASIL!* 🔔\n\n"
+                    . "Halo Orang Tua *{$student->name}*,\n"
+                    . "Terima kasih telah mendaftar di *LG Learning ({$package->name})*.\n\n"
+                    . "📝 *Detail Pendaftaran:*\n"
+                    . "👤 Siswa: {$student->name}\n"
+                    . "📦 Paket: {$package->name}\n"
+                    . "💰 Total Tagihan: Rp {$amountRp}\n\n"
+                    . "Silakan selesaikan pembayaran melalui Portal Siswa (Link Otomatis):\n"
+                    . "👉 Portal: {$portalLink}\n"
+                    . "📅 Jadwal: {$scheduleLink}\n\n"
+                    . "ℹ️ *Info:* Portal ini login otomatis (tanpa password), cukup klik link di atas untuk melihat tagihan & jadwal.\n\n"
+                    . "Terima kasih! 🙏";
                 
                 $waService->sendMessage($target, $message);
             }
@@ -311,6 +322,13 @@ class LandingController extends Controller
         ]);
 
         return redirect()->route('home')->with('success', 'Pembayaran Berhasil! Siswa telah aktif.');
+    }
+
+    public function contact()
+    {
+        $settings = \App\Models\SiteSetting::pluck('value', 'key');
+        $branches = Branch::all();
+        return view('landing.contact.index', compact('settings', 'branches'));
     }
 
     public function schedules()

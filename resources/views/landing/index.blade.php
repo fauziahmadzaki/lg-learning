@@ -1,4 +1,4 @@
-<x-landing-layout :settings="$settings">
+<x-landing-layout :settings="$settings" title="Beranda">
 
     {{-- HERO SECTION --}}
     <section id="home" class="relative pt-28 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-white">
@@ -9,7 +9,10 @@
         <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-yellow-100 rounded-full blur-3xl opacity-50"></div>
         <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 bg-orange-100 rounded-full blur-3xl opacity-50"></div>
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div x-data="{ show: false }" x-init="setTimeout(() => show = true, 100)" 
+             :class="show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'"
+             class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 transition-all duration-700 ease-out transform">
+            
             <div class="flex flex-col lg:flex-row items-center gap-16">
                 {{-- Text Content --}}
                 <div class="flex-1 text-center lg:text-left">
@@ -18,7 +21,7 @@
                         Bimbel Paling Favorit & Terpercaya
                     </div>
                     <h1 class="text-4xl lg:text-6xl font-extrabold text-gray-900 tracking-tight leading-tight mb-6">
-                        {{ $settings['hero_title'] ?? 'Raih Prestasi Gemilang Bersama LG Learning' }}
+                        {{ $settings['hero_title'] ?? 'Raih Prestasi Gemilang Bersama L-G Learning' }}
                     </h1>
                     <p class="text-lg text-gray-500 mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
                         {{ $settings['hero_description'] ?? 'Kami menyediakan bimbingan belajar terbaik dengan metode personal yang disesuaikan dengan kebutuhan setiap siswa.' }}
@@ -68,23 +71,50 @@
     </section>
 
     {{-- STATS SECTION --}}
-    <section class="py-12 bg-gray-50 border-y border-gray-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-12 text-center">
+    <section class="py-12 bg-gray-50 border-y border-gray-100" 
+             x-data="{ shown: false }" 
+             x-intersect.threshold.05.once="shown = true">
+             
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-700 ease-out transform"
+             :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'">
+             
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-12 text-center" 
+                 x-data="{
+                    items: [
+                        { current: 0, target: {{ $stats['students'] }}, step: Math.ceil({{ $stats['students'] }} / 50) },
+                        { current: 0, target: {{ $stats['tutors'] }}, step: Math.ceil({{ $stats['tutors'] }} / 50) },
+                        { current: 0, target: {{ $stats['branches'] }}, step: 1 },
+                        { current: 0, target: {{ $stats['packages'] }}, step: 1 }
+                    ],
+                    startAnimation() {
+                        this.items.forEach((item) => {
+                            let interval = setInterval(() => {
+                                if (item.current < item.target) {
+                                    item.current += item.step;
+                                    if(item.current > item.target) item.current = item.target;
+                                } else {
+                                    clearInterval(interval);
+                                }
+                            }, 30);
+                        });
+                    }
+                 }"
+                 x-intersect.enter.once="startAnimation()">
+                
                 <div class="space-y-2">
-                    <div class="text-4xl font-extrabold text-orange-500">{{ $stats['students'] }}</div>
+                    <div class="text-4xl font-extrabold text-orange-500" x-text="items[0].current + '+'">0</div>
                     <div class="text-sm font-medium text-gray-500 uppercase tracking-wide">Siswa Aktif</div>
                 </div>
                 <div class="space-y-2">
-                    <div class="text-4xl font-extrabold text-yellow-500">{{ $stats['tutors'] }}</div>
+                    <div class="text-4xl font-extrabold text-yellow-500" x-text="items[1].current">0</div>
                     <div class="text-sm font-medium text-gray-500 uppercase tracking-wide">Tutor Berpengalaman</div>
                 </div>
                 <div class="space-y-2">
-                    <div class="text-4xl font-extrabold text-indigo-500">{{ $stats['branches'] }}</div>
+                    <div class="text-4xl font-extrabold text-indigo-500" x-text="items[2].current">0</div>
                     <div class="text-sm font-medium text-gray-500 uppercase tracking-wide">Cabang Tersebar</div>
                 </div>
                 <div class="space-y-2">
-                    <div class="text-4xl font-extrabold text-green-500">{{ $stats['packages'] }}</div>
+                    <div class="text-4xl font-extrabold text-green-500" x-text="items[3].current">0</div>
                     <div class="text-sm font-medium text-gray-500 uppercase tracking-wide">Pilihan Paket</div>
                 </div>
             </div>
@@ -92,54 +122,71 @@
     </section>
 
     {{-- ABOUT SECTION --}}
-    <section id="about" class="py-20 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-20">
-                <span class="text-orange-500 font-bold tracking-wider uppercase text-sm">Tentang Kami</span>
-                <h2 class="text-3xl font-extrabold text-gray-900 mt-2 sm:text-4xl">{{ $settings['about_title'] ?? 'Mengapa Memilih LG Learning?' }}</h2>
-                <p class="mt-4 max-w-2xl mx-auto text-xl text-gray-500">{{ $settings['about_description'] ?? 'Kami bukan sekadar bimbel biasa. Kami adalah partner sukses akademik Anda.' }}</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-                {{-- Feature 1 --}}
-                <div class="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-300">
-                    <div class="w-14 h-14 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600 mb-6">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+    <section id="about" class="py-20 bg-white" x-data="{ shown: false }" x-intersect.threshold.10.once="shown = true">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-700 ease-out transform"
+             :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                
+                {{-- Left Side: Content & Features --}}
+                <div class="space-y-12">
+                    <div class="text-left">
+                        <span class="text-orange-500 font-bold tracking-wider uppercase text-sm">Tentang Kami</span>
+                        <h2 class="text-3xl font-extrabold text-gray-900 mt-2 sm:text-4xl">{{ $settings['about_title'] ?? 'Mengapa Memilih L-G Learning?' }}</h2>
+                        <p class="mt-4 text-lg text-gray-500 leading-relaxed">{{ $settings['about_description'] ?? 'Kami bukan sekadar bimbel biasa. Kami adalah partner sukses akademik Anda dengan pendekatan yang lebih personal, fleksibel, dan terukur.' }}</p>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">{{ $settings['feature_1_title'] ?? 'Metode Personal' }}</h3>
-                    <p class="text-gray-500 leading-relaxed">
-                        {{ $settings['feature_1_desc'] ?? 'Setiap anak unik. Kami menyesuaikan pendekatan belajar sesuai dengan gaya dan kecepatan belajar siswa.' }}
-                    </p>
+
+                    <div class="space-y-6">
+                        {{-- Feature 1 --}}
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center text-orange-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900 mb-1">{{ $settings['feature_1_title'] ?? 'Metode Personal' }}</h3>
+                                <p class="text-gray-500 text-sm">{{ $settings['feature_1_desc'] ?? 'Setiap anak unik. Kami menyesuaikan pendekatan belajar sesuai dengan gaya dan kecepatan belajar siswa.' }}</p>
+                            </div>
+                        </div>
+
+                        {{-- Feature 2 --}}
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center text-yellow-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900 mb-1">{{ $settings['feature_2_title'] ?? 'Tutor Selektif' }}</h3>
+                                <p class="text-gray-500 text-sm">{{ $settings['feature_2_desc'] ?? 'Tutor kami tidak hanya pintar akademis, tapi juga sabar dan mampu memotivasi siswa untuk berprestasi.' }}</p>
+                            </div>
+                        </div>
+
+                        {{-- Feature 3 --}}
+                        <div class="flex gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900 mb-1">{{ $settings['feature_3_title'] ?? 'Laporan Berkala' }}</h3>
+                                <p class="text-gray-500 text-sm">{{ $settings['feature_3_desc'] ?? 'Pantau perkembangan anak Anda dengan laporan progress yang detail dan transparan setiap bulannya.' }}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                {{-- Feature 2 --}}
-                <div class="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-300">
-                    <div class="w-14 h-14 bg-yellow-100 rounded-xl flex items-center justify-center text-yellow-600 mb-6">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                {{-- Right Side: Logo --}}
+                <div class="flex justify-center lg:justify-end relative">
+                    <div class="absolute inset-0 bg-orange-50 rounded-full filter blur-3xl opacity-30 transform scale-110"></div>
+                    <div class="relative bg-white p-8 rounded-3xl shadow-2xl border border-gray-100 max-w-sm w-full animate-bounce-slow" style="animation-duration: 6s;">
+                         <img src="{{ asset('img/image.png') }}" alt="L-G Learning Logo" class="w-full h-auto object-contain transform hover:scale-105 transition duration-500">
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">{{ $settings['feature_2_title'] ?? 'Tutor Selektif' }}</h3>
-                    <p class="text-gray-500 leading-relaxed">
-                        {{ $settings['feature_2_desc'] ?? 'Tutor kami tidak hanya pintar akademis, tapi juga sabar dan mampu memotivasi siswa untuk berprestasi.' }}
-                    </p>
                 </div>
 
-                {{-- Feature 3 --}}
-                <div class="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-300">
-                    <div class="w-14 h-14 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 mb-6">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">{{ $settings['feature_3_title'] ?? 'Laporan Berkala' }}</h3>
-                    <p class="text-gray-500 leading-relaxed">
-                        {{ $settings['feature_3_desc'] ?? 'Pantau perkembangan anak Anda dengan laporan progress yang detail dan transparan setiap bulannya.' }}
-                    </p>
-                </div>
             </div>
         </div>
     </section>
 
     {{-- PACKAGES SECTION --}}
-    <section id="packages" class="py-20 bg-orange-50/50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="packages" class="py-20 bg-orange-50/50" x-data="{ shown: false }" x-intersect.threshold.10.once="shown = true">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-700 ease-out transform"
+             :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'">
             <div class="text-center mb-20">
                 <span class="text-orange-500 font-bold tracking-wider uppercase text-sm">Paket Belajar</span>
                 <h2 class="text-3xl font-extrabold text-gray-900 mt-2 sm:text-4xl">Pilih Paket Sesuai Kebutuhan</h2>
@@ -221,11 +268,12 @@
     @include('landing.partials.simple_tutor_section')
 
     {{-- GALLERY / ACTIVITIES CAROUSEL SECTION --}}
-    <section id="gallery" class="py-20 bg-white overflow-hidden">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="gallery" class="py-20 bg-white overflow-hidden" x-data="{ shown: false }" x-intersect.threshold.10.once="shown = true">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-700 ease-out transform"
+             :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'">
             <div class="text-center mb-16">
                 <span class="text-orange-500 font-bold tracking-wider uppercase text-sm">Galeri & Testimoni</span>
-                <h2 class="text-3xl font-extrabold text-gray-900 mt-2 sm:text-4xl">Keseruan Belajar di LG Learning</h2>
+                <h2 class="text-3xl font-extrabold text-gray-900 mt-2 sm:text-4xl">Keseruan Belajar di L-G Learning</h2>
             </div>
 
             <div x-data="{ 
@@ -291,20 +339,21 @@
         </div>
 
     {{-- CTA SECTION --}}
-        <section class="py-20 relative overflow-hidden mt-20">
+        <section class="py-20 relative overflow-hidden mt-20" x-data="{ shown: false }" x-intersect.threshold.10.once="shown = true">
         <div class="absolute inset-0 bg-gradient-to-r from-orange-600 to-yellow-500"></div>
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
         
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center transition-all duration-700 ease-out transform"
+             :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'">
             <h2 class="text-3xl font-extrabold text-white sm:text-4xl mb-6">Siap Memulai Perjalanan Sukses?</h2>
             <p class="text-xl text-orange-100 mb-10 max-w-2xl mx-auto">
-                Jangan tunda prestasi anak Anda. Bergabunglah dengan ratusan siswa lainnya yang telah merasakan manfaat belajar di LG Learning.
+                Jangan tunda prestasi anak Anda. Bergabunglah dengan ratusan siswa lainnya yang telah merasakan manfaat belajar di L-G Learning.
             </p>
             <div class="flex flex-col sm:flex-row justify-center gap-4">
-                <a href="{{ route('register') }}" class="px-8 py-4 bg-white text-orange-600 font-bold rounded-xl shadow-lg hover:bg-gray-50 transition transform hover:scale-105">
+                <a href="/paket" class="px-8 py-4 bg-white text-orange-600 font-bold rounded-xl shadow-lg hover:bg-gray-50 transition transform hover:scale-105">
                     Daftar Sekarang
                 </a>
-                <a href="#contact" class="px-8 py-4 bg-orange-700 bg-opacity-30 text-white font-bold rounded-xl border border-orange-400 hover:bg-opacity-50 transition">
+                <a href="/kontak" class="px-8 py-4 bg-orange-700 bg-opacity-30 text-white font-bold rounded-xl border border-orange-400 hover:bg-opacity-50 transition">
                     Hubungi Kami
                 </a>
             </div>
@@ -312,8 +361,9 @@
     </section>
 
     {{-- CONTACT SECTION --}}
-    <section id="contact" class="py-20 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="contact" class="py-20 bg-white" x-data="{ shown: false }" x-intersect.threshold.10.once="shown = true">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-700 ease-out transform"
+             :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
                 <div>
                     <span class="text-orange-500 font-bold tracking-wider uppercase text-sm">Hubungi Kami</span>

@@ -1,6 +1,7 @@
     {{-- TUTORS SECTION (Simple) --}}
-    <section class="py-20 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section class="py-20 bg-white" x-data="{ shown: false }" x-intersect.threshold.10.once="shown = true">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 transition-all duration-700 ease-out transform"
+             :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-20'">
             <div class="text-center mb-16">
                 <span class="text-orange-500 font-bold tracking-wider uppercase text-sm">Tim Pengajar</span>
                 <h2 class="text-3xl font-extrabold text-gray-900 mt-2 sm:text-4xl text-center">Tutor Berpengalaman</h2>

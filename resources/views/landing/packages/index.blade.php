@@ -1,4 +1,4 @@
-<x-landing-layout>
+<x-landing-layout title="Paket Belajar">
 
     <div class="h-20 bg-white"></div>
 

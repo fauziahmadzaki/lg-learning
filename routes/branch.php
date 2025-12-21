@@ -41,4 +41,10 @@ Route::middleware(['auth', 'verified', 'branch.check'])
         Route::resource('paket', \App\Http\Controllers\Branch\PackageController::class)
             ->names('packages')
             ->parameters(['paket' => 'package']);
+        // Transaction History (New)
+        Route::controller(\App\Http\Controllers\Branch\TransactionController::class)->group(function() {
+            Route::get('transaksi', 'index')->name('transactions.index');
+            Route::get('transaksi/{transaction}', 'show')->name('transactions.show');
+        });
+
     });

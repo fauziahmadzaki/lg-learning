@@ -23,6 +23,13 @@ class StorePackageRequest extends FormRequest
                 })),
             ]);
         }
+
+        // Fix for Branch Context: Merge branch_id from route if available
+        if ($this->route('branch')) {
+            $this->merge([
+                'branch_id' => $this->route('branch')->id,
+            ]);
+        }
     }
 
     public function rules(): array

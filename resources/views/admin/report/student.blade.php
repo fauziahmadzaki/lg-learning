@@ -1,14 +1,15 @@
-<x-app-layout>
-    <div x-data>
-        <div class="sm:flex sm:items-center sm:justify-between mb-6">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-800">Laporan Data Siswa</h1>
-                <p class="text-sm text-gray-500">
-                    Laporan lengkap data siswa dengan filter cabang dan kelas.
-                </p>
-            </div>
-        </div>
+@php
+    $breadcrumbs = [
+        'Laporan & Log' => null,
+        'Laporan Siswa' => route('admin.reports.students'),
+    ];
+@endphp
 
+<x-app-layout :breadcrumbs="$breadcrumbs">
+    <x-slot name="pageTitle">Laporan Data Siswa</x-slot>
+
+    <div x-data>
+        
         {{-- Filter Section --}}
         <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
             <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">

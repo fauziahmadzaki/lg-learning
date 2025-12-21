@@ -36,10 +36,11 @@
                     </div>
 
                      {{-- Tombol Lihat Jadwal (Future Feature) --}}
-                     <button onclick="alert('Fitur Jadwal akan segera hadir! Silakan hubungi admin cabang untuk info jadwal.')" class="w-full sm:w-auto px-6 py-2 bg-orange-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-orange-200 hover:bg-orange-600 transition flex items-center justify-center gap-2 mx-auto">
+                     {{-- Tombol Lihat Jadwal --}}
+                     <a href="{{ route('schedules.index') }}" class="w-full sm:w-auto px-6 py-2 bg-orange-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-orange-200 hover:bg-orange-600 transition flex items-center justify-center gap-2 mx-auto">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         Lihat Jadwal Belajar
-                     </button>
+                     </a>
                 </div>
             </div>
 

@@ -1,4 +1,11 @@
-<x-app-layout :breadcrumbs="['Paket Bimbel' => null]">
+@php
+    $breadcrumbs = [
+        'Master Data' => null,
+        'Paket Belajar' => route('admin.packages.index'),
+    ];
+@endphp
+
+<x-app-layout :breadcrumbs="$breadcrumbs">
     <x-slot name="pageTitle">Daftar Paket Belajar</x-slot>
 
     {{-- SETUP ALPINE JS: Gabungan Delete Modal + Tabs Filter --}}

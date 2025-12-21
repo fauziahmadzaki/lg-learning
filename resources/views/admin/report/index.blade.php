@@ -1,4 +1,13 @@
-<x-app-layout>
+@php
+    $breadcrumbs = [
+        'Laporan & Log' => null,
+        'Laporan Keuangan' => route('admin.reports.index'),
+    ];
+@endphp
+
+<x-app-layout :breadcrumbs="$breadcrumbs">
+    <x-slot name="pageTitle">Laporan Keuangan</x-slot>
+
     <div x-data="{ 
         period: '{{ request('period', 'this_month') }}',
         toggleCustom() {
@@ -7,8 +16,7 @@
     }">
         <div class="sm:flex sm:items-center sm:justify-between mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Laporan Keuangan</h1>
-                <p class="text-sm text-gray-500">
+                 <p class="text-sm text-gray-500">
                     Periode: {{ $start->format('d M Y') }} s/d {{ $end->format('d M Y') }}
                 </p>
             </div>

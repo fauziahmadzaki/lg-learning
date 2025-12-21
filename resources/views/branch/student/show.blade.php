@@ -150,20 +150,17 @@ $breadcrumbs = [
                                         // LOGIKA BARU: Tri-State (Lunas Selesai, Belum Lunas, atau Masih Jalan)
                                         $statusDisplay = 'ONGOING'; // Default
                                         
-                                        if ($student->package && $student->join_date && $student->next_billing_date) {
-                                            $endDate = $student->join_date->copy()->addDays($student->package->duration);
-                                            $isPeriodOver = $student->next_billing_date->gte($endDate);
+                                        // $isPeriodOver passed from Controller
+                                        if ($isPeriodOver) {
                                             $hasUnpaidBills = $student->bills->where('status', '!=', 'PAID')->count() > 0;
                                             
-                                            if ($isPeriodOver) {
-                                                if (!$hasUnpaidBills) {
-                                                    $statusDisplay = 'FINISHED_PAID'; // Lunas & Selesai
-                                                } else {
-                                                    $statusDisplay = 'FINISHED_UNPAID'; // Selesai tapi nunggak
-                                                }
+                                            if (!$hasUnpaidBills) {
+                                                $statusDisplay = 'FINISHED_PAID'; // Lunas & Selesai
+                                            } else {
+                                                $statusDisplay = 'FINISHED_UNPAID'; // Selesai tapi nunggak
                                             }
                                         }
-                                        
+
                                         // Compatibility variable for existing UI logic below
                                         $isFullyPaid = ($statusDisplay === 'FINISHED_PAID');
                                     @endphp

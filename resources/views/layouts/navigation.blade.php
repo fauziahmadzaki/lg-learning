@@ -95,49 +95,121 @@
         </div>
     </div>
 
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden lg:hidden border-t border-gray-100 bg-white shadow-lg"
+    <div :class="{'block': open, 'hidden': ! open}" class="hidden lg:hidden border-t border-gray-100 bg-white shadow-lg max-h-[calc(100vh-5rem)] overflow-y-auto"
         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2"
         x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150"
         x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2">
 
+@php
+            $isBranchRoute = request()->routeIs('branch.*');
+            // Try to get branch from Route Parameter first (for Admin viewing Branch), then from User (for Branch Admin)
+            $currentBranch = request()->route('branch') ?? (Auth::user()->branch_id ? Auth::user()->branch : null);
+        @endphp
+
         <div class="pt-2 pb-3 space-y-1">
-            @if(Auth::user()->isCentralAdmin())
+            @if($isBranchRoute && $currentBranch)
+                {{-- MENU CABANG (Context-Aware) --}}
+                
+                @if(Auth::user()->isCentralAdmin())
+                    <x-responsive-nav-link :href="route('admin.dashboard')" class="bg-indigo-50 text-indigo-700 font-bold border-l-4 border-indigo-500">
+                        &larr; {{ __('Kembali ke Dashboard Pusat') }}
+                    </x-responsive-nav-link>
+                @endif
+
+                <x-responsive-nav-link :href="route('branch.dashboard', $currentBranch)" :active="request()->routeIs('branch.dashboard')">
+                    {{ __('Dashboard Cabang') }}
+                </x-responsive-nav-link>
+
+                <div class="px-4 pt-2 pb-1 text-xs text-gray-400 font-bold uppercase">Akademik</div>
+                
+                <x-responsive-nav-link :href="route('branch.students.index', $currentBranch)" :active="request()->routeIs('branch.students.*')">
+                    {{ __('Data Siswa') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('branch.packages.index', $currentBranch)" :active="request()->routeIs('branch.packages.*')">
+                    {{ __('Paket Belajar') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('branch.courses.index', $currentBranch)" :active="request()->routeIs('branch.courses.*')">
+                    {{ __('Kelas & Jadwal') }}
+                </x-responsive-nav-link>
+
+                <div class="px-4 pt-2 pb-1 text-xs text-gray-400 font-bold uppercase">Keuangan</div>
+
+                <x-responsive-nav-link :href="route('branch.transactions.index', $currentBranch)" :active="request()->routeIs('branch.transactions.*')">
+                    {{ __('Riwayat Transaksi') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('branch.reports.index', $currentBranch)" :active="request()->routeIs('branch.reports.index')">
+                    {{ __('Laporan Pemasukan') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('branch.reports.students', $currentBranch)" :active="request()->routeIs('branch.reports.students')">
+                    {{ __('Laporan Siswa') }}
+                </x-responsive-nav-link>
+
+            @elseif(Auth::user()->isCentralAdmin())
+                {{-- MENU ADMIN PUSAT --}}
                 <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                     {{ __('Dashboard') }}
                 </x-responsive-nav-link>
 
                 <div class="px-4 pt-2 pb-1 text-xs text-gray-400 font-bold uppercase">Master Data</div>
-                <x-responsive-nav-link :href="route('admin.branches.index')"
-                    :active="request()->routeIs('admi.branches.*')">
-                    {{ __('Kelola Cabang') }}
+                
+                <x-responsive-nav-link :href="route('admin.students.index')" :active="request()->routeIs('admin.students.*')">
+                    {{ __('Data Siswa') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.tutors.index')" :active="request()->routeIs('admi.tutors.*')">
-                    {{ __('Kelola Tutor') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.packages.index')"
-                    :active="request()->routeIs('admi.packages.*')">
-                    {{ __('Kelola Paket') }}
+                
+                <x-responsive-nav-link :href="route('admin.tutors.index')" :active="request()->routeIs('admin.tutors.*')">
+                    {{ __('Data Tutor') }}
                 </x-responsive-nav-link>
 
-                <div class="px-4 pt-2 pb-1 text-xs text-gray-400 font-bold uppercase">Keuangan & Laporan</div>
-                <x-responsive-nav-link :href="route('admin.transactions.index')"
-                    :active="request()->routeIs('admin.transactions.*')">
+                <x-responsive-nav-link :href="route('admin.packages.index')" :active="request()->routeIs('admin.packages.*')">
+                    {{ __('Paket Belajar') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('admin.package-categories.index')" :active="request()->routeIs('admin.package-categories.*')">
+                    {{ __('Kategori Paket') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('admin.schedules.index')" :active="request()->routeIs('admin.schedules.*')">
+                    {{ __('Jadwal Belajar') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('admin.branches.index')" :active="request()->routeIs('admin.branches.*')">
+                    {{ __('Data Cabang') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('admin.contents.index')" :active="request()->routeIs('admin.contents.*')">
+                    {{ __('Galeri & Konten') }}
+                </x-responsive-nav-link>
+
+                <div class="px-4 pt-2 pb-1 text-xs text-gray-400 font-bold uppercase">Keuangan</div>
+                
+                <x-responsive-nav-link :href="route('admin.transactions.index')" :active="request()->routeIs('admin.transactions.*')">
                     {{ __('Riwayat Transaksi') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.reports.index')"
-                    :active="request()->routeIs('admin.reports.*')">
+
+                <div class="px-4 pt-2 pb-1 text-xs text-gray-400 font-bold uppercase">Laporan & Log</div>
+                
+                <x-responsive-nav-link :href="route('admin.reports.index')" :active="request()->routeIs('admin.reports.index')">
                     {{ __('Laporan Keuangan') }}
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.reports.students')"
-                    :active="request()->routeIs('admin.reports.students')">
+                
+                <x-responsive-nav-link :href="route('admin.reports.students')" :active="request()->routeIs('admin.reports.students')">
                     {{ __('Laporan Siswa') }}
                 </x-responsive-nav-link>
 
-           @elseif(Auth::user()->branch_id)
-                {{-- Tambahkan Menu Cabang jika perlu --}}
-                <x-responsive-nav-link :href="Auth::user()->dashboard_url">
-                    {{ __('Dashboard Cabang') }}
+                <x-responsive-nav-link :href="route('admin.activity-logs.index')" :active="request()->routeIs('admin.activity-logs.index*')">
+                    {{ __('Log Aktivitas') }}
                 </x-responsive-nav-link>
+
+                <div class="px-4 pt-2 pb-1 text-xs text-gray-400 font-bold uppercase">Pengaturan</div>
+                
+                <x-responsive-nav-link :href="route('admin.settings.index')" :active="request()->routeIs('admin.settings.*')">
+                    {{ __('Pengaturan Website') }}
+                </x-responsive-nav-link>
+
            @endif
         </div>
 

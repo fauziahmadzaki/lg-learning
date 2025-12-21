@@ -146,7 +146,7 @@
                         </div>
 
                         <p class="text-xs text-center text-gray-400">
-                            Dengan mendaftar, Anda menyetujui Syarat & Ketentuan LG Learning.
+                            Dengan mendaftar, Anda menyetujui Syarat & Ketentuan L-G Learning.
                         </p>
                     </div>
                 </div>
