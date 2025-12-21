@@ -1,4 +1,4 @@
-<x-app-layout :breadcrumbs="['Manajemen Siswa' => route('students.index'), 'Tambah Baru' => null]">
+<x-app-layout :breadcrumbs="['Manajemen Siswa' => route('admin.students.index'), 'Tambah Baru' => null]">
     <x-slot name="pageTitle">Registrasi Siswa Baru</x-slot>
 
     <div class="max-w-4xl mx-auto">
@@ -15,7 +15,7 @@
                 </div>
 
                 {{-- Form Wrapper --}}
-                <form action="{{ route('students.store') }}" method="POST">
+                <form action="{{ route('admin.students.store') }}" method="POST">
                     @csrf
 
                     {{-- Panggil Partial --}}

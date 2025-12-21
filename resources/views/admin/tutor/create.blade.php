@@ -1,4 +1,4 @@
-<x-app-layout :breadcrumbs="['Manajemen Tutor' => route('tutors.index'), 'Tambah Baru' => null]">
+<x-app-layout :breadcrumbs="['Manajemen Tutor' => route('admin.tutors.index'), 'Tambah Baru' => null]">
     <x-slot name="pageTitle">Tambah Tutor Baru</x-slot>
 
     <div class="max-w-4xl mx-auto">
@@ -16,7 +16,7 @@
                 </div>
 
                 {{-- FORM CREATE --}}
-                <form action="{{ route('tutors.store') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('admin.tutors.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
 
                     {{--

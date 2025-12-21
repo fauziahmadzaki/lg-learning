@@ -12,6 +12,9 @@ class TutorSeeder extends Seeder
 {
     public function run(): void
     {
+        // Ambil salah satu cabang untuk assigned tutor (contoh: Unit Kemiri atau Random)
+        // Pastikan BranchSeeder dijalankan SEBELUM TutorSeeder di DatabaseSeeder
+        $branch = \App\Models\Branch::first() ?? \App\Models\Branch::factory()->create();
         // Data dari Spreadsheet: Nama, HP, Alamat, dan KELAS YANG DIAMPU (Array)
         $tutors = [
             [
@@ -86,13 +89,15 @@ class TutorSeeder extends Seeder
                 [
                     'name' => $data['name'],
                     'password' => Hash::make('password'),
-                    // 'role' => 'tutor', // Uncomment jika pakai role
+                    'role' => 'tutor', // Role explicitly set
+                    'branch_id' => $branch->id,
                 ]
             );
 
             // 2. Buat Data Tutor
             $tutor = Tutor::create([
                 'user_id' => $user->id,
+                'branch_id' => $branch->id,
                 'phone'   => $data['phone'],
                 'address' => $data['address'],
                 'jobs'    => ['Tentor Pengajar'], // Default job title
@@ -110,5 +115,8 @@ class TutorSeeder extends Seeder
                 }
             }
         }
+
+        // Generate Random Tutors
+        Tutor::factory(30)->create();
     }
 }

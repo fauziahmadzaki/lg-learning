@@ -46,7 +46,7 @@
                                 </div>
                             </div>
                             <div class="ml-4">
-                                <a href="{{ route('students.show', $student) }}"
+                                <a href="{{ route('admin.students.show', $student) }}"
                                     class="text-sm font-medium text-gray-900 hover:text-indigo-600 hover:underline">
                                     {{ $student->name }}
                                 </a>
@@ -66,14 +66,14 @@
                     {{-- 3. Paket (Badges) --}}
                     <td class="px-6 py-4">
                         <div class="flex flex-wrap gap-1 max-w-[200px]">
-                            @forelse($student->packages as $pkg)
+                            @if($student->package)
                             <span
                                 class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                                {{ $pkg->name }}
+                                {{ $student->package->name }}
                             </span>
-                            @empty
+                            @else
                             <span class="text-xs text-gray-400 italic">- Tidak ada paket -</span>
-                            @endforelse
+                            @endif
                         </div>
                     </td>
 
@@ -128,6 +128,11 @@
                             class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                             Pending
                         </span>
+                        @elseif($student->status == 'finished')
+                        <span
+                            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            Selesai
+                        </span>
                         @else
                         <span
                             class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
@@ -141,7 +146,7 @@
                         <div class="flex items-center justify-end gap-2">
 
                             {{-- Tombol Detail (BARU) --}}
-                            <a href="{{ route('students.show', $student) }}"
+                            <a href="{{ route('admin.students.show', $student) }}"
                                 class="text-blue-600 hover:text-blue-900 bg-blue-50 p-1.5 rounded-lg hover:bg-blue-100 transition"
                                 title="Lihat Detail">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -153,7 +158,7 @@
                             </a>
 
                             {{-- Tombol Edit --}}
-                            <a href="{{ route('students.edit', $student) }}"
+                            <a href="{{ route('admin.students.edit', $student) }}"
                                 class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 p-1.5 rounded-lg hover:bg-indigo-100 transition"
                                 title="Edit Data">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,7 +170,7 @@
 
                             {{-- Tombol Hapus --}}
                             <button
-                                @click.prevent="$dispatch('trigger-delete-modal', { url: '{{ route('students.destroy', $student) }}', name: '{{ addslashes($student->name) }}' })"
+                                @click.prevent="$dispatch('trigger-delete-modal', { url: '{{ route('admin.students.destroy', $student) }}', name: '{{ addslashes($student->name) }}' })"
                                 class="text-red-600 hover:text-red-900 bg-red-50 p-1.5 rounded-lg hover:bg-red-100 transition"
                                 title="Hapus Data">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

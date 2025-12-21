@@ -32,5 +32,8 @@ class BranchSeeder extends Seeder
         foreach ($branches as $branch) {
             Branch::create($branch);
         }
+
+        // Create 5 Extra Random Branches
+        Branch::factory(5)->create();
     }
 }

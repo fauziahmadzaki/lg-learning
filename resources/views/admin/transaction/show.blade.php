@@ -1,9 +1,16 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Detail Transaksi') }} #{{ $transaction->invoice_code }}
-        </h2>
-    </x-slot>
+@php
+    $isBranch = request()->routeIs('branch.*');
+    $backRoute = $isBranch ? route('branch.transactions.index', request()->route('branch')) : route('admin.transactions.index');
+    
+    $breadcrumbs = [
+        'Keuangan' => null,
+        'Riwayat Transaksi' => $backRoute,
+        'Detail Invoice' => null,
+    ];
+@endphp
+
+<x-app-layout :breadcrumbs="$breadcrumbs">
+    <x-slot name="pageTitle">Detail Transaksi #{{ $transaction->invoice_code }}</x-slot>
 
     <div class="py-12">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
@@ -70,7 +77,7 @@
 
                 {{-- TOMBOL AKSI --}}
                 <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
-                    <a href="{{ route('transactions.index') }}"
+                    <a href="{{ route('admin.transactions.index') }}"
                         class="text-gray-600 hover:text-gray-900 font-medium text-sm">
                         &larr; Kembali ke Riwayat
                     </a>

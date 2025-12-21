@@ -28,21 +28,25 @@ class XenditWebhookController extends Controller
             return response()->json(['message' => 'Status not PAID, ignored'], 200);
         }
 
-        // 3. Cari Transaksi di Database
-        $transaction = Transaction::where('invoice_code', $data['external_id'])->first();
-
-        if (!$transaction) {
-            return response()->json(['message' => 'Transaction not found'], 404);
-        }
-
-        // Jika transaksi sudah PAID sebelumnya, abaikan (biar ga double process)
-        if ($transaction->status === 'PAID') {
-            return response()->json(['message' => 'Already paid'], 200);
-        }
-
-        // 4. Update Database (Pakai DB Transaction biar aman)
+        // 3. Update Database (Pakai DB Transaction & Lock)
         DB::beginTransaction();
         try {
+            // Cari Transaction dengan LOCK untuk mencegah Race Condition
+            $transaction = Transaction::where('invoice_code', $data['external_id'])
+                                    ->lockForUpdate()
+                                    ->first();
+
+            if (!$transaction) {
+                 DB::rollBack();
+                 return response()->json(['message' => 'Transaction not found'], 404);
+            }
+
+            // Jika transaksi sudah PAID sebelumnya, abaikan (biar ga double process)
+            if ($transaction->status === 'PAID') {
+                DB::rollBack();
+                return response()->json(['message' => 'Already paid'], 200);
+            }
+
             // A. Update Transaksi jadi PAID
             $transaction->update([
                 'status'         => 'PAID',
@@ -51,11 +55,19 @@ class XenditWebhookController extends Controller
                 'paid_at'        => parse_xendit_date($data['paid_at']), // Perlu helper parsing tanggal
             ]);
 
-            // B. Update Status Siswa jadi ACTIVE
-            // Karena sudah bayar, siswa resmi aktif
+            // B. Update Status Siswa & Next Billing Date (Via Service)
             $student = Student::find($transaction->student_id);
             if ($student) {
-                $student->update(['status' => 'active']);
+                // Dependency Injection manual atau via constructor. Disini manual agar minim perubahan
+                $studentService = app(\App\Services\StudentService::class);
+                // Pass transaction for idempotency
+                $studentService->processPaymentSuccess($student, $transaction);
+            }
+
+            // C. Update Status Tagihan (Bill) jadi PAID jika ada
+            $bill = \App\Models\Bill::where('transaction_id', $transaction->id)->first();
+            if ($bill) {
+                $bill->update(['status' => 'PAID']);
             }
 
             DB::commit();

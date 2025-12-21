@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Transaction extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'invoice_code',     // Kode Xendit (INV-BATCH-...)
@@ -31,6 +32,11 @@ class Transaction extends Model
     public function student()
     {
         return $this->belongsTo(Student::class);
+    }
+
+    public function package()
+    {
+        return $this->belongsTo(Package::class);
     }
 
     // Relasi: Transaksi ini membayar tagihan apa saja? (PENTING)

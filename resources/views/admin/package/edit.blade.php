@@ -1,4 +1,4 @@
-<x-app-layout :breadcrumbs="['Paket Bimbel' => route('packages.index'), 'Tambah Baru' => null]">
+<x-app-layout :breadcrumbs="['Paket Bimbel' => route('admin.packages.index'), 'Tambah Baru' => null]">
     <x-slot name="pageTitle">Edit Paket Belajar Baru</x-slot>
 
     <div class="max-w-4xl mx-auto">
@@ -15,7 +15,8 @@
 
                 {{-- FORM WRAPPER --}}
                 {{-- Penting: enctype="multipart/form-data" wajib ada untuk upload gambar --}}
-                <form action="{{ route('packages.update', $package) }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('admin.packages.update', $package) }}" method="POST"
+                    enctype="multipart/form-data">
                     @csrf
                     @method('PATCH')
 
@@ -24,8 +25,7 @@
                     @include('admin.package._form', [
                     'submit_text' => 'Simpan & Terbitkan Paket',
                     'package' => $package,
-                    'branches' => $branches,
-                    'tutors' => $tutors
+                    'branches' => $branches
                     ])
 
                 </form>

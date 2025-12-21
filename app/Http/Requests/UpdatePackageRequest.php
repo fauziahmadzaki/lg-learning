@@ -14,17 +14,23 @@ class UpdatePackageRequest extends FormRequest
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
+    protected function prepareForValidation()
+    {
+        if ($this->has('benefits')) {
+            $this->merge([
+                'benefits' => array_values(array_filter($this->benefits, function ($value) {
+                    return !is_null($value) && trim($value) !== '';
+                })),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [
             'name'          => 'required|string|max:255',
             'branch_id'     => 'required|exists:branches,id',
-            'grade'         => 'required|string|max:50', // Misal: 12 SMA
+            'package_category_id' => 'required|exists:package_categories,id',
             'price'         => 'required|numeric|min:0',
             'duration'      => 'required|integer|min:1', // Dalam Hari
             'session_count' => 'required|integer|min:1', // Jumlah Pertemuan
@@ -37,6 +43,8 @@ class UpdatePackageRequest extends FormRequest
             // Validasi Multi-Select Tutor
             'tutors'        => 'nullable|array',
             'tutors.*'      => 'exists:tutors,id', // Pastikan ID tutor valid
+
+            'category' => ['required', 'string', 'in:PRIVATE,ROMBEL'],
             
             'image'         => 'nullable|image|max:2048',
         ];

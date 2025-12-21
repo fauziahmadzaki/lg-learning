@@ -17,7 +17,7 @@ class UpdateStudentRequest extends FormRequest
     return [
         'name'           => ['required', 'string', 'max:255'],
         
-        'email'          => ['required', 'email', 'unique:students,email,' . $this->student->id],
+        'email'          => ['required', 'email'],
         
         'parent_phone'   => ['required', 'string', 'max:20'],
         'school'         => ['nullable', 'string', 'max:255'],

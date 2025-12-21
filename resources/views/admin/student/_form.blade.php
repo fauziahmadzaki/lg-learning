@@ -47,25 +47,24 @@
 
         {{-- Jenjang / Kelas (Sekolah) --}}
         <div>
-            <x-input-label for="grade" :value="__('Jenjang Sekolah')" />
-            <select id="grade" name="grade"
-                class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                <option value="" disabled selected>-- Pilih Jenjang --</option>
-                @foreach(['SD', 'SMP', 'SMA', 'ALUMNI'] as $gradeOption)
-                <option value="{{ $gradeOption }}" @selected(old('grade', $student?->grade) == $gradeOption)>
-                    {{ $gradeOption == 'ALUMNI' ? 'Alumni / Gap Year' : $gradeOption }}
-                </option>
-                @endforeach
-            </select>
+            <x-input-label for="grade" :value="__('Kelas / Jenjang Sekolah')" />
+            <x-text-input id="grade" class="block mt-1 w-full" type="text" name="grade"
+                :value="old('grade', $student?->grade)" required placeholder="Contoh: 12 SMA" />
             <x-input-error :messages="$errors->get('grade')" class="mt-2" />
         </div>
 
         {{-- Tanggal Gabung --}}
         <div>
             <x-input-label for="join_date" :value="__('Tanggal Bergabung')" />
-            <x-text-input id="join_date" class="block mt-1 w-full" type="date" name="join_date"
+            <x-text-input id="join_date" class="block mt-1 w-full {{ $student ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : '' }}" 
+                type="date" name="join_date"
                 :value="old('join_date', $student?->join_date ? $student->join_date->format('Y-m-d') : date('Y-m-d'))"
-                required />
+                required 
+                :readonly="$student ? true : false"
+                />
+            @if($student)
+                <p class="text-xs text-red-500 mt-1">* Tanggal gabung tidak dapat diubah.</p>
+            @endif
             <x-input-error :messages="$errors->get('join_date')" class="mt-2" />
         </div>
 
@@ -152,14 +151,14 @@
         {{-- B. Pilih Paket --}}
         <div>
             <x-input-label for="package_id" :value="__('Pilih Paket Belajar')" />
-            <select id="package_id" name="package_id"
-                class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+            <select id="package_id" name="package_id" {{ $student ? 'disabled' : '' }}
+                class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm {{ $student ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : '' }}">
                 <option value="" disabled selected>-- Pilih Paket Bimbel --</option>
                 @foreach($packages as $package)
-                <option value="{{ $package->id }}" @selected(old('package_id')==$package->id || ($student &&
-                    $student->packages->contains($package->id)))>
-                    {{ $package->name }}
-                    {{-- Tampilkan harga estimasi sesuai pilihan billing --}}
+                {{-- Tampilkan Nama Cabang di Dropdown --}}
+                <option value="{{ $package->id }}" @selected(old('package_id', $student?->package_id) == $package->id)>
+                    {{ $package->name }} ({{ $package->branch->name ?? 'N/A' }})
+                    
                     <span x-show="billing_cycle === 'monthly'">(Rp
                         {{ number_format($package->price, 0, ',', '.') }}/bln)</span>
                     <span x-show="billing_cycle === 'weekly'">(~Rp
@@ -167,6 +166,12 @@
                 </option>
                 @endforeach
             </select>
+            
+            {{-- Hidden Input untuk Package ID saat Edit agar tetap terkirim/validasi aman (walaupun controller ignore) --}}
+            @if($student)
+                <input type="hidden" name="package_id" value="{{ $student->package_id }}">
+                <p class="text-xs text-red-500 mt-1">* Paket tidak dapat diubah setelah pendaftaran.</p>
+            @endif
             <p class="text-xs text-gray-500 mt-1" x-show="billing_cycle === 'weekly'">
                 *Harga mingguan adalah estimasi (Harga Paket / 4).
             </p>
@@ -180,6 +185,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
+            @if(!($student && $student->status === 'active'))
             {{-- Opsi 1: PENDING --}}
             <label class="cursor-pointer relative group">
                 <input type="radio" name="status" value="pending" x-model="status" class="sr-only">
@@ -201,6 +207,7 @@
                     <p class="text-xs text-gray-500">Siswa baru mendaftar, belum ada pembayaran masuk.</p>
                 </div>
             </label>
+            @endif
 
             {{-- Opsi 2: ACTIVE --}}
             <label class="cursor-pointer relative group">
@@ -247,7 +254,7 @@
 
     {{-- TOMBOL AKSI --}}
     <div class="flex items-center justify-end gap-3 border-t border-gray-100 pt-6">
-        <a href="{{ route('students.index') }}"
+        <a href="{{ route('admin.students.index') }}"
             class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium transition">
             Batal
         </a>

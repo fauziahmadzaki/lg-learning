@@ -11,9 +11,19 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
+
     public function register(): void
     {
-        //
+        // Bind WhatsApp Service
+        $this->app->bind(\App\Services\WhatsApp\WhatsAppServiceInterface::class, function ($app) {
+            $gateway = env('WHATSAPP_GATEWAY', 'log');
+
+            if ($gateway === 'fonnte') {
+                return new \App\Services\WhatsApp\FonnteWhatsAppService();
+            }
+
+            return new \App\Services\WhatsApp\LogWhatsAppService();
+        });
     }
 
     /**
@@ -25,8 +35,6 @@ class AppServiceProvider extends ServiceProvider
             'create' => 'tambah',
         ]);
 
-        // if (str_contains(request()->url(), 'ngrok-free.app')) {
-        //     URL::forceScheme('https');
-        // }
+
     }
 }

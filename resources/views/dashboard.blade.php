@@ -1,5 +1,5 @@
-<x-app-layout :breadcrumbs="['Dashboard' => null]">
-    <x-slot name="pageTitle">Overview</x-slot>
+<x-app-layout>
+    <x-slot name="pageTitle">Ringkasan</x-slot>
 
     <div class="space-y-6">
 
@@ -18,7 +18,7 @@
             </div>
         </div>
 
-        {{-- 2. STATS GRID (Placeholder Data) --}}
+        {{-- 2. STATS GRID (Real Data) --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
             {{-- Card 1: Total Cabang --}}
@@ -32,7 +32,7 @@
                 </div>
                 <div>
                     <p class="text-xs font-medium text-gray-500 uppercase">Total Cabang</p>
-                    <h4 class="text-xl font-bold text-gray-800">12</h4>
+                    <h4 class="text-xl font-bold text-gray-800">{{ $totalBranches }}</h4>
                 </div>
             </div>
 
@@ -47,7 +47,7 @@
                 </div>
                 <div>
                     <p class="text-xs font-medium text-gray-500 uppercase">Tutor Aktif</p>
-                    <h4 class="text-xl font-bold text-gray-800">45</h4>
+                    <h4 class="text-xl font-bold text-gray-800">{{ $activeTutors }}</h4>
                 </div>
             </div>
 
@@ -60,8 +60,8 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="text-xs font-medium text-gray-500 uppercase">Paket Terjual</p>
-                    <h4 class="text-xl font-bold text-gray-800">1,204</h4>
+                    <p class="text-xs font-medium text-gray-500 uppercase">Jumlah Paket</p>
+                    <h4 class="text-xl font-bold text-gray-800">{{ number_format($totalPackages) }}</h4>
                 </div>
             </div>
 
@@ -75,8 +75,8 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="text-xs font-medium text-gray-500 uppercase">Omset (Bln)</p>
-                    <h4 class="text-xl font-bold text-gray-800">Rp 85jt</h4>
+                    <p class="text-xs font-medium text-gray-500 uppercase">Omset (Bln Ini)</p>
+                    <h4 class="text-xl font-bold text-gray-800">Rp {{ number_format($revenue, 0, ',', '.') }}</h4>
                 </div>
             </div>
         </div>
@@ -85,26 +85,80 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             {{-- Bagian Kiri: Placeholder Grafik --}}
-            <div
-                class="lg:col-span-2 border border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[300px] bg-gray-50/50">
-                <div class="bg-white p-4 rounded-full shadow-sm mb-3">
-                    <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
-                    </svg>
+            {{-- Bagian Kiri: Grafik Omset --}}
+            <div class="lg:col-span-2 border border-gray-200 rounded-xl p-6 bg-white shadow-sm flex flex-col h-full">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-gray-900 font-bold text-lg">Statistik Pendapatan</h3>
+                        <p class="text-sm text-gray-500">Grafik pemasukan 7 hari terakhir</p>
+                    </div>
                 </div>
-                <h3 class="text-gray-900 font-medium">Statistik Pendaftaran</h3>
-                <p class="text-sm text-gray-500 mt-1">Grafik pertumbuhan siswa akan ditampilkan di sini.</p>
-                <button class="mt-4 text-sm text-indigo-600 hover:underline">Lihat Laporan Lengkap &rarr;</button>
+                
+                <div class="relative flex-1 w-full min-h-[300px]">
+                    <canvas id="revenueChart"></canvas>
+                </div>
 
-                {{-- Visual Bar Palsu --}}
-                <div class="flex items-end gap-2 mt-8 h-24 opacity-50">
-                    <div class="w-8 bg-indigo-300 rounded-t h-12"></div>
-                    <div class="w-8 bg-indigo-400 rounded-t h-16"></div>
-                    <div class="w-8 bg-indigo-500 rounded-t h-20"></div>
-                    <div class="w-8 bg-indigo-600 rounded-t h-14"></div>
-                    <div class="w-8 bg-indigo-400 rounded-t h-24"></div>
-                </div>
+                <!-- Load Chart.js from CDN -->
+                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const ctx = document.getElementById('revenueChart').getContext('2d');
+                        new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: @json($chartLabels),
+                                datasets: [{
+                                    label: 'Pendapatan (Rp)',
+                                    data: @json($chartValues),
+                                    borderColor: '#4F46E5', 
+                                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.4,
+                                    fill: true,
+                                    pointBackgroundColor: '#ffffff',
+                                    pointBorderColor: '#4F46E5',
+                                    pointRadius: 4,
+                                    pointHoverRadius: 6
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: {
+                                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                        padding: 12,
+                                        cornerRadius: 8,
+                                        callbacks: {
+                                            label: function(context) {
+                                                let value = context.parsed.y;
+                                                return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
+                                            }
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        grid: { borderDash: [2, 4], color: '#f3f4f6' },
+                                        ticks: {
+                                            callback: function(value) {
+                                                return 'Rp ' + new Intl.NumberFormat('id-ID', { notation: "compact" }).format(value);
+                                            },
+                                            font: { size: 11 }
+                                        }
+                                    },
+                                    x: {
+                                        grid: { display: false },
+                                        ticks: { font: { size: 11 } }
+                                    }
+                                }
+                            }
+                        });
+                    });
+                </script>
             </div>
 
             {{-- Bagian Kanan: Aktivitas Terbaru --}}
@@ -112,76 +166,57 @@
                 <h3 class="text-gray-800 font-bold mb-4 text-sm uppercase tracking-wide">Aktivitas Terbaru</h3>
 
                 <div class="space-y-4">
-                    {{-- Item 1 --}}
-                    <div class="flex gap-3">
-                        <div class="mt-1">
-                            <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                    @forelse($recentActivities as $activity)
+                        @php
+                            $dotColor = match($activity->action) {
+                                'CREATE' => 'bg-green-500',
+                                'UPDATE' => 'bg-blue-500', 
+                                'DELETE' => 'bg-red-500',
+                                default  => 'bg-gray-500'
+                            };
+                        @endphp
+                        {{-- Item Loop --}}
+                        <div class="flex gap-3">
+                            <div class="mt-1">
+                                <div class="w-2 h-2 rounded-full {{ $dotColor }}"></div>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-800 font-medium">
+                                    <span class="font-bold">{{ $activity->user->name ?? 'System' }}</span>
+                                    <span class="text-gray-600">{{ strtolower($activity->description) }}</span>
+                                </p>
+                                <p class="text-xs text-gray-400">{{ $activity->created_at->diffForHumans() }}</p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-sm text-gray-800 font-medium">Budi Santoso mendaftar paket <span
-                                    class="text-indigo-600">Super Intensif</span></p>
-                            <p class="text-xs text-gray-400">Baru saja</p>
+                    @empty
+                        <div class="text-center py-6">
+                            <p class="text-sm text-gray-500 italic">Belum ada aktivitas tercatat.</p>
                         </div>
-                    </div>
-
-                    {{-- Item 2 --}}
-                    <div class="flex gap-3">
-                        <div class="mt-1">
-                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-800 font-medium">Pembayaran diterima dari <span
-                                    class="text-gray-600">Siti Aminah</span></p>
-                            <p class="text-xs text-gray-400">15 menit lalu</p>
-                        </div>
-                    </div>
-
-                    {{-- Item 3 --}}
-                    <div class="flex gap-3">
-                        <div class="mt-1">
-                            <div class="w-2 h-2 rounded-full bg-purple-500"></div>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-800 font-medium">Tutor baru <span class="text-gray-600">Pak
-                                    Joko</span> ditambahkan</p>
-                            <p class="text-xs text-gray-400">1 jam lalu</p>
-                        </div>
-                    </div>
-
-                    {{-- Item 4 --}}
-                    <div class="flex gap-3">
-                        <div class="mt-1">
-                            <div class="w-2 h-2 rounded-full bg-orange-500"></div>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-800 font-medium">Cabang <span class="text-gray-600">Surabaya
-                                    Barat</span> diperbarui</p>
-                            <p class="text-xs text-gray-400">Hari ini, 09:00</p>
-                        </div>
-                    </div>
+                    @endforelse
                 </div>
 
-                <button
-                    class="w-full mt-6 py-2 text-xs font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-white hover:text-indigo-600 transition">
-                    Lihat Semua Aktivitas
-                </button>
+                <a href="{{ route('admin.activity-logs.index') }}">
+                    <button
+                        class="w-full mt-6 py-2 text-xs font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-white hover:text-indigo-600 transition">
+                        Lihat Semua Aktivitas
+                    </button>
+                </a>
             </div>
-
         </div>
 
         {{-- 4. QUICK ACTIONS --}}
         <div class="pt-4 border-t border-gray-100">
             <h3 class="text-gray-800 font-bold mb-4 text-sm uppercase tracking-wide">Akses Cepat</h3>
             <div class="flex gap-3 overflow-x-auto pb-2">
-                <a href="{{ route('branches.create') }}"
+                <a href="{{ route('admin.branches.create') }}"
                     class="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium hover:bg-indigo-100 transition whitespace-nowrap">
                     + Tambah Cabang
                 </a>
-                <a href="{{ route('tutors.create') }}"
+                <a href="{{ route('admin.tutors.create') }}"
                     class="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-100 transition whitespace-nowrap">
                     + Tambah Tutor
                 </a>
-                <a href="{{ route('packages.create') }}"
+                <a href="{{ route('admin.packages.create') }}"
                     class="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition whitespace-nowrap">
                     + Buat Paket
                 </a>

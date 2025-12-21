@@ -1,7 +1,7 @@
 @php
 $breadcrumbs = [
 'Master Data' => null,
-'Siswa' => route('students.index'),
+'Siswa' => route('admin.students.index'),
 'Detail Siswa' => null,
 ];
 @endphp
@@ -19,11 +19,11 @@ $breadcrumbs = [
             </div>
 
             <div class="flex items-center gap-3">
-                <a href="{{ route('students.index') }}"
+                <a href="{{ route('admin.students.index') }}"
                     class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium transition">
                     &larr; Kembali
                 </a>
-                <a href="{{ route('students.edit', $student) }}"
+                <a href="{{ route('admin.students.edit', $student) }}"
                     class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium shadow-lg shadow-indigo-200 transition">
                     Edit Data
                 </a>
@@ -62,6 +62,10 @@ $breadcrumbs = [
                             @elseif($student->status == 'pending')
                             <span
                                 class="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold uppercase tracking-wider rounded-full">Pending</span>
+                            @elseif($student->status == 'finished')
+                            <span
+                                class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider rounded-full">Finished
+                                (Selesai)</span>
                             @else
                             <span
                                 class="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold uppercase tracking-wider rounded-full">Inactive</span>
@@ -142,23 +146,188 @@ $breadcrumbs = [
                             <div>
                                 <p class="text-xs text-gray-500 uppercase font-bold">Tagihan Berikutnya</p>
                                 <p class="text-gray-900 font-medium">
-                                    {{ $student->next_bill_date ? $student->next_bill_date->format('d F Y') : '-' }}
+                                    @php
+                                        // LOGIKA BARU: Tri-State (Lunas Selesai, Belum Lunas, atau Masih Jalan)
+                                        $statusDisplay = 'ONGOING'; // Default
+                                        
+                                        // $isPeriodOver passed from Controller
+                                        if ($isPeriodOver) {
+                                            $hasUnpaidBills = $student->bills->where('status', '!=', 'PAID')->count() > 0;
+                                            
+                                            if (!$hasUnpaidBills) {
+                                                $statusDisplay = 'FINISHED_PAID'; // Lunas & Selesai
+                                            } else {
+                                                $statusDisplay = 'FINISHED_UNPAID'; // Selesai tapi nunggak
+                                            }
+                                        }
+
+                                        // Compatibility variable for existing UI logic below
+                                        $isFullyPaid = ($statusDisplay === 'FINISHED_PAID');
+                                    @endphp
+
+                                    @if($statusDisplay === 'FINISHED_PAID')
+                                        <span class="text-green-600 font-bold flex items-center gap-1">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            LUNAS SEMUA (Selesai)
+                                        </span>
+                                    @elseif($statusDisplay === 'FINISHED_UNPAID')
+                                        <span class="text-red-600 font-bold flex items-center gap-1">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            Selesaikan Tagihan
+                                        </span>
+                                    @else
+                                        {{ $student->next_billing_date ? $student->next_billing_date->format('d F Y') : '-' }}
+                                    @endif
                                 </p>
                             </div>
 
                             <div>
                                 <p class="text-xs text-gray-500 uppercase font-bold mb-1">Paket Diambil</p>
                                 <div class="flex flex-wrap gap-2">
-                                    @forelse($student->packages as $pkg)
+                                    @if($student->package)
                                     <span
                                         class="px-2 py-1 bg-gray-100 border border-gray-200 text-gray-700 rounded text-xs font-medium">
-                                        {{ $pkg->name }}
+                                        {{ $student->package->name }}
+                                        (Rp {{ number_format($student->package->price, 0, ',', '.') }})
                                     </span>
-                                    @empty
+                                    @else
                                     <span class="text-gray-400 text-sm italic">Tidak ada paket</span>
-                                    @endforelse
+                                    @endif
                                 </div>
                             </div>
+
+                            {{-- Form Buat Tagihan (MODAL TRIGGER) --}}
+                            {{-- BUTTONS HANYA MUNCUL JIKA PERIODE BELUM HABIS --}}
+                            @if($student->package && !$isPeriodOver)
+                                <div class="pt-4 border-t border-gray-100 mt-4" x-data="">
+                                     @php
+                                        // Hitung Estimasi Nominal (Untuk Display di Modal)
+                                        $estAmount = $student->package->price;
+                                        if ($student->billing_cycle === 'weekly') $estAmount /= 4;
+                                        elseif ($student->billing_cycle === 'full') {
+                                            $m = ceil($student->package->duration / 30);
+                                            $estAmount *= ($m > 0 ? $m : 1);
+                                        }
+                                     @endphp
+                                     
+                                    @if($student->status === 'pending')
+                                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center mb-3">
+                                            <p class="text-xs text-yellow-800 font-bold">
+                                                <svg class="w-4 h-4 inline mr-1 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                                Pendaftaran pertama harus dilunasi dulu.
+                                            </p>
+                                        </div>
+                                        <div class="flex gap-2 opacity-50 cursor-not-allowed">
+                                            <button disabled class="flex-1 py-2 bg-gray-400 text-white text-xs font-bold rounded-lg cursor-not-allowed flex items-center justify-center gap-2">
+                                                Buat Tagihan
+                                            </button>
+                                            <button disabled class="flex-1 py-2 bg-gray-400 text-white text-xs font-bold rounded-lg cursor-not-allowed flex items-center justify-center gap-2">
+                                                Bayar Tunai
+                                            </button>
+                                        </div>
+                                    @else
+                                        {{-- BUTTONS ACTIVE --}}
+                                        <div class="flex gap-2">
+                                            <button
+                                                x-on:click.prevent="$dispatch('open-modal', 'create-bill-modal')"
+                                                class="flex-1 py-2 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition shadow flex items-center justify-center gap-2">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                                Buat Tagihan
+                                            </button>
+
+                                            <button
+                                                x-on:click.prevent="$dispatch('open-modal', 'pay-manual-modal')"
+                                                class="flex-1 py-2 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-700 transition shadow flex items-center justify-center gap-2">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                                Bayar Tunai
+                                            </button>
+                                        </div>
+                                    @endif
+                                    
+                                    <p class="text-[10px] text-gray-400 mt-2 text-center">
+                                        Ini akan memajukan tanggal tagihan berikutnya.
+                                    </p>
+
+                                    {{-- MODAL 1: CREATE BILL (XENDIT) --}}
+                                    <x-modal name="create-bill-modal" focusable>
+                                        <form method="POST" action="{{ route('admin.students.bill.store', $student) }}" class="p-6">
+                                            @csrf
+
+                                            <h2 class="text-lg font-medium text-gray-900">
+                                                Konfirmasi Buat Tagihan
+                                            </h2>
+
+                                            <div class="mt-4 text-sm text-gray-600 space-y-3">
+                                                <p>Anda akan membuat tagihan <strong>Menunggu Pembayaran (Pending)</strong>. Link Xendit akan dibuat otomatis.</p>
+                                                
+                                                <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                                    <div class="flex justify-between">
+                                                        <span>Paket:</span>
+                                                        <span class="font-bold">{{ $student->package->name }}</span>
+                                                    </div>
+                                                    <div class="flex justify-between mt-1">
+                                                        <span>Nominal:</span>
+                                                        <span class="font-bold text-lg">Rp {{ number_format($estAmount, 0, ',', '.') }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="mt-6 flex justify-end gap-3">
+                                                <x-secondary-button x-on:click="$dispatch('close')">
+                                                    Batal
+                                                </x-secondary-button>
+
+                                                <x-primary-button class="bg-indigo-600 hover:bg-indigo-700">
+                                                    Ya, Generate Invoice
+                                                </x-primary-button>
+                                            </div>
+                                        </form>
+                                    </x-modal>
+
+                                    {{-- MODAL 2: PAY MANUAL (CASH / RECORD LUNAS) --}}
+                                    <x-modal name="pay-manual-modal" focusable>
+                                        <form method="POST" action="{{ route('admin.students.pay.manual', $student) }}" class="p-6">
+                                            @csrf
+
+                                            <h2 class="text-lg font-medium text-gray-900">
+                                                Konfirmasi Pembayaran Tunai
+                                            </h2>
+
+                                            <div class="mt-4 text-sm text-gray-600 space-y-3">
+                                                <p>Anda akan mencatat pembayaran <strong>TUNAI / CASH</strong> untuk siswa <strong>{{ $student->name }}</strong>. Status tagihan akan langsung dicatat <strong>LUNAS</strong> dalam sistem.</p>
+                                                
+                                                <div class="bg-green-50 p-3 rounded-lg border border-green-100">
+                                                    <div class="flex justify-between">
+                                                        <span>Paket:</span>
+                                                        <span class="font-bold">{{ $student->package->name }}</span>
+                                                    </div>
+                                                    <div class="flex justify-between mt-1 pt-1 border-t border-green-200">
+                                                        <span>Total Dibayar:</span>
+                                                        <span class="font-bold text-lg text-green-700">Rp {{ number_format($estAmount, 0, ',', '.') }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="mt-6 flex justify-end gap-3">
+                                                <x-secondary-button x-on:click="$dispatch('close')">
+                                                    Batal
+                                                </x-secondary-button>
+
+                                                <x-primary-button class="bg-green-600 hover:bg-green-700 focus:ring-green-500">
+                                                    konfirmasi Pembayaran Tunai
+                                                </x-primary-button>
+                                            </div>
+                                        </form>
+                                    </x-modal>
+                                </div>
+                            @elseif($isFullyPaid)
+                                <div class="pt-4 border-t border-gray-100 mt-4 text-center">
+                                    <div class="bg-green-50 text-green-700 px-4 py-3 rounded-xl border border-green-200">
+                                        <p class="font-bold text-sm">Tagihan Selesai</p>
+                                        <p class="text-xs mt-1">Siswa telah melunasi seluruh periode paket belajar.</p>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     </div>
 
@@ -271,18 +440,60 @@ $breadcrumbs = [
                                         <td class="px-6 py-4 text-right font-bold text-gray-900">
                                             Rp {{ number_format($bill->amount, 0, ',', '.') }}
                                         </td>
-                                        <td class="px-6 py-4 text-center">
+                                    <td class="px-6 py-4 text-center">
                                             @if($bill->status == 'UNPAID')
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                                 Belum Bayar
                                             </span>
-                                            @else
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                Menunggu Konfirmasi
+                                            @elseif($bill->status == 'PENDING')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                Menunggu
                                             </span>
                                             @endif
+                                            
+                                            {{-- TOMBOL LUNASKAN (MODAL TRIGGER) --}}
+                                            <div class="mt-2" x-data="">
+                                                <button x-on:click.prevent="$dispatch('open-modal', 'pay-bill-{{ $bill->id }}')" 
+                                                    class="text-xs text-indigo-600 hover:text-indigo-900 font-bold underline">
+                                                    Lunaskan (Cash)
+                                                </button>
+
+                                                {{-- MODAL LUNASKAN PER TAGIHAN --}}
+                                                <x-modal name="pay-bill-{{ $bill->id }}" focusable>
+                                                    <form method="POST" action="{{ route('admin.students.bills.pay_manual', [$student, $bill]) }}" class="p-6 text-left">
+                                                        @csrf
+                                                        
+                                                        <h2 class="text-lg font-medium text-gray-900">
+                                                            Konfirmasi Pelunasan Tagihan
+                                                        </h2>
+
+                                                        <div class="mt-4 text-sm text-gray-600 space-y-3">
+                                                            <p>Anda akan mencatat pembayaran <strong>TUNAI / CASH</strong> untuk tagihan ini secara manual.</p>
+                                                            
+                                                            <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-100">
+                                                                <div class="flex flex-col gap-1">
+                                                                    <span class="text-xs text-gray-500">Judul Tagihan:</span>
+                                                                    <span class="font-bold text-gray-800">{{ $bill->title }}</span>
+                                                                </div>
+                                                                <div class="flex justify-between mt-2 pt-2 border-t border-yellow-200">
+                                                                    <span>Nominal:</span>
+                                                                    <span class="font-bold text-lg text-indigo-700">Rp {{ number_format($bill->amount, 0, ',', '.') }}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="mt-6 flex justify-end gap-3">
+                                                            <x-secondary-button x-on:click="$dispatch('close')">
+                                                                Batal
+                                                            </x-secondary-button>
+
+                                                            <x-primary-button class="bg-indigo-600 hover:bg-indigo-700">
+                                                                Ya, Lunaskan Sekarang
+                                                            </x-primary-button>
+                                                        </div>
+                                                    </form>
+                                                </x-modal>
+                                            </div>
                                         </td>
                                     </tr>
                                     @endforeach

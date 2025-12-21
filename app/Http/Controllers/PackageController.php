@@ -9,24 +9,44 @@ use App\Http\Requests\StorePackageRequest;
 use App\Http\Requests\UpdatePackageRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
 
 class PackageController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-$packages = Package::with('branch')->latest()->get();
+        $search = $request->input('search');
+
+        $packages = Package::with(['branch', 'packageCategory'])->withCount('students')
+            ->when($search, function ($query, $search) {
+                return $query->where('name', 'like', "%{$search}%")
+                             ->orWhere('category', 'like', "%{$search}%")
+                             ->orWhereHas('packageCategory', function($q) use($search){
+                                $q->where('name', 'like', "%{$search}%");
+                             });
+            })
+            // Filter Kategori (Strict)
+            ->when($request->category, function ($query, $category) {
+                return $query->where('category', $category);
+            })
+            ->latest()
+            ->get();
     
-    // 2. Ambil daftar Grade dari konstanta Model untuk bikin tombol Tabs
-    // Kita pakai keys-nya saja (SD, SMP, SMA, dll)
-    $grades = array_keys(Package::GRADES);
+        // 2. Ambil daftar Kategori dari DB
+        $grades = \App\Models\PackageCategory::pluck('name', 'id');
+
+        if ($request->ajax()) {
+            return view('admin.package._list', compact('packages', 'grades'))->render();
+        }
+
         return view('admin.package.index', compact('packages', 'grades'));
     }
 
     public function create()
     {
         $branches = Branch::all();
-        $tutors = Tutor::with('user')->get(); 
-        return view('admin.package.create', compact('branches', 'tutors'));
+        $categories = \App\Models\PackageCategory::all(); // Load dynamic categories
+        return view('admin.package.create', compact('branches', 'categories'));
     }
 
     public function store(StorePackageRequest $request)
@@ -39,38 +59,28 @@ $packages = Package::with('branch')->latest()->get();
 
             Package::create([
                 'branch_id'     => $request->branch_id,
+                'package_category_id' => $request->package_category_id, // New Column
                 'name'          => $request->name,
-                // PERBAIKAN 2: Tambahkan category (PRIVATE/ROMBEL)
                 'category'      => $request->category, 
-                'grade'         => $request->grade,
+                // 'grade'         => $request->grade, // Removed
                 'price'         => $request->price,
-                'duration'      => $request->duration,
+                'duration'      => $request->duration * 30, // Convert Bulan ke Hari
                 'session_count' => $request->session_count,
                 'description'   => $request->description,
                 'benefits'      => $request->benefits,
                 'image'         => $imagePath,
             ]);
-
-            // Simpan Relasi Tutor (Many-to-Many)
-            if ($request->has('tutors')) {
-                // Ambil paket terakhir dibuat utk di-attach
-                // Karena Package::create mengembalikan object, lebih aman begini:
-                $package = Package::latest()->first(); 
-                $package->tutors()->attach($request->tutors);
-            }
         });
 
-        return redirect()->route('packages.index')->with('success', 'Paket berhasil dibuat!');
+        return redirect()->route('admin.packages.index')->with('success', 'Paket berhasil dibuat!');
     }
 
     public function edit(Package $package)
     {
         $branches = Branch::all();
-        $tutors = Tutor::with('user')->get();
+        $categories = \App\Models\PackageCategory::all();
         
-        $package->load('tutors'); 
-        
-        return view('admin.package.edit', compact('package', 'branches', 'tutors'));
+        return view('admin.package.edit', compact('package', 'branches', 'categories'));
     }
 
     public function update(UpdatePackageRequest $request, Package $package)
@@ -89,18 +99,19 @@ $packages = Package::with('branch')->latest()->get();
                 $data['image'] = $request->file('image')->store('packages', 'public');
             }
 
+            // Convert Durasi (Bulan -> Hari)
+            if (isset($data['duration'])) {
+                $data['duration'] = $data['duration'] * 30;
+            }
+
             $package->update($data);
 
             // Update Relasi Tutor (SYNC)
             // Jika ada input tutors, sync. Jika kosong/null, detach semua.
-            if ($request->has('tutors')) {
-                $package->tutors()->sync($request->tutors);
-            } else {
-                $package->tutors()->detach();
-            }
+
         });
 
-        return redirect()->route('packages.index')->with('success', 'Paket diperbarui!');
+        return redirect()->route('admin.packages.index')->with('success', 'Paket diperbarui!');
     }
 
     // PERBAIKAN 3: Method Hapus
@@ -114,6 +125,6 @@ $packages = Package::with('branch')->latest()->get();
         // Hapus Data (Relasi tutor di pivot table otomatis hilang karena onDelete cascade di migration)
         $package->delete();
 
-        return redirect()->route('packages.index')->with('success', 'Paket berhasil dihapus!');
+        return redirect()->route('admin.packages.index')->with('success', 'Paket berhasil dihapus!');
     }
 }

@@ -18,6 +18,7 @@ class Tutor extends Model
         'phone',
         'image',
         'bio', // <--- WAJIB DITAMBAHKAN
+        
     ];
 
     /**

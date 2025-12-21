@@ -14,14 +14,9 @@ return new class extends Migration
             // Kode Invoice Xendit (Contoh: INV-BATCH-2023...)
             $table->string('invoice_code')->unique();
             
-            // Relasi ke Siswa
+    
             $table->foreignId('student_id')->constrained()->cascadeOnDelete();
             
-            // HAPUS kolom package_id dan package_name_snapshot.
-            // Alasannya: Transaksi ini bersifat "Global/Induk".
-            // Rincian apa yang dibayar (paket apa, minggu ke berapa) akan ada di tabel 'bills'.
-            
-            // Total yang harus dibayar ke Xendit (Gabungan dari beberapa bills)
             $table->decimal('total_amount', 12, 0);
             
             // Status Pembayaran Xendit

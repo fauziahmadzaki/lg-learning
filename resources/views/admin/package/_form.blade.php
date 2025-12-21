@@ -1,4 +1,4 @@
-@props(['package' => null, 'branches', 'tutors'])
+@props(['package' => null, 'branches', 'categories'])
 
 <div x-data="{
         benefits: @js(old('benefits') ?? ($package?->benefits ?? [''])),
@@ -140,16 +140,17 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
             <div>
-                <x-input-label for="grade" :value="__('Jenjang Pendidikan')" />
-                <select id="grade" name="grade"
+                <x-input-label for="package_category_id" :value="__('Jenjang Pendidikan')" />
+                <select id="package_category_id" name="package_category_id"
                     class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                    @foreach(\App\Models\Package::GRADES as $value => $label)
-                    <option value="{{ $value }}" @selected(old('grade', $package?->grade) == $value)>
-                        {{ $label }}
+                    <option value="" disabled selected>-- Pilih Jenjang --</option>
+                    @foreach($categories as $cat)
+                    <option value="{{ $cat->id }}" @selected(old('package_category_id', $package?->package_category_id) == $cat->id)>
+                        {{ $cat->name }}
                     </option>
                     @endforeach
                 </select>
-                <x-input-error class="mt-2" :messages="$errors->get('grade')" />
+                <x-input-error class="mt-2" :messages="$errors->get('package_category_id')" />
             </div>
 
             <div>
@@ -168,11 +169,11 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <x-input-label for="duration" :value="__('Durasi Paket (Hari)')" />
+                <x-input-label for="duration" :value="__('Durasi Paket (Bulan)')" />
                 <div class="flex gap-2 items-center">
                     <x-text-input id="duration" name="duration" type="number" class="mt-1 block w-full"
-                        :value="old('duration', $package?->duration)" placeholder="30" />
-                    <span class="text-gray-500">Hari</span>
+                        :value="old('duration', $package?->duration ? $package->duration / 30 : '')" placeholder="6" />
+                    <span class="text-gray-500">Bulan</span>
                 </div>
                 <x-input-error class="mt-2" :messages="$errors->get('duration')" />
             </div>
@@ -182,7 +183,7 @@
                 <div class="flex gap-2 items-center">
                     <x-text-input id="session_count" name="session_count" type="number" class="mt-1 block w-full"
                         :value="old('session_count', $package?->session_count)" placeholder="8" />
-                    <span class="text-gray-500">Sesi</span>
+                    <span class="text-gray-500 text-sm whitespace-nowrap">Sesi / Minggu</span>
                 </div>
                 <x-input-error class="mt-2" :messages="$errors->get('session_count')" />
             </div>
@@ -229,30 +230,13 @@
                         </button>
                     </div>
                 </template>
+                {{-- Tampilkan Error Validasi Backend --}}
+                <x-input-error class="mt-2" :messages="$errors->get('benefits')" />
+                <x-input-error class="mt-1" :messages="$errors->get('benefits.*')" />
             </div>
         </div>
 
-        <div>
-            <x-input-label for="tutors" :value="__('Pilih Pengajar (Bisa Lebih dari 1)')" />
-            <div class="mt-1">
-                <select name="tutors[]" id="tutors" multiple
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-40">
-                    @foreach($tutors as $tutor)
-                    <option value="{{ $tutor->id }}" class="py-1" @selected( (old('tutors') && in_array($tutor->id,
-                        old('tutors'))) ||
-                        ($package && $package->tutors->contains($tutor->id))
-                        )
-                        >
-                        {{ $tutor->user->name }} ({{ $tutor->specialization ?? 'Umum' }})
-                    </option>
-                    @endforeach
-                </select>
-                <p class="mt-1 text-xs text-gray-500">
-                    💡 Tips: Tahan tombol <strong>CTRL</strong> (Windows) atau <strong>CMD</strong> (Mac) untuk memilih
-                    beberapa nama sekaligus.
-                </p>
-            </div>
-        </div>
+        {{-- Kolom Pengajar dihapus (dimindahkan ke Form Tutor) --}}
 
     </div>
 
@@ -290,7 +274,7 @@
 
     {{-- TOMBOL AKSI --}}
     <div class="flex items-center justify-end gap-4 border-t border-gray-200 pt-6">
-        <a href="{{ route('packages.index') }}" class="text-gray-600 hover:text-gray-900 font-medium text-sm">
+        <a href="{{ route('admin.packages.index') }}" class="text-gray-600 hover:text-gray-900 font-medium text-sm">
             {{ __('Batal') }}
         </a>
         <x-primary-button class="px-6">

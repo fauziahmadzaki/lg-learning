@@ -4,11 +4,11 @@
     {{-- AREA MENU (Scrollable) --}}
     <div class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
 
-        {{-- MENU UTAMA --}}
-        <a href="{{ route('dashboard') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('dashboard') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            {{-- MENU UTAMA --}}
+        <a href="{{ route('admin.dashboard') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('admin.dashboard') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
             {{-- Icon Dashboard --}}
-            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('dashboard') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
+            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('admin.dashboard') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -23,10 +23,10 @@
             </p>
         </div>
 
-        {{-- Menu Siswa (BARU) --}}
-        <a href="{{ route('students.index') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('students.*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('students.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
+        {{-- Menu Siswa --}}
+        <a href="{{ route('admin.students.index') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('admin.students.*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('admin.students.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
@@ -36,73 +36,148 @@
         </a>
 
         {{-- Menu Tutor --}}
-        <a href="{{ route('tutors.index') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('tutors.*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('tutors.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
+        <a href="{{ route('admin.tutors.index') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('admin.tutors.*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('admin.tutors.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
-            <span class="font-medium text-sm">Kelola Tutor</span>
+            <span class="font-medium text-sm">Data Tutor</span>
         </a>
 
         {{-- Menu Paket --}}
-        <a href="{{ route('packages.index') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('packages.*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('packages.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
+        <a href="{{ route('admin.packages.index') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('admin.packages.*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('admin.packages.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
-            <span class="font-medium text-sm">Kelola Paket</span>
+            <span class="font-medium text-sm">Paket Belajar</span>
+        </a>
+
+        {{-- Menu Kategori Paket --}}
+        <a href="{{ route('admin.package-categories.index') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('admin.package-categories.*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('admin.package-categories.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+            <span class="font-medium text-sm">Kategori Paket</span>
+        </a>
+
+        {{-- Menu Jadwal Belajar --}}
+        <a href="{{ route('admin.schedules.index') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('admin.schedules.*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('admin.schedules.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span class="font-medium text-sm">Jadwal Belajar</span>
         </a>
 
         {{-- Menu Cabang --}}
-        <a href="{{ route('branches.index') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('branches.*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('branches.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
+        <a href="{{ route('admin.branches.index') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('admin.branches.*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('admin.branches.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
             </svg>
-            <span class="font-medium text-sm">Kelola Cabang</span>
+            <span class="font-medium text-sm">Data Cabang</span>
         </a>
 
-        {{-- GROUP: KEUANGAN (BARU) --}}
+        {{-- Menu Galeri (Moved from Bottom) --}}
+        <a href="{{ route('admin.contents.index') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('admin.contents.*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('admin.contents.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span class="font-medium text-sm">Galeri & Konten</span>
+        </a>
+
+        {{-- GROUP: KEUANGAN --}}
         <div class="pt-5 pb-2">
             <p class="px-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                 Keuangan
             </p>
         </div>
 
-        {{-- Menu Transaksi (BARU) --}}
-        {{-- <a href="{{ route('transactions.index') }}"
-        class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group
-        {{ request()->routeIs('transactions.*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-        <svg class="w-5 h-5 transition-colors {{ request()->routeIs('transactions.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
-            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
-            </path>
-        </svg>
-        <span class="font-medium text-sm">Riwayat Transaksi</span>
-        </a> --}}
+        {{-- Menu Transaksi --}}
+        <a href="{{ route('admin.transactions.index') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group
+        {{ request()->routeIs('admin.transactions.*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('admin.transactions.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                </path>
+            </svg>
+            <span class="font-medium text-sm">Riwayat Transaksi</span>
+        </a>
 
         {{-- GROUP: LAPORAN --}}
         <div class="pt-5 pb-2">
             <p class="px-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                Laporan & Akun
+                Laporan & Log
             </p>
         </div>
 
-        <a href="{{ route('profile.edit') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('profile.edit') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
-            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('profile.edit') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
+        {{-- Menu Laporan Keuangan --}}
+        <a href="{{ route('admin.reports.index') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('admin.reports.index') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('admin.reports.index') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <span class="font-medium text-sm">Laporan</span>
+            <span class="font-medium text-sm">Laporan Keuangan</span>
+        </a>
+
+        {{-- Menu Laporan Siswa --}}
+        <a href="{{ route('admin.reports.students') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('admin.reports.students') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('admin.reports.students') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            <span class="font-medium text-sm">Laporan Siswa</span>
+        </a>
+
+        {{-- Menu Activity Logs --}}
+        <a href="{{ route('admin.activity-logs.index') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('admin.activity-logs.index*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('admin.activity-logs.index*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="font-medium text-sm">Log Aktivitas</span>
+        </a>
+
+        {{-- GROUP: PENGATURAN --}}
+        <div class="pt-5 pb-2">
+            <p class="px-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                Pengaturan
+            </p>
+        </div>
+
+        {{-- Menu Pengaturan --}}
+        <a href="{{ route('admin.settings.index') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('admin.settings.*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('admin.settings.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span class="font-medium text-sm">Pengaturan Website</span>
         </a>
     </div>
 

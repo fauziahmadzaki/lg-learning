@@ -1,4 +1,4 @@
-@props(['tutor' => null])
+@props(['tutor' => null, 'branches', 'packages' => []])
 
 {{--
     LOGIKA ALPINE JS (GABUNGAN)
@@ -9,6 +9,16 @@
 <div x-data="{ 
     jobs: {{ old('jobs') ? json_encode(old('jobs')) : ($tutor && $tutor->jobs ? json_encode($tutor->jobs) : json_encode([''])) }},
     
+    // State untuk filter paket berdasarkan cabang
+    branchId: '{{ old('branch_id', $tutor?->branch_id) }}',
+    allPackages: @js($packages), // Pass semua data paket ke Alpine
+    
+    // Computed: Paket yang tersedia sesuai cabang dipilih
+    get availablePackages() {
+        if (!this.branchId) return [];
+        return this.allPackages.filter(pkg => pkg.branch_id == this.branchId);
+    },
+
     imagePreview: '{{ $tutor && $tutor->image ? asset('storage/'.$tutor->image) : '' }}',
 
     previewImage(event) {
@@ -87,7 +97,7 @@
     <div class="mb-4">
         <x-input-label for="branch_id" :value="__('Penempatan Cabang')" />
 
-        <select id="branch_id" name="branch_id"
+        <select id="branch_id" name="branch_id" x-model="branchId"
             class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
             <option value="" disabled selected>-- Pilih Cabang --</option>
 
@@ -111,27 +121,82 @@
         <x-input-error class="mt-2" :messages="$errors->get('bio')" />
     </div>
 
+    {{-- BAGIAN 3: PAKET YANG DIAMPU (BARU) --}}
+    <h3 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2 mt-8">Paket / Kelas yang Diampu</h3>
+    
+    <div class="mb-6">
+        <x-input-label for="packages" :value="__('Pilih Paket Belajar (Bisa Lebih dari 1)')" />
+        <div class="mt-1">
+            <select name="packages[]" id="packages" multiple
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-40">
+                
+                {{-- Opsi Default jika belum pilih cabang --}}
+                <option value="" disabled x-show="!branchId">-- Pilih Cabang Terlebih Dahulu --</option>
+                
+                {{-- Loop Paket via JS --}}
+                <template x-for="pkg in availablePackages" :key="pkg.id">
+                    <option :value="pkg.id" 
+                        {{-- Logic selected untuk JS agak tricky, kita gunakan server-side helper array di x-init atau biarkan user pilih ulang --}}
+                        {{-- Tapi karena ini ganti cabang = reset paket biasanya, jadi kita biarkan kosong kecuali ada logic complex --}}
+                        :selected="@js(old('packages') ?? ($tutor ? $tutor->packages->pluck('id')->toArray() : [])).includes(pkg.id)"
+                    >
+                        <span x-text="pkg.name"></span> (<span x-text="pkg.grade"></span>)
+                    </option>
+                </template>
+            </select>
+            <p class="mt-1 text-xs text-gray-500">
+                💡 Tips: Tahan tombol <strong>CTRL</strong> (Windows) atau <strong>CMD</strong> (Mac) untuk memilih
+                beberapa paket sekaligus.
+            </p>
+            <x-input-error class="mt-2" :messages="$errors->get('packages')" />
+            @if($errors->has('packages.*'))
+                <ul class="mt-2 text-sm text-red-600 space-y-1">
+                    @foreach($errors->get('packages.*') as $errorsArray)
+                        @foreach($errorsArray as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    @endforeach
+                </ul>
+            @endif
+        </div>
+    </div>
+
     {{-- FITUR DYNAMIC INPUT (PEKERJAAN/JOBS) --}}
     <div class="mb-6">
         <x-input-label :value="__('Riwayat Pekerjaan / Keahlian')" class="mb-2" />
 
         {{-- Loop input berdasarkan state Alpine 'jobs' --}}
         <template x-for="(job, index) in jobs" :key="index">
-            <div class="flex gap-2 mb-2">
-                <x-text-input name="jobs[]" type="text" class="block w-full"
-                    placeholder="Contoh: Guru Matematika SMAN 1" x-model="jobs[index]" />
+            <div class="flex flex-col mb-2">
+                <div class="flex gap-2">
+                    <x-text-input name="jobs[]" type="text" class="block w-full"
+                        placeholder="Contoh: Guru Matematika SMAN 1" x-model="jobs[index]" />
 
-                <button type="button" @click="removeJob(index)"
-                    class="text-red-500 hover:text-red-700 px-2 border border-red-200 rounded hover:bg-red-50"
-                    title="Hapus baris">
-                    &times;
-                </button>
+                    <button type="button" @click="removeJob(index)"
+                        class="text-red-500 hover:text-red-700 px-2 border border-red-200 rounded hover:bg-red-50"
+                        title="Hapus baris">
+                        &times;
+                    </button>
+                </div>
+                {{-- Show error for specific index if possible (Alpine logic vs Blade logic is tricky here) --}}
+                {{-- Since we can't easily map JS index to Blade error bag dynamically without complex JS, we display general errors below --}}
             </div>
         </template>
 
         <button type="button" @click="addJob()" class="text-sm text-blue-600 hover:underline mt-1">
             + Tambah Pekerjaan Lain
         </button>
+        
+        <x-input-error class="mt-2" :messages="$errors->get('jobs')" />
+        @if($errors->has('jobs.*'))
+            <ul class="mt-2 text-sm text-red-600 space-y-1">
+                @foreach($errors->get('jobs.*') as $errorsArray)
+                    @foreach($errorsArray as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                @endforeach
+            </ul>
+        @endif
     </div>
 
     {{-- FITUR PREVIEW IMAGE --}}
@@ -163,7 +228,7 @@
     </div>
 
     <div class="flex items-center justify-end gap-4 border-t pt-4">
-        <a href="{{ route('tutors.index') }}" class="text-gray-600 hover:text-gray-900">{{ __('Batal') }}</a>
+        <a href="{{ route('admin.tutors.index') }}" class="text-gray-600 hover:text-gray-900">{{ __('Batal') }}</a>
         <x-primary-button>
             {{ $submit_text ?? 'Simpan Data' }}
         </x-primary-button>

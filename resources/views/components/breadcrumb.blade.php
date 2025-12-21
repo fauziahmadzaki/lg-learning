@@ -2,8 +2,19 @@
 
 <nav class="flex" aria-label="Breadcrumb">
     <ol class="inline-flex items-center space-x-1 md:space-x-3">
+@php
+    $dashboardRoute = '#';
+    if (auth()->check()) {
+        if (auth()->user()->isCentralAdmin()) {
+            $dashboardRoute = route('admin.dashboard');
+        } elseif (auth()->user()->branch_id) {
+            $dashboardRoute = route('branch.dashboard', ['branch' => auth()->user()->branch_id]);
+        }
+    }
+@endphp
+
         <li class="inline-flex items-center">
-            <a href="/dashboard" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
+            <a href="{{ $dashboardRoute }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600">
                 <svg class="w-3 h-3 mr-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
                     viewBox="0 0 20 20">
                     <path

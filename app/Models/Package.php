@@ -6,40 +6,33 @@ use App\Models\Tutor;
 use App\Models\Branch;
 use App\Models\Student;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Package extends Model
 {
+    use HasFactory;
+
+    // DEPRECATED: GRADES constant removed in favor of PackageCategory model.
+    // protected $grade = ... (removed)
+
     protected $fillable = [
-            'branch_id', 'name', 'grade', 'category',
+            'branch_id', 'package_category_id', 'name', 'grade', 'category',
             'price', 'duration', 'session_count', 
-            'description', 'benefits', 'image'
+            'description', 'benefits', 'image', 'slug'
         ];
 
-    protected $casts =  [
-        'benefits' => 'array'
+    protected $casts = [
+        'benefits' => 'array',
     ];
 
-    protected function badgeColor(): Attribute
+    // ...
+
+    public function packageCategory()
     {
-        return Attribute::make(
-            get: fn () => match($this->category) {
-                self::CAT_PRIVATE => 'purple',
-                self::CAT_ROMBEL  => 'blue',
-                default => 'gray',
-            }
-        );
+        return $this->belongsTo(PackageCategory::class, 'package_category_id');
     }
-
-    public const CAT_PRIVATE = 'PRIVATE';
-    public const CAT_ROMBEL = 'ROMBEL';
-
-    public const GRADES = [
-            'SD' => 'Sekolah Dasar (SD)',
-            'SMP' => 'Sekolah Menengah Pertama (SMP)',
-            'SMA' => 'Sekolah Menengah Atas (SMA)',
-            'UTBK' => 'Persiapan UTBK / SNBT',
-            'UMUM' => 'Bahasa Asing / Umum',
-        ];
 
     public function branch()
     {
@@ -51,9 +44,9 @@ class Package extends Model
         return $this->belongsToMany(Tutor::class);
     }
 
-    public function student()
+    public function students()
     {
-        return $this->belongsToMany(Student::class);
+        return $this->hasMany(Student::class);
     }
 
 
@@ -83,4 +76,32 @@ class Package extends Model
         );
     }
 
+
+
+    protected function badgeColor(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                return match($this->category) {
+                    'PRIVATE' => 'indigo',
+                    'ROMBEL' => 'pink',
+                    default => 'gray',
+                };
+            }
+        );
+    }
+
+    protected function imageUrl(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if ($this->image && str_contains($this->image, 'http')) {
+                    return $this->image;
+                }
+                return $this->image 
+                    ? asset('storage/' . $this->image) 
+                    : 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'; // Fallback
+            }
+        );
+    }
 }

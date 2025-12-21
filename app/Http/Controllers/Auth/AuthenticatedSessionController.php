@@ -22,13 +22,18 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+   public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $user = $request->user();
+
+        // LOGIKA REDIRECT BARU
+        
+        // Redirect using User helper (automatically handles Branch Slug vs ID)
+        return redirect($user->dashboard_url);
     }
 
     /**
