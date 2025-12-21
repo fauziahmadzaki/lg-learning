@@ -32,36 +32,22 @@ class DatabaseSeeder extends Seeder
         );
 
         // 2. Seed Branches (Real + Fake)
-        $this->call(BranchSeeder::class);
-        $branches = Branch::all();
+        // $this->call(BranchSeeder::class);
+        // $branches = Branch::all();
 
-        // 3. Create Branch Managers (Users) for each branch
-        foreach($branches as $branch) {
-            $email = strtolower(str_replace(' ', '', $branch->name)) . '@bimbel.com';
-            User::updateOrCreate(
-                ['email' => $email],
-                [
-                    'name' => 'Admin ' . $branch->name,
-                    'password' => Hash::make('password'),
-                    'role' => 'admin', // Role sebagai Branch Admin
-                    'branch_id' => $branch->id,
-                    'email_verified_at' => now(),
-                ]
-            );
-        }
 
-        // 4. Seed Other Data
-        // PackageSeeder needs to run BEFORE StudentSeeder
-        $this->call([
-            TutorSeeder::class,   // Tutors
-            PackageCategorySeeder::class, // Categories
-            PackageSeeder::class, // Packages
-            StudentSeeder::class, // Students + Attach Package
-            TransactionSeeder::class, // Transactions
-        ]);
+        // // 4. Seed Other Data
+        // // PackageSeeder needs to run BEFORE StudentSeeder
+        // $this->call([
+        //     TutorSeeder::class,   // Tutors
+        //     PackageCategorySeeder::class, // Categories
+        //     PackageSeeder::class, // Packages
+        //     StudentSeeder::class, // Students + Attach Package
+        //     TransactionSeeder::class, // Transactions
+        // ]);
 
         echo "Seeding Complete! \n";
         echo "Admin Pusat: admin@bimbel.com / password \n";
-        echo "Contoh Admin Cabang: " . strtolower(str_replace(' ', '', $branches->first()->name)) . "@bimbel.com / password \n";
+        // echo "Contoh Admin Cabang: " . strtolower(str_replace(' ', '', $branches->first()->name)) . "@bimbel.com / password \n";
     }
 }

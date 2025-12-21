@@ -78,7 +78,7 @@
 
                         {{-- Tags Keahlian --}}
                         <div class="mt-auto">
-                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Keahlian / Mapel</p>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Pekerjaan</p>
                             <div class="flex flex-wrap gap-2">
                                 @if($tutor->jobs && count($tutor->jobs) > 0)
                                     @foreach($tutor->jobs as $job)

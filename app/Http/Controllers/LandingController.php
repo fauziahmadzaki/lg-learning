@@ -18,7 +18,7 @@ class LandingController extends Controller
     {
         // Data untuk Hero/Stats
         $stats = [
-            'students' => Student::count(),
+            'students' => max(40, Student::count()),
             'tutors'   => Tutor::count(),
             'branches' => Branch::count(),
             'packages' => Package::count(),
