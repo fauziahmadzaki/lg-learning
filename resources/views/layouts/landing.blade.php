@@ -6,6 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    {{-- SEO Meta Tags --}}
+    <meta name="description" content="{{ $settings['site_description'] ?? 'L-G Learning - Bimbingan Belajar Terbaik untuk SD, SMP, dan SMA. Metode personal, tutor berpengalaman, dan hasil terbukti.' }}">
+    <meta name="keywords" content="bimbel, les privat, bimbingan belajar, lg learning, les matematika, les fisika, les kimia, persiapan utbk, snbt, masuk ptn">
+    <meta name="author" content="L-G Learning">
+    <meta property="og:title" content="{{ isset($title) ? $title . ' - ' . config('app.name', 'L-G Learning') : config('app.name', 'L-G Learning') }}">
+    <meta property="og:description" content="{{ $settings['site_description'] ?? 'Raih prestasi akademik terbaik bersama L-G Learning.' }}">
+    <meta property="og:image" content="{{ asset('img/image.png') }}">
+    <meta property="og:type" content="website">
+
     @php
         $siteSettingsLogo = \App\Models\SiteSetting::get('site_logo');
         $siteFavicon = $siteSettingsLogo ? asset('storage/' . $siteSettingsLogo) : asset('img/image.png');
@@ -19,9 +28,46 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        [x-cloak] { display: none !important; }
+        .loader-dots div { animation-timing-function: cubic-bezier(0, 1, 1, 0); }
+        .loader-dots div:nth-child(1) { left: 8px; animation: loader-dots1 0.6s infinite; }
+        .loader-dots div:nth-child(2) { left: 8px; animation: loader-dots2 0.6s infinite; }
+        .loader-dots div:nth-child(3) { left: 32px; animation: loader-dots2 0.6s infinite; }
+        .loader-dots div:nth-child(4) { left: 56px; animation: loader-dots3 0.6s infinite; }
+        @keyframes loader-dots1 { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        @keyframes loader-dots3 { 0% { transform: scale(1); } 100% { transform: scale(0); } }
+        @keyframes loader-dots2 { 0% { transform: translate(0, 0); } 100% { transform: translate(24px, 0); } }
+    </style>
 </head>
 
-<body class="font-sans antialiased text-gray-800 bg-white selection:bg-orange-100 selection:text-orange-600">
+<body class="font-sans antialiased text-gray-800 bg-white selection:bg-orange-100 selection:text-orange-600"
+      x-data="{ isLoading: true }"
+      x-init="window.addEventListener('load', () => { setTimeout(() => isLoading = false, 800); })">
+
+    {{-- Global Loader --}}
+    <div x-show="isLoading" 
+         x-transition:leave="transition ease-in duration-500"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[100] flex items-center justify-center bg-white">
+         <div class="text-center">
+            <div class="relative w-20 h-20 mx-auto mb-4">
+                 @php
+                    $isUrl = str_contains($siteFavicon, 'http');
+                 @endphp
+                <img src="{{ $siteFavicon }}" class="w-full h-full object-contain animate-bounce">
+                <div class="absolute inset-0 bg-white/30 backdrop-blur-sm hidden"></div>
+            </div>
+            <div class="loader-dots block relative w-20 h-5 mx-auto">
+                <div class="absolute top-0 w-3 h-3 rounded-full bg-orange-500"></div>
+                <div class="absolute top-0 w-3 h-3 rounded-full bg-orange-500"></div>
+                <div class="absolute top-0 w-3 h-3 rounded-full bg-orange-500"></div>
+                <div class="absolute top-0 w-3 h-3 rounded-full bg-orange-500"></div>
+            </div>
+         </div>
+    </div>
     @props(['settings' => []])
 
     {{-- NAVBAR --}}

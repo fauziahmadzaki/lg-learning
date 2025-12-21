@@ -16,6 +16,12 @@ Route::middleware(['auth', 'verified', 'branch.check'])
 
             // Reports
             Route::get('/laporan', 'reports')->name('reports.index');
+
+            // Schedules (New)
+            Route::get('/jadwal', 'schedules')->name('schedules.index');
+
+            // Profile (New)
+            Route::get('/profil', 'profile')->name('profile');
         });
 
         // Student Management

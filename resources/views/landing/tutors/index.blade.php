@@ -40,7 +40,9 @@
                             <div class="relative">
                                 @if($tutor->image)
                                 <img class="h-20 w-20 rounded-full object-cover border-4 border-white shadow-md group-hover:scale-105 transition duration-500"
-                                    src="{{ asset('storage/' . $tutor->image) }}" alt="{{ $tutor->user->name }}">
+                                    src="{{ asset('storage/' . $tutor->image) }}" 
+                                    alt="{{ $tutor->user->name }}"
+                                    onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($tutor->user->name) }}&background=random&color=fff&size=256';">
                                 @else
                                 <div class="h-20 w-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl border-4 border-white shadow-md">
                                     {{ substr($tutor->user->name, 0, 1) }}

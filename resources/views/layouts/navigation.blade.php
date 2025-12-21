@@ -142,7 +142,11 @@
                 </x-responsive-nav-link>
 
                 <x-responsive-nav-link :href="route('branch.courses.index', $currentBranch)" :active="request()->routeIs('branch.courses.*')">
-                    {{ __('Kelas & Jadwal') }}
+                    {{ __('Data Kelas') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link :href="route('branch.schedules.index', $currentBranch)" :active="request()->routeIs('branch.schedules.*')">
+                    {{ __('Jadwal Belajar') }}
                 </x-responsive-nav-link>
 
                 <div class="px-4 pt-2 pb-1 text-xs text-gray-400 font-bold uppercase">Keuangan</div>

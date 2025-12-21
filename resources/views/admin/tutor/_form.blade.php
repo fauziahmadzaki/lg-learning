@@ -139,8 +139,7 @@
                         {{-- Logic selected untuk JS agak tricky, kita gunakan server-side helper array di x-init atau biarkan user pilih ulang --}}
                         {{-- Tapi karena ini ganti cabang = reset paket biasanya, jadi kita biarkan kosong kecuali ada logic complex --}}
                         :selected="@js(old('packages') ?? ($tutor ? $tutor->packages->pluck('id')->toArray() : [])).includes(pkg.id)"
-                    >
-                        <span x-text="pkg.name"></span> (<span x-text="pkg.grade"></span>)
+                        <span x-text="pkg.name"></span> (<span x-text="pkg.branch?.name || '-'"></span>)
                     </option>
                 </template>
             </select>

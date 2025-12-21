@@ -65,14 +65,24 @@
             <span class="font-medium text-sm">Paket Belajar</span>
         </a>
 
-        {{-- Kelas (Exist) --}}
+        {{-- Kelas / Paket Management (Courses) --}}
         <a href="{{ route('branch.courses.index', $branch) }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('branch.courses.*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
             <svg class="w-5 h-5 transition-colors {{ request()->routeIs('branch.courses.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
             </svg>
-            <span class="font-medium text-sm">Kelas & Jadwal</span>
+            <span class="font-medium text-sm">Data Kelas</span>
+        </a>
+
+        {{-- Jadwal Belajar (New) --}}
+        <a href="{{ route('branch.schedules.index', $branch) }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group {{ request()->routeIs('branch.schedules.*') ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' }}">
+            <svg class="w-5 h-5 transition-colors {{ request()->routeIs('branch.schedules.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-gray-500' }}"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span class="font-medium text-sm">Jadwal Belajar</span>
         </a>
 
             {{-- GROUP: KEUANGAN --}}

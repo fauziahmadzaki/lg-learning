@@ -55,11 +55,11 @@ class TutorController extends Controller
     }
 
     public function create()
-{
-    $branches = Branch::all(); // Ambil semua cabang
-    $packages = \App\Models\Package::all(); // Load semua paket untuk opsi
-    return view('admin.tutor.create', compact('branches', 'packages'));
-}
+    {
+        $branches = Branch::all(); // Ambil semua cabang
+        $packages = \App\Models\Package::with('branch')->get(); // Load semua paket dengan cabang untuk opsi
+        return view('admin.tutor.create', compact('branches', 'packages'));
+    }
 
     public function store(StoreTutorRequest $request)
     {
@@ -102,7 +102,7 @@ class TutorController extends Controller
     public function edit(Tutor $tutor)
     {
         $branches = Branch::all();
-        $packages = \App\Models\Package::all();
+        $packages = \App\Models\Package::with('branch')->get();
         $tutor->load('packages'); // Eager load relasi existing
         return view('admin.tutor.edit', compact('tutor', 'branches', 'packages'));
     }
@@ -170,6 +170,14 @@ class TutorController extends Controller
         });
 
         return redirect()->route('admin.tutors.index')->with('success', 'Tutor dihapus!');
+    }
+
+    public function show(Tutor $tutor)
+    {
+        // Load relasi yang diperlukan
+        $tutor->load(['user', 'branch', 'packages.branch']);
+
+        return view('admin.tutor.show', compact('tutor'));
     }
 
 }

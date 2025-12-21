@@ -127,4 +127,17 @@ class PackageController extends Controller
 
         return redirect()->route('admin.packages.index')->with('success', 'Paket berhasil dihapus!');
     }
+
+    public function show(Package $package)
+    {
+        // Load related data
+        $package->load(['branch', 'packageCategory', 'tutors.user']);
+        
+        $students = $package->students()
+            ->with(['branch']) // Eager load branch if needed for display
+            ->latest()
+            ->paginate(10);
+
+        return view('admin.package.show', compact('package', 'students'));
+    }
 }

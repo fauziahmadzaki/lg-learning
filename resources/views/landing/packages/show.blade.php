@@ -76,10 +76,19 @@
                             @foreach($package->tutors as $tutor)
                             <div class="flex items-center gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
                                 <div class="w-16 h-16 bg-gray-200 rounded-full overflow-hidden">
-                                     <img src="https://ui-avatars.com/api/?name={{ urlencode($tutor->name) }}&background=random" alt="{{ $tutor->name }}" class="w-full h-full object-cover">
+                                    @if($tutor->image)
+                                        <img src="{{ asset('storage/' . $tutor->image) }}" 
+                                             alt="{{ $tutor->user->name }}" 
+                                             class="w-full h-full object-cover"
+                                             onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ urlencode($tutor->user->name) }}&background=random&color=fff&size=128';">
+                                    @else
+                                        <img src="https://ui-avatars.com/api/?name={{ urlencode($tutor->user->name) }}&background=random&color=fff&size=128" 
+                                             alt="{{ $tutor->user->name }}" 
+                                             class="w-full h-full object-cover">
+                                    @endif
                                 </div>
                                 <div>
-                                    <h4 class="font-bold text-gray-900">{{ $tutor->name }}</h4>
+                                    <h4 class="font-bold text-gray-900">{{ $tutor->user->name }}</h4>
                                     <p class="text-xs text-blue-600 font-bold uppercase tracking-wide">{{ $tutor->subject ?? 'Pengajar Ahli' }}</p>
                                     <p class="text-xs text-gray-500 line-clamp-1 mt-1">{{ $tutor->bio ?? 'Berpengalaman mengajar lebih dari 5 tahun.' }}</p>
                                 </div>
