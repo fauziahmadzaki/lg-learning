@@ -249,7 +249,7 @@ $breadcrumbs = [
                                     </p>
 
                                     {{-- MODAL 1: CREATE BILL (XENDIT) --}}
-                                    <x-modal name="create-bill-modal" focusable>
+                                    <x-ui.modal name="create-bill-modal" focusable>
                                         <form method="POST" action="{{ route('admin.students.bill.store', $student) }}" class="p-6">
                                             @csrf
 
@@ -273,19 +273,19 @@ $breadcrumbs = [
                                             </div>
 
                                             <div class="mt-6 flex justify-end gap-3">
-                                                <x-secondary-button x-on:click="$dispatch('close')">
+                                                <x-buttons.secondary x-on:click="$dispatch('close')">
                                                     Batal
-                                                </x-secondary-button>
+                                                </x-buttons.secondary>
 
-                                                <x-primary-button class="bg-indigo-600 hover:bg-indigo-700">
+                                                <x-buttons.primary class="bg-indigo-600 hover:bg-indigo-700">
                                                     Ya, Generate Invoice
-                                                </x-primary-button>
+                                                </x-buttons.primary>
                                             </div>
                                         </form>
-                                    </x-modal>
+                                    </x-ui.modal>
 
                                     {{-- MODAL 2: PAY MANUAL (CASH / RECORD LUNAS) --}}
-                                    <x-modal name="pay-manual-modal" focusable>
+                                    <x-ui.modal name="pay-manual-modal" focusable>
                                         <form method="POST" action="{{ route('admin.students.pay.manual', $student) }}" class="p-6">
                                             @csrf
 
@@ -309,16 +309,16 @@ $breadcrumbs = [
                                             </div>
 
                                             <div class="mt-6 flex justify-end gap-3">
-                                                <x-secondary-button x-on:click="$dispatch('close')">
+                                                <x-buttons.secondary x-on:click="$dispatch('close')">
                                                     Batal
-                                                </x-secondary-button>
+                                                </x-buttons.secondary>
 
-                                                <x-primary-button class="bg-green-600 hover:bg-green-700 focus:ring-green-500">
+                                                <x-buttons.primary class="bg-green-600 hover:bg-green-700 focus:ring-green-500">
                                                     konfirmasi Pembayaran Tunai
-                                                </x-primary-button>
+                                                </x-buttons.primary>
                                             </div>
                                         </form>
-                                    </x-modal>
+                                    </x-ui.modal>
                                 </div>
                             @elseif($isFullyPaid)
                                 <div class="pt-4 border-t border-gray-100 mt-4 text-center">
@@ -407,110 +407,95 @@ $breadcrumbs = [
                     <div x-show="activeTab === 'bills'" x-transition.opacity class="p-0">
                         @if($student->bills->where('status', '!=', 'PAID')->count() > 0)
                         <div class="overflow-x-auto">
-                            <table class="w-full text-sm text-left">
-                                <thead class="bg-gray-50 text-xs text-gray-500 uppercase border-b border-gray-200">
-                                    <tr>
-                                        <th class="px-6 py-3">Deskripsi Tagihan</th>
-                                        <th class="px-6 py-3">Jatuh Tempo</th>
-                                        <th class="px-6 py-3 text-right">Nominal</th>
-                                        <th class="px-6 py-3 text-center">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-100">
-                                    {{-- Filter hanya menampilkan yang BELUM LUNAS --}}
-                                    @foreach($student->bills->where('status', '!=', 'PAID') as $bill)
-                                    <tr class="hover:bg-gray-50 transition">
-                                        <td class="px-6 py-4 font-medium text-gray-900">
-                                            {{ $bill->title }}
-                                            <div class="text-xs text-gray-400 font-normal mt-0.5">ID: #BILL-{{ $bill->id
-                                                }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 text-gray-600">
-                                            <div class="flex items-center gap-2">
-                                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
-                                                    </path>
-                                                </svg>
-                                                {{ $bill->due_date->format('d M Y') }}
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 text-right font-bold text-gray-900">
-                                            Rp {{ number_format($bill->amount, 0, ',', '.') }}
-                                        </td>
-                                    <td class="px-6 py-4 text-center">
-                                            @if($bill->status == 'UNPAID')
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                Belum Bayar
-                                            </span>
-                                            @elseif($bill->status == 'PENDING')
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                Menunggu
-                                            </span>
-                                            @endif
-                                            
-                                            {{-- TOMBOL LUNASKAN (MODAL TRIGGER) --}}
-                                            <div class="mt-2" x-data="">
-                                                <button x-on:click.prevent="$dispatch('open-modal', 'pay-bill-{{ $bill->id }}')" 
-                                                    class="text-xs text-indigo-600 hover:text-indigo-900 font-bold underline">
-                                                    Lunaskan (Cash)
-                                                </button>
+                            <x-ui.table :headers="['Deskripsi Tagihan', 'Jatuh Tempo', 'Nominal', 'Status']">
+    {{-- Filter hanya menampilkan yang BELUM LUNAS --}}
+    @foreach($student->bills->where('status', '!=', 'PAID') as $bill)
+    <x-ui.tr>
+        <x-ui.td class="font-medium text-gray-900">
+            {{ $bill->title }}
+            <div class="text-xs text-gray-400 font-normal mt-0.5">ID: #BILL-{{ $bill->id }}</div>
+        </x-ui.td>
+        <x-ui.td class="text-gray-600">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                {{ $bill->due_date->format('d M Y') }}
+            </div>
+        </x-ui.td>
+        <x-ui.td class="text-right font-bold text-gray-900">
+            Rp {{ number_format($bill->amount, 0, ',', '.') }}
+        </x-ui.td>
+        <x-ui.td class="text-center">
+            @if($bill->status == 'UNPAID')
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                Belum Bayar
+            </span>
+            @elseif($bill->status == 'PENDING')
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                Menunggu
+            </span>
+            @endif
+            
+            {{-- TOMBOL LUNASKAN (MODAL TRIGGER) --}}
+            <div class="mt-2" x-data="">
+                <button x-on:click.prevent="$dispatch('open-modal', 'pay-bill-{{ $bill->id }}')" 
+                    class="text-xs text-indigo-600 hover:text-indigo-900 font-bold underline">
+                    Lunaskan (Cash)
+                </button>
 
-                                                {{-- MODAL LUNASKAN PER TAGIHAN --}}
-                                                <x-modal name="pay-bill-{{ $bill->id }}" focusable>
-                                                    <form method="POST" action="{{ route('admin.students.bills.pay_manual', [$student, $bill]) }}" class="p-6 text-left">
-                                                        @csrf
-                                                        
-                                                        <h2 class="text-lg font-medium text-gray-900">
-                                                            Konfirmasi Pelunasan Tagihan
-                                                        </h2>
+                {{-- MODAL LUNASKAN PER TAGIHAN --}}
+                <x-ui.modal name="pay-bill-{{ $bill->id }}" focusable>
+                    <form method="POST" action="{{ route('admin.students.bills.pay_manual', [$student, $bill]) }}" class="p-6 text-left">
+                        @csrf
+                        
+                        <h2 class="text-lg font-medium text-gray-900">
+                            Konfirmasi Pelunasan Tagihan
+                        </h2>
 
-                                                        <div class="mt-4 text-sm text-gray-600 space-y-3">
-                                                            <p>Anda akan mencatat pembayaran <strong>TUNAI / CASH</strong> untuk tagihan ini secara manual.</p>
-                                                            
-                                                            <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-100">
-                                                                <div class="flex flex-col gap-1">
-                                                                    <span class="text-xs text-gray-500">Judul Tagihan:</span>
-                                                                    <span class="font-bold text-gray-800">{{ $bill->title }}</span>
-                                                                </div>
-                                                                <div class="flex justify-between mt-2 pt-2 border-t border-yellow-200">
-                                                                    <span>Nominal:</span>
-                                                                    <span class="font-bold text-lg text-indigo-700">Rp {{ number_format($bill->amount, 0, ',', '.') }}</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                        <div class="mt-4 text-sm text-gray-600 space-y-3">
+                            <p>Anda akan mencatat pembayaran <strong>TUNAI / CASH</strong> untuk tagihan ini secara manual.</p>
+                            
+                            <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-100">
+                                <div class="flex flex-col gap-1">
+                                    <span class="text-xs text-gray-500">Judul Tagihan:</span>
+                                    <span class="font-bold text-gray-800">{{ $bill->title }}</span>
+                                </div>
+                                <div class="flex justify-between mt-2 pt-2 border-t border-yellow-200">
+                                    <span>Nominal:</span>
+                                    <span class="font-bold text-lg text-indigo-700">Rp {{ number_format($bill->amount, 0, ',', '.') }}</span>
+                                </div>
+                            </div>
+                        </div>
 
-                                                        <div class="mt-6 flex justify-end gap-3">
-                                                            <x-secondary-button x-on:click="$dispatch('close')">
-                                                                Batal
-                                                            </x-secondary-button>
+                        <div class="mt-6 flex justify-end gap-3">
+                            <x-buttons.secondary x-on:click="$dispatch('close')">
+                                Batal
+                            </x-buttons.secondary>
 
-                                                            <x-primary-button class="bg-indigo-600 hover:bg-indigo-700">
-                                                                Ya, Lunaskan Sekarang
-                                                            </x-primary-button>
-                                                        </div>
-                                                    </form>
-                                                </x-modal>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                                {{-- Footer Total Tagihan --}}
-                                <tfoot class="bg-gray-50 border-t border-gray-200">
-                                    <tr>
-                                        <td colspan="2" class="px-6 py-3 text-right font-bold text-gray-600">Total
-                                            Tagihan Aktif:</td>
-                                        <td class="px-6 py-3 text-right font-bold text-indigo-600 text-lg">
-                                            Rp
-                                            {{ number_format($student->bills->where('status', '!=', 'PAID')->sum('amount'), 0, ',', '.') }}
-                                        </td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
+                            <x-buttons.primary class="bg-indigo-600 hover:bg-indigo-700">
+                                Ya, Lunaskan Sekarang
+                            </x-buttons.primary>
+                        </div>
+                    </form>
+                </x-ui.modal>
+            </div>
+        </x-ui.td>
+    </x-ui.tr>
+    @endforeach
+    {{-- Footer Total Tagihan --}}
+    <x-slot:footer>
+        <tfoot class="bg-gray-50 border-t border-gray-200">
+            <tr>
+                <td colspan="2" class="px-6 py-3 text-right font-bold text-gray-600">Total Tagihan Aktif:</td>
+                <td class="px-6 py-3 text-right font-bold text-indigo-600 text-lg">
+                    Rp {{ number_format($student->bills->where('status', '!=', 'PAID')->sum('amount'), 0, ',', '.') }}
+                </td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </x-slot:footer>
+</x-ui.table>
                         </div>
 
                         {{-- Info Tambahan --}}
@@ -544,60 +529,44 @@ $breadcrumbs = [
                     <div x-show="activeTab === 'history'" x-transition.opacity class="p-0" style="display: none;">
                         @if($student->transactions->count() > 0)
                         <div class="overflow-x-auto">
-                            <table class="w-full text-sm text-left">
-                                <thead class="bg-gray-50 text-xs text-gray-500 uppercase border-b border-gray-200">
-                                    <tr>
-                                        <th class="px-6 py-3">Invoice</th>
-                                        <th class="px-6 py-3">Tanggal Bayar</th>
-                                        <th class="px-6 py-3">Metode</th>
-                                        <th class="px-6 py-3 text-right">Total</th>
-                                        <th class="px-6 py-3 text-center">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-100">
-                                    @foreach($student->transactions as $trx)
-                                    <tr class="hover:bg-gray-50 transition">
-                                        <td class="px-6 py-4 font-medium text-indigo-600">
-                                            {{ $trx->invoice_code }}
-                                        </td>
-                                        <td class="px-6 py-4 text-gray-600">
-                                            {{ $trx->paid_at ? $trx->paid_at->format('d M Y H:i') : $trx->created_at->format('d M Y') }}
-                                        </td>
-                                        <td class="px-6 py-4 text-gray-600">
-                                            <span
-                                                class="uppercase text-xs font-bold">{{ $trx->payment_method ?? '-' }}</span>
-                                            <span class="text-xs text-gray-400 block">{{ $trx->payment_channel }}</span>
-                                        </td>
-                                        <td class="px-6 py-4 text-right font-bold text-gray-900">
-                                            Rp {{ number_format($trx->total_amount, 0, ',', '.') }}
-                                        </td>
-                                        <td class="px-6 py-4 text-center">
-                                            @if($trx->status == 'PAID')
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                LUNAS
-                                            </span>
-                                            @elseif($trx->status == 'PENDING')
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                PENDING
-                                            </span>
-                                            @elseif($trx->status == 'EXPIRED')
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                                EXPIRED
-                                            </span>
-                                            @else
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                GAGAL
-                                            </span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                            <x-ui.table :headers="['Invoice', 'Tanggal Bayar', 'Metode', 'Total', 'Status']">
+    @foreach($student->transactions as $trx)
+    <x-ui.tr>
+        <x-ui.td class="font-medium text-indigo-600">
+            {{ $trx->invoice_code }}
+        </x-ui.td>
+        <x-ui.td class="text-gray-600">
+            {{ $trx->paid_at ? $trx->paid_at->format('d M Y H:i') : $trx->created_at->format('d M Y') }}
+        </x-ui.td>
+        <x-ui.td class="text-gray-600">
+            <span class="uppercase text-xs font-bold">{{ $trx->payment_method ?? '-' }}</span>
+            <span class="text-xs text-gray-400 block">{{ $trx->payment_channel }}</span>
+        </x-ui.td>
+        <x-ui.td class="text-right font-bold text-gray-900">
+            Rp {{ number_format($trx->total_amount, 0, ',', '.') }}
+        </x-ui.td>
+        <x-ui.td class="text-center">
+            @if($trx->status == 'PAID')
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                LUNAS
+            </span>
+            @elseif($trx->status == 'PENDING')
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                PENDING
+            </span>
+            @elseif($trx->status == 'EXPIRED')
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                EXPIRED
+            </span>
+            @else
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                GAGAL
+            </span>
+            @endif
+        </x-ui.td>
+    </x-ui.tr>
+    @endforeach
+</x-ui.table>
                         </div>
                         @else
                         {{-- Empty State Riwayat --}}

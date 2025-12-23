@@ -15,57 +15,56 @@
 
         {{-- Nama Siswa --}}
         <div class="col-span-1 md:col-span-2">
-            <x-input-label for="name" :value="__('Nama Lengkap Siswa')" />
-            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name"
+            <x-inputs.label for="name" :value="__('Nama Lengkap Siswa')" />
+            <x-inputs.text id="name" class="block mt-1 w-full" type="text" name="name"
                 :value="old('name', $student?->name)" required autofocus placeholder="Contoh: Muhammad Rizky" />
-            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+            <x-inputs.error :messages="$errors->get('name')" class="mt-2" />
         </div>
 
         {{-- Email Siswa --}}
         <div>
-            <x-input-label for="email" :value="__('Email Siswa')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email"
+            <x-inputs.label for="email" :value="__('Email Siswa')" />
+            <x-inputs.text id="email" class="block mt-1 w-full" type="email" name="email"
                 :value="old('email', $student?->email)" required placeholder="email@contoh.com" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            <x-inputs.error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
         {{-- No HP Orang Tua --}}
         <div>
-            <x-input-label for="parent_phone" :value="__('No. WhatsApp Orang Tua')" />
-            <x-text-input id="parent_phone" class="block mt-1 w-full" type="number" name="parent_phone"
+            <x-inputs.label for="parent_phone" :value="__('No. WhatsApp Orang Tua')" />
+            <x-inputs.text id="parent_phone" class="block mt-1 w-full" type="number" name="parent_phone"
                 :value="old('parent_phone', $student?->parent_phone)" required placeholder="0812xxxx" />
-            <x-input-error :messages="$errors->get('parent_phone')" class="mt-2" />
+            <x-inputs.error :messages="$errors->get('parent_phone')" class="mt-2" />
         </div>
 
         {{-- Asal Sekolah --}}
         <div>
-            <x-input-label for="school" :value="__('Asal Sekolah')" />
-            <x-text-input id="school" class="block mt-1 w-full" type="text" name="school"
+            <x-inputs.label for="school" :value="__('Asal Sekolah')" />
+            <x-inputs.text id="school" class="block mt-1 w-full" type="text" name="school"
                 :value="old('school', $student?->school)" required placeholder="Contoh: SMAN 1 Jakarta" />
-            <x-input-error :messages="$errors->get('school')" class="mt-2" />
+            <x-inputs.error :messages="$errors->get('school')" class="mt-2" />
         </div>
 
         {{-- Jenjang / Kelas (Sekolah) --}}
         <div>
-            <x-input-label for="grade" :value="__('Kelas / Jenjang Sekolah')" />
-            <x-text-input id="grade" class="block mt-1 w-full" type="text" name="grade"
+            <x-inputs.label for="grade" :value="__('Kelas / Jenjang Sekolah')" />
+            <x-inputs.text id="grade" class="block mt-1 w-full" type="text" name="grade"
                 :value="old('grade', $student?->grade)" required placeholder="Contoh: 12 SMA" />
-            <x-input-error :messages="$errors->get('grade')" class="mt-2" />
+            <x-inputs.error :messages="$errors->get('grade')" class="mt-2" />
         </div>
 
         {{-- Tanggal Gabung --}}
         <div>
-            <x-input-label for="join_date" :value="__('Tanggal Bergabung')" />
-            <x-text-input id="join_date" class="block mt-1 w-full {{ $student ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : '' }}" 
+            <x-inputs.label for="join_date" :value="__('Tanggal Bergabung')" />
+            <x-inputs.text id="join_date"
+                class="block mt-1 w-full {{ $student ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : '' }}"
                 type="date" name="join_date"
                 :value="old('join_date', $student?->join_date ? $student->join_date->format('Y-m-d') : date('Y-m-d'))"
-                required 
-                :readonly="$student ? true : false"
-                />
+                required :readonly="$student ? true : false" />
             @if($student)
-                <p class="text-xs text-red-500 mt-1">* Tanggal gabung tidak dapat diubah.</p>
+            <p class="text-xs text-red-500 mt-1">* Tanggal gabung tidak dapat diubah.</p>
             @endif
-            <x-input-error :messages="$errors->get('join_date')" class="mt-2" />
+            <x-inputs.error :messages="$errors->get('join_date')" class="mt-2" />
         </div>
 
     </div>
@@ -83,7 +82,7 @@
 
         {{-- A. Tipe Tagihan (Billing Cycle) --}}
         <div class="mb-6">
-            <x-input-label :value="__('Siklus Pembayaran')" class="mb-2" />
+            <x-inputs.label :value="__('Siklus Pembayaran')" class="mb-2" />
 
             @if($student)
             {{-- MODE EDIT: Tampilkan Read-Only --}}
@@ -98,14 +97,15 @@
                 <div>
                     <p class="text-sm text-gray-500 font-medium">Siklus Pembayaran Terpilih:</p>
                     <p class="text-lg font-bold text-gray-900 uppercase tracking-wide">
-                        {{
-                                match($student->billing_cycle) {
-                                    'monthly' => 'Bulanan',
-                                    'weekly' => 'Mingguan',
-                                    'full' => 'Lunas / Full',
-                                    default => $student->billing_cycle
-                                }
-                            }}
+                        @if($student->billing_cycle === 'monthly')
+                        Bulanan
+                        @elseif($student->billing_cycle === 'weekly')
+                        Mingguan
+                        @elseif($student->billing_cycle === 'full')
+                        Lunas / Full
+                        @else
+                        {{ $student->billing_cycle }}
+                        @endif
                     </p>
                     <p class="text-xs text-red-500 mt-1">
                         * Metode pembayaran tidak dapat diubah setelah pendaftaran.
@@ -145,18 +145,17 @@
                     </div>
                 </label>
             </div>
-            <x-input-error :messages="$errors->get('billing_cycle')" class="mt-2" />
+            <x-inputs.error :messages="$errors->get('billing_cycle')" class="mt-2" />
             @endif
         </div>
         {{-- B. Pilih Paket --}}
         <div>
-            <x-input-label for="package_id" :value="__('Pilih Paket Belajar')" />
-            <select id="package_id" name="package_id" {{ $student ? 'disabled' : '' }}
-                class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm {{ $student ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : '' }}">
+            <x-inputs.label for="package_id" :value="__('Pilih Paket Belajar')" />
+            <x-inputs.select id="package_id" name="package_id" :disabled="$student"
+                class="mt-1 block w-full {{ $student ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : '' }}">
                 <option value="" disabled selected>-- Pilih Paket Bimbel --</option>
                 @foreach($packages as $package)
-                {{-- Tampilkan Nama Cabang di Dropdown --}}
-                <option value="{{ $package->id }}" @selected(old('package_id', $student?->package_id) == $package->id)>
+                <option value="{{ $package->id }}" @if(old('package_id', $student?->package_id) == $package->id) selected @endif>
                     {{ $package->name }} ({{ $package->branch->name ?? 'N/A' }})
                     
                     <span x-show="billing_cycle === 'monthly'">(Rp
@@ -165,23 +164,22 @@
                         {{ number_format($package->price / 4, 0, ',', '.') }}/mgg)</span>
                 </option>
                 @endforeach
-            </select>
-            
-            {{-- Hidden Input untuk Package ID saat Edit agar tetap terkirim/validasi aman (walaupun controller ignore) --}}
+            </x-inputs.select>
+
             @if($student)
-                <input type="hidden" name="package_id" value="{{ $student->package_id }}">
-                <p class="text-xs text-red-500 mt-1">* Paket tidak dapat diubah setelah pendaftaran.</p>
+            <input type="hidden" name="package_id" value="{{ $student->package_id }}">
+            <p class="text-xs text-red-500 mt-1">* Paket tidak dapat diubah setelah pendaftaran.</p>
             @endif
             <p class="text-xs text-gray-500 mt-1" x-show="billing_cycle === 'weekly'">
                 *Harga mingguan adalah estimasi (Harga Paket / 4).
             </p>
-            <x-input-error :messages="$errors->get('package_id')" class="mt-2" />
+            <x-inputs.error :messages="$errors->get('package_id')" class="mt-2" />
         </div>
     </div>
 
     {{-- BAGIAN 3: STATUS SISWA --}}
     <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
-        <x-input-label :value="__('Status Keaktifan Siswa')" class="mb-3 text-lg" />
+        <x-inputs.label :value="__('Status Keaktifan Siswa')" class="mb-3 text-lg" />
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
@@ -249,7 +247,7 @@
             @endif
 
         </div>
-        <x-input-error :messages="$errors->get('status')" class="mt-2" />
+        <x-inputs.error :messages="$errors->get('status')" class="mt-2" />
     </div>
 
     {{-- TOMBOL AKSI --}}
@@ -258,9 +256,9 @@
             class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium transition">
             Batal
         </a>
-        <x-primary-button class="px-6">
+        <x-buttons.primary class="px-6">
             {{ $submit_text ?? 'Simpan Data' }}
-        </x-primary-button>
+        </x-buttons.primary>
     </div>
 
 </div>

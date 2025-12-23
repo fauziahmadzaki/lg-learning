@@ -9,29 +9,29 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {{-- Nama Cabang --}}
             <div>
-                <x-input-label for="name" :value="__('Nama Cabang')" />
-                <x-text-input id="name" name="name" type="text" class="mt-1 block w-full"
+                <x-inputs.label for="name" :value="__('Nama Cabang')" />
+                <x-inputs.text id="name" name="name" type="text" class="mt-1 block w-full"
                     :value="old('name', $branch->name ?? '')" placeholder="Contoh: Cabang Jakarta Selatan" required autofocus />
-                <x-input-error class="mt-2" :messages="$errors->get('name')" />
+                <x-inputs.error class="mt-2" :messages="$errors->get('name')" />
             </div>
 
             {{-- Kontak --}}
             <div>
-                <x-input-label for="phone" :value="__('Nomor Telepon / Kontak')" />
-                <x-text-input id="phone" name="phone" type="text" class="mt-1 block w-full"
+                <x-inputs.label for="phone" :value="__('Nomor Telepon / Kontak')" />
+                <x-inputs.text id="phone" name="phone" type="text" class="mt-1 block w-full"
                     :value="old('phone', $branch->phone ?? '')" placeholder="Contoh: 0812-3456-7890" />
-                <x-input-error class="mt-2" :messages="$errors->get('phone')" />
+                <x-inputs.error class="mt-2" :messages="$errors->get('phone')" />
                 <p class="mt-1 text-xs text-gray-500">Kosongkan jika belum tersedia.</p>
             </div>
         </div>
 
         {{-- Alamat --}}
         <div>
-            <x-input-label for="address" :value="__('Alamat Lengkap')" />
+            <x-inputs.label for="address" :value="__('Alamat Lengkap')" />
             <textarea id="address" name="address" rows="3"
                 class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                 placeholder="Masukkan alamat lengkap cabang...">{{ old('address', $branch->address ?? '') }}</textarea>
-            <x-input-error class="mt-2" :messages="$errors->get('address')" />
+            <x-inputs.error class="mt-2" :messages="$errors->get('address')" />
         </div>
 
     </div>
@@ -41,9 +41,9 @@
         <a href="{{ route('admin.branches.index') }}" class="text-gray-600 hover:text-gray-900 font-medium text-sm">
             {{ __('Batal') }}
         </a>
-        <x-primary-button class="px-6">
+        <x-buttons.primary class="px-6">
             {{ $submit_text ?? 'Simpan Data Cabang' }}
-        </x-primary-button>
+        </x-buttons.primary>
     </div>
 
 </div>

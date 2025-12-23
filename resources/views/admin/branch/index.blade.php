@@ -65,23 +65,23 @@ $breadcrumbs = [
 
             {{-- Kanan: Tombol Tambah --}}
             <a href="{{ route('admin.branches.create') }}">
-                <x-primary-button class="flex items-center gap-2 shadow-lg shadow-indigo-200">
+                <x-buttons.primary class="flex items-center gap-2 shadow-lg shadow-indigo-200">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
                     Tambah Cabang
-                </x-primary-button>
+                </x-buttons.primary>
             </a>
         </div>
 
         {{-- SECTION: Grid Cards (Container) --}}
         <div id="branch-list-container">
-            @include('admin.branch._list')
+            @include('admin.branch.partials.list')
         </div>
 
         {{-- MODAL HAPUS --}}
-        <x-modal name="confirm-branch-deletion" focusable>
+        <x-ui.modal name="confirm-branch-deletion" focusable>
             <form method="post" :action="deleteUrl" class="p-6">
                 @csrf
                 @method('DELETE')
@@ -106,16 +106,16 @@ $breadcrumbs = [
                 </p>
 
                 <div class="mt-6 flex justify-end gap-3">
-                    <x-secondary-button x-on:click="$dispatch('close')">
+                    <x-buttons.secondary x-on:click="$dispatch('close')">
                         {{ __('Batal') }}
-                    </x-secondary-button>
+                    </x-buttons.secondary>
 
-                    <x-danger-button>
+                    <x-buttons.danger>
                         {{ __('Ya, Hapus Cabang') }}
-                    </x-danger-button>
+                    </x-buttons.danger>
                 </div>
             </form>
-        </x-modal>
+        </x-ui.modal>
 
     </div>
 </x-app-layout>

@@ -24,14 +24,14 @@
                 {{-- Period Selector --}}
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Periode</label>
-                    <select name="period" x-model="period" class="w-full rounded-lg border-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <x-inputs.select name="period" x-model="period" class="w-full text-sm">
                         <option value="today">Hari Ini</option>
                         <option value="this_week">Minggu Ini</option>
                         <option value="this_month">Bulan Ini</option>
                         <option value="last_month">Bulan Lalu</option>
                         <option value="this_year">Tahun Ini</option>
                         <option value="custom">Custom Tanggal</option>
-                    </select>
+                    </x-inputs.select>
                 </div>
 
                 {{-- Custom Date Range (Show if period == custom) --}}
@@ -49,14 +49,14 @@
                 {{-- Package Filter --}}
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Paket</label>
-                    <select name="package_id" class="w-full rounded-lg border-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <x-inputs.select name="package_id" class="w-full text-sm">
                         <option value="">Semua Paket</option>
                         @foreach($packages as $pkg)
                             <option value="{{ $pkg->id }}" @selected(request('package_id') == $pkg->id)>
                                 {{ $pkg->name }}
                             </option>
                         @endforeach
-                    </select>
+                    </x-inputs.select>
                 </div>
 
                 {{-- Buttons --}}
@@ -121,56 +121,41 @@
             <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
                 <h3 class="font-bold text-gray-800">Rincian Transaksi {{ $start->format('d M') }} - {{ $end->format('d M') }}</h3>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-gray-600">
-                    <thead class="bg-gray-50 text-xs uppercase font-bold text-gray-500">
-                        <tr>
-                            <th class="px-6 py-3">Tanggal</th>
-                            <th class="px-6 py-3">Invoice</th>
-                            <th class="px-6 py-3">Siswa</th>
-                            <th class="px-6 py-3">Cabang</th>
-                            <th class="px-6 py-3">Paket</th>
-                            <th class="px-6 py-3 text-right">Nominal</th>
-                            <th class="px-6 py-3">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @forelse($transactions as $trx)
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4">
-                                {{ $trx->paid_at ? \Carbon\Carbon::parse($trx->paid_at)->format('d M Y H:i') : $trx->created_at->format('d M Y') }}
-                            </td>
-                            <td class="px-6 py-4 font-mono text-xs">{{ $trx->invoice_code }}</td>
-                            <td class="px-6 py-4">
-                                <div class="font-medium text-gray-900">{{ $trx->student?->name ?? 'Siswa Terhapus' }}</div>
-                            </td>
-                            <td class="px-6 py-4 text-gray-600">
-                                {{ $trx->student?->branch?->name ?? 'Tanpa Cabang' }}
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs">{{ $trx->student?->package?->name ?? '-' }}</span>
-                            </td>
-                            <td class="px-6 py-4 text-right font-medium text-green-600">Rp {{ number_format($trx->total_amount, 0, ',', '.') }}</td>
-                            <td class="px-6 py-4">
-                                @if($trx->status == 'PAID')
-                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold">LUNAS</span>
-                                @elseif($trx->status == 'PENDING')
-                                    <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-bold">PENDING</span>
-                                @else
-                                    <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-bold">{{ $trx->status }}</span>
-                                @endif
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="7" class="px-6 py-10 text-center text-gray-400">
-                                Tidak ada data transaksi untuk periode ini.
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+            <x-ui.table :headers="['Tanggal', 'Invoice', 'Siswa', 'Cabang', 'Paket', 'Nominal', 'Status']">
+    @forelse($transactions as $trx)
+    <x-ui.tr>
+        <x-ui.td>
+            {{ $trx->paid_at ? \Carbon\Carbon::parse($trx->paid_at)->format('d M Y H:i') : $trx->created_at->format('d M Y') }}
+        </x-ui.td>
+        <x-ui.td class="font-mono text-xs">{{ $trx->invoice_code }}</x-ui.td>
+        <x-ui.td>
+            <div class="font-medium text-gray-900">{{ $trx->student?->name ?? 'Siswa Terhapus' }}</div>
+        </x-ui.td>
+        <x-ui.td class="text-gray-600">
+            {{ $trx->student?->branch?->name ?? 'Tanpa Cabang' }}
+        </x-ui.td>
+        <x-ui.td>
+            <span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs">{{ $trx->student?->package?->name ?? '-' }}</span>
+        </x-ui.td>
+        <x-ui.td class="text-right font-medium text-green-600">Rp {{ number_format($trx->total_amount, 0, ',', '.') }}</x-ui.td>
+        <x-ui.td>
+            @if($trx->status == 'PAID')
+                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold">LUNAS</span>
+            @elseif($trx->status == 'PENDING')
+                <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-bold">PENDING</span>
+            @else
+                <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-bold">{{ $trx->status }}</span>
+            @endif
+        </x-ui.td>
+    </x-ui.tr>
+    @empty
+    <x-ui.tr>
+        <x-ui.td colspan="7" class="text-center py-10 text-gray-400">
+            Tidak ada data transaksi untuk periode ini.
+        </x-ui.td>
+    </x-ui.tr>
+    @endforelse
+</x-ui.table>
         </div>
     </div>
 </x-app-layout>

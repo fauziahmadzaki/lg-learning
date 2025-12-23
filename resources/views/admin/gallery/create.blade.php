@@ -27,20 +27,20 @@
                         
                         {{-- Judul --}}
                         <div class="col-span-1 md:col-span-2">
-                            <x-input-label for="title" :value="__('Judul / Nama (Testimoni)')" />
-                            <x-text-input id="title" name="title" type="text" class="mt-1 block w-full" :value="old('title')" required placeholder="Contoh: Kegiatan Belajar Mengajar..."/>
-                            <x-input-error class="mt-2" :messages="$errors->get('title')" />
+                            <x-inputs.label for="title" :value="__('Judul / Nama (Testimoni)')" />
+                            <x-inputs.text id="title" name="title" type="text" class="mt-1 block w-full" :value="old('title')" required placeholder="Contoh: Kegiatan Belajar Mengajar..."/>
+                            <x-inputs.error class="mt-2" :messages="$errors->get('title')" />
                         </div>
 
                         {{-- Tipe & Toggle Carousel --}}
                         <div>
-                            <x-input-label for="type" :value="__('Tipe Konten')" />
+                            <x-inputs.label for="type" :value="__('Tipe Konten')" />
                             <select id="type" name="type" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
                                 <option value="Kegiatan">Kegiatan</option>
                                 <option value="Testimoni">Testimoni</option>
                                 <option value="Galeri">Galeri</option>
                             </select>
-                            <x-input-error class="mt-2" :messages="$errors->get('type')" />
+                            <x-inputs.error class="mt-2" :messages="$errors->get('type')" />
                         </div>
 
                         {{-- Toggle Carousel --}}
@@ -66,9 +66,9 @@
 
                         {{-- Deskripsi --}}
                         <div class="col-span-1 md:col-span-2">
-                            <x-input-label for="description" :value="__('Deskripsi / Isi Testimoni')" />
+                            <x-inputs.label for="description" :value="__('Deskripsi / Isi Testimoni')" />
                             <textarea id="description" name="description" rows="4" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required placeholder="Tulis deskripsi singkat...">{{ old('description') }}</textarea>
-                            <x-input-error class="mt-2" :messages="$errors->get('description')" />
+                            <x-inputs.error class="mt-2" :messages="$errors->get('description')" />
                         </div>
                     </div>
 
@@ -81,12 +81,12 @@
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
                             <div>
-                                <x-input-label for="image" :value="__('Upload File')" />
+                                <x-inputs.label for="image" :value="__('Upload File')" />
                                 <input type="file" id="image" name="image" @change="previewImage"
                                     class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer" 
                                     accept="image/*">
                                 <p class="text-xs text-gray-500 mt-2">Format: JPG, PNG, JPEG. Max: 2MB.</p>
-                                <x-input-error class="mt-2" :messages="$errors->get('image')" />
+                                <x-inputs.error class="mt-2" :messages="$errors->get('image')" />
                             </div>
 
                             {{-- Preview Area --}}
@@ -117,7 +117,7 @@
 
                     <div class="flex justify-end gap-3 pt-6 border-t border-gray-100">
                         <a href="{{ route('admin.contents.index') }}" class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium transition">Batal</a>
-                        <x-primary-button class="px-6">Simpan Konten</x-primary-button>
+                        <x-buttons.primary class="px-6">Simpan Konten</x-buttons.primary>
                     </div>
                 </form>
 

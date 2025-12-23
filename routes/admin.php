@@ -18,7 +18,10 @@ Route::middleware(['auth', 'verified', 'central.admin'])
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('cabang', BranchController::class)->names('branches')->parameters([
         'cabang' => 'branch',
-    ]);
+    ])->except(['show']);
+    
+    // Custom Show Route (Detail)
+    Route::get('cabang/{branch}/detail', [BranchController::class, 'show'])->name('branches.show');
     Route::resource('tutor', TutorController::class)->names('tutors');
     Route::resource('paket', PackageController::class)->names('packages')->parameters([
         'paket' => 'package'

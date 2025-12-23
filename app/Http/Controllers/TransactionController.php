@@ -33,7 +33,7 @@ class TransactionController extends Controller
             ->withQueryString();
 
         if ($request->ajax()) {
-            return view('admin.transaction._list', compact('transactions'))->render();
+            return view('admin.transaction.partials.table', compact('transactions'))->render();
         }
 
         return view('admin.transaction.index', compact('transactions'));

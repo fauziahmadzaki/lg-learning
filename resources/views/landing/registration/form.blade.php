@@ -21,24 +21,24 @@
                                     <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-100 pb-2">Data Diri Siswa</h3>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <x-input-label for="name" value="Nama Lengkap" />
-                                            <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus />
-                                            <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                                            <x-inputs.label for="name" value="Nama Lengkap" />
+                                            <x-inputs.text id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus />
+                                            <x-inputs.error :messages="$errors->get('name')" class="mt-2" />
                                         </div>
                                         <div>
-                                            <x-input-label for="school" value="Asal Sekolah" />
-                                            <x-text-input id="school" class="block mt-1 w-full" type="text" name="school" :value="old('school')" />
-                                            <x-input-error :messages="$errors->get('school')" class="mt-2" />
+                                            <x-inputs.label for="school" value="Asal Sekolah" />
+                                            <x-inputs.text id="school" class="block mt-1 w-full" type="text" name="school" :value="old('school')" />
+                                            <x-inputs.error :messages="$errors->get('school')" class="mt-2" />
                                         </div>
                                         <div>
-                                            <x-input-label for="grade" value="Kelas / Tingkat" />
-                                            <x-text-input id="grade" class="block mt-1 w-full" type="text" name="grade" :value="old('grade')" placeholder="Contoh: 12 SMA" />
-                                            <x-input-error :messages="$errors->get('grade')" class="mt-2" />
+                                            <x-inputs.label for="grade" value="Kelas / Tingkat" />
+                                            <x-inputs.text id="grade" class="block mt-1 w-full" type="text" name="grade" :value="old('grade')" placeholder="Contoh: 12 SMA" />
+                                            <x-inputs.error :messages="$errors->get('grade')" class="mt-2" />
                                         </div>
                                         <div>
-                                            <x-input-label for="email" value="Email Siswa (Opsional)" />
-                                            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" placeholder="user@example.com" />
-                                            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                                            <x-inputs.label for="email" value="Email Siswa (Opsional)" />
+                                            <x-inputs.text id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" placeholder="user@example.com" />
+                                            <x-inputs.error :messages="$errors->get('email')" class="mt-2" />
                                         </div>
                                     </div>
                                 </div>
@@ -48,15 +48,15 @@
                                     <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b border-gray-100 pb-2">Kontak & Alamat</h3>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div class="md:col-span-2">
-                                            <x-input-label for="parent_phone" value="Nomor WhatsApp Aktif" />
-                                            <x-text-input id="parent_phone" class="block mt-1 w-full" type="text" name="parent_phone" :value="old('parent_phone')" placeholder="08xxxxxxxxxx" required />
+                                            <x-inputs.label for="parent_phone" value="Nomor WhatsApp Aktif" />
+                                            <x-inputs.text id="parent_phone" class="block mt-1 w-full" type="text" name="parent_phone" :value="old('parent_phone')" placeholder="08xxxxxxxxxx" required />
                                             <p class="text-[10px] text-gray-500 mt-1">Nomor ini akan digunakan untuk menerima notifikasi tagihan dan info belajar.</p>
-                                            <x-input-error :messages="$errors->get('parent_phone')" class="mt-2" />
+                                            <x-inputs.error :messages="$errors->get('parent_phone')" class="mt-2" />
                                         </div>
                                         <div class="md:col-span-2">
-                                            <x-input-label for="address" value="Alamat Domisili" />
+                                            <x-inputs.label for="address" value="Alamat Domisili" />
                                             <textarea id="address" name="address" class="block mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:border-orange-500 focus:ring-orange-500 h-24">{{ old('address') }}</textarea>
-                                            <x-input-error :messages="$errors->get('address')" class="mt-2" />
+                                            <x-inputs.error :messages="$errors->get('address')" class="mt-2" />
                                         </div>
                                     </div>
                                 </div>
@@ -106,7 +106,7 @@
                                         </label>
 
                                     </div>
-                                    <x-input-error :messages="$errors->get('billing_cycle')" class="mt-2" />
+                                    <x-inputs.error :messages="$errors->get('billing_cycle')" class="mt-2" />
                                 </div>
                             </div>
 

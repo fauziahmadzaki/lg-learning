@@ -64,11 +64,11 @@
         @endphp
 
         @if($routeBranch && $routeBranch instanceof \App\Models\Branch)
-            <x-branch-sidebar :branch="$routeBranch" />
+            <x-layout.branch-sidebar :branch="$routeBranch" />
         @elseif(Auth::user()->isCentralAdmin())
-            <x-sidebar />
+            <x-layout.sidebar />
         @elseif(Auth::user()->branch_id)
-            <x-branch-sidebar :branch="Auth::user()->branch" />
+            <x-layout.branch-sidebar :branch="Auth::user()->branch" />
         @endif
 
         {{-- 2. Navbar (Fixed Top) --}}
@@ -94,7 +94,7 @@
                                 <h1 class="text-gray-800 text-3xl font-bold mb-2">{{ $pageTitle ?? "Page" }}</h1>
 
                                 <div>
-                                    <x-breadcrumb :links="$breadcrumbs" />
+                                    <x-layout.breadcrumb :links="$breadcrumbs" />
                                 </div>
                             </div>
 
@@ -113,7 +113,7 @@
     </div>
 
     {{-- Toast Notification (Global) --}}
-    <x-toast></x-toast>
+    <x-ui.toast></x-ui.toast>
 </body>
 
 </html>

@@ -140,7 +140,7 @@
         <h3 class="text-gray-900 font-bold text-lg">Belum ada paket tersedia</h3>
         <p class="text-sm text-gray-500 mt-1 mb-6">Silakan tambahkan data paket baru untuk memulai, atau coba kata kunci lain.</p>
         <a href="{{ route('branch.packages.create', $branch) }}">
-            <x-primary-button>Buat Paket Pertama</x-primary-button>
+            <x-buttons.primary>Buat Paket Pertama</x-buttons.primary>
         </a>
     </div>
     @endforelse

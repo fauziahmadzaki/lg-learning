@@ -25,7 +25,7 @@ class BranchController extends Controller
             ->withQueryString();
 
         if ($request->ajax()) {
-            return view('admin.branch._list', compact('branches'))->render();
+            return view('admin.branch.partials.list', compact('branches'))->render();
         }
 
         return view('admin.branch.index', compact('branches'));

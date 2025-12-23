@@ -124,15 +124,15 @@
                     @auth
                         @if(Auth::user()->isCentralAdmin() || Auth::user()->branch_id)
                         <a href="{{ Auth::user()->dashboard_url }}">
-                            <x-primary-button class="!bg-orange-500 hover:!bg-orange-600 !shadow-orange-200">
+                            <x-buttons.primary class="!bg-orange-500 hover:!bg-orange-600 !shadow-orange-200">
                                 Dashboard
-                            </x-primary-button>
+                            </x-buttons.primary>
                         </a>
                         @else
                         <a href="{{ route('profile.edit') }}">
-                            <x-primary-button class="!bg-orange-500 hover:!bg-orange-600 !shadow-orange-200">
+                            <x-buttons.primary class="!bg-orange-500 hover:!bg-orange-600 !shadow-orange-200">
                                 Dashboard
-                            </x-primary-button>
+                            </x-buttons.primary>
                         </a>
                         @endif
                     @else
@@ -346,7 +346,7 @@
         }
     </style>
 
-    <x-toast></x-toast>
+    <x-ui.toast></x-ui.toast>
 </body>
 
 </html>

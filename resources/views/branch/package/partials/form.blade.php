@@ -1,4 +1,7 @@
-@props(['package' => null, 'branches', 'categories'])
+@props(['package' => null, 'branch', 'categories'])
+
+<!-- Hidden Branch ID for Validation -->
+<input type="hidden" name="branch_id" value="{{ $branch->id }}">
 
 <div x-data="{
         benefits: @js(old('benefits') ?? ($package?->benefits ?? [''])),
@@ -30,45 +33,27 @@
     {{-- BAGIAN 1: INFORMASI DASAR --}}
     <div class="border-b border-gray-200 pb-4">
 
-        {{-- ... Input Cabang & Nama Paket ... --}}
         <h3 class="text-lg font-medium text-gray-900 mb-4">Informasi Dasar Paket</h3>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {{-- Input Cabang --}}
-            <div>
-                <x-input-label for="branch_id" :value="__('Cabang')" />
-                <select id="branch_id" name="branch_id"
-                    class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                    <option value="" disabled selected>-- Pilih Cabang --</option>
-                    @foreach($branches as $branch)
-                    <option value="{{ $branch->id }}" @selected(old('branch_id', $package?->branch_id) == $branch->id)>
-                        {{ $branch->name }}
-                    </option>
-                    @endforeach
-                </select>
-                <x-input-error class="mt-2" :messages="$errors->get('branch_id')" />
-            </div>
-
+        <div class="grid grid-cols-1 gap-6 mb-6">
             {{-- Input Nama Paket --}}
             <div>
-                <x-input-label for="name" :value="__('Nama Paket')" />
-                <x-text-input id="name" name="name" type="text" class="mt-1 block w-full"
+                <x-inputs.label for="name" :value="__('Nama Paket')" />
+                <x-inputs.text id="name" name="name" type="text" class="mt-1 block w-full"
                     :value="old('name', $package?->name)" placeholder="Contoh: Super Intensif UTBK" required />
-                <x-input-error class="mt-2" :messages="$errors->get('name')" />
+                <x-inputs.error class="mt-2" :messages="$errors->get('name')" />
             </div>
         </div>
 
         {{-- BAGIAN KATEGORI (FIXED STYLE) --}}
         <div class="mt-6">
-            <x-input-label :value="__('Kategori Kelas')" class="mb-2" />
+            <x-inputs.label :value="__('Kategori Kelas')" class="mb-2" />
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                 {{-- OPSI PRIVATE --}}
                 <label class="cursor-pointer relative group">
-                    {{-- Hapus class 'peer' karena kita pakai logic Alpine --}}
                     <input type="radio" name="category" value="PRIVATE" x-model="category" class="sr-only">
 
-                    {{-- Logic Style: Cek isi variabel category --}}
                     <div class="rounded-lg p-4 flex items-center gap-3 border transition duration-200" :class="category === 'PRIVATE' 
                             ? 'border-purple-600 bg-purple-50 text-purple-700 ring-1 ring-purple-600' 
                             : 'border-gray-200 hover:bg-gray-50 text-gray-600'">
@@ -129,7 +114,7 @@
                     </div>
                 </label>
             </div>
-            <x-input-error class="mt-2" :messages="$errors->get('category')" />
+            <x-inputs.error class="mt-2" :messages="$errors->get('category')" />
         </div>
 
     </div>
@@ -140,21 +125,20 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
             <div>
-                <x-input-label for="package_category_id" :value="__('Jenjang Pendidikan')" />
-                <select id="package_category_id" name="package_category_id"
-                    class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                <x-inputs.label for="package_category_id" :value="__('Jenjang Pendidikan')" />
+                <x-inputs.select id="package_category_id" name="package_category_id" class="mt-1 block w-full">
                     <option value="" disabled selected>-- Pilih Jenjang --</option>
                     @foreach($categories as $cat)
                     <option value="{{ $cat->id }}" @selected(old('package_category_id', $package?->package_category_id) == $cat->id)>
                         {{ $cat->name }}
                     </option>
                     @endforeach
-                </select>
-                <x-input-error class="mt-2" :messages="$errors->get('package_category_id')" />
+                </x-inputs.select>
+                <x-inputs.error class="mt-2" :messages="$errors->get('package_category_id')" />
             </div>
 
             <div>
-                <x-input-label for="price" :value="__('Harga Total (Rp)')" />
+                <x-inputs.label for="price" :value="__('Harga Total (Rp)')" />
                 <div class="relative mt-1 rounded-md shadow-sm">
                     <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                         <span class="text-gray-500 sm:text-sm">Rp</span>
@@ -163,34 +147,34 @@
                         class="block w-full rounded-md border-gray-300 pl-10 focus:border-indigo-500 focus:ring-indigo-500"
                         placeholder="0" value="{{ old('price', $package?->price) }}" required>
                 </div>
-                <x-input-error class="mt-2" :messages="$errors->get('price')" />
+                <x-inputs.error class="mt-2" :messages="$errors->get('price')" />
             </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <x-input-label for="duration" :value="__('Durasi Paket (Bulan)')" />
+                <x-inputs.label for="duration" :value="__('Durasi Paket (Bulan)')" />
                 <div class="flex gap-2 items-center">
-                    <x-text-input id="duration" name="duration" type="number" class="mt-1 block w-full"
+                    <x-inputs.text id="duration" name="duration" type="number" class="mt-1 block w-full"
                         :value="old('duration', $package?->duration ? $package->duration / 30 : '')" placeholder="6" />
                     <span class="text-gray-500">Bulan</span>
                 </div>
-                <x-input-error class="mt-2" :messages="$errors->get('duration')" />
+                <x-inputs.error class="mt-2" :messages="$errors->get('duration')" />
             </div>
 
             <div>
-                <x-input-label for="session_count" :value="__('Jumlah Pertemuan')" />
+                <x-inputs.label for="session_count" :value="__('Jumlah Pertemuan')" />
                 <div class="flex gap-2 items-center">
-                    <x-text-input id="session_count" name="session_count" type="number" class="mt-1 block w-full"
+                    <x-inputs.text id="session_count" name="session_count" type="number" class="mt-1 block w-full"
                         :value="old('session_count', $package?->session_count)" placeholder="8" />
                     <span class="text-gray-500 text-sm whitespace-nowrap">Sesi / Minggu</span>
                 </div>
-                <x-input-error class="mt-2" :messages="$errors->get('session_count')" />
+                <x-inputs.error class="mt-2" :messages="$errors->get('session_count')" />
             </div>
         </div>
 
         <div class="mt-4">
-            <x-input-label for="description" :value="__('Deskripsi Paket')" />
+            <x-inputs.label for="description" :value="__('Deskripsi Paket')" />
             <textarea id="description" name="description" rows="3"
                 class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old('description', $package?->description) }}</textarea>
         </div>
@@ -201,7 +185,7 @@
 
         <div>
             <div class="flex justify-between items-center mb-2">
-                <x-input-label :value="__('Poin Keuntungan (Benefit)')" />
+                <x-inputs.label :value="__('Poin Keuntungan (Benefit)')" />
                 <button type="button" @click="addBenefit()" class="text-sm text-blue-600 hover:underline font-medium">+
                     Tambah Poin</button>
             </div>
@@ -231,18 +215,16 @@
                     </div>
                 </template>
                 {{-- Tampilkan Error Validasi Backend --}}
-                <x-input-error class="mt-2" :messages="$errors->get('benefits')" />
-                <x-input-error class="mt-1" :messages="$errors->get('benefits.*')" />
+                <x-inputs.error class="mt-2" :messages="$errors->get('benefits')" />
+                <x-inputs.error class="mt-1" :messages="$errors->get('benefits.*')" />
             </div>
         </div>
-
-        {{-- Kolom Pengajar dihapus (dimindahkan ke Form Tutor) --}}
 
     </div>
 
     {{-- BAGIAN 4: GAMBAR COVER --}}
     <div class="border-t border-gray-200 pt-6">
-        <x-input-label for="image" :value="__('Gambar Cover Paket')" />
+        <x-inputs.label for="image" :value="__('Gambar Cover Paket')" />
 
         <div class="mt-2 flex items-center gap-x-5">
             <div
@@ -267,19 +249,19 @@
                 <input type="file" id="image" name="image" accept="image/*" @change="previewImage"
                     class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
                 <p class="mt-1 text-xs text-gray-500">Format: JPG, PNG. Maksimal 2MB.</p>
-                <x-input-error class="mt-2" :messages="$errors->get('image')" />
+                <x-inputs.error class="mt-2" :messages="$errors->get('image')" />
             </div>
         </div>
     </div>
 
     {{-- TOMBOL AKSI --}}
     <div class="flex items-center justify-end gap-4 border-t border-gray-200 pt-6">
-        <a href="{{ route('admin.packages.index') }}" class="text-gray-600 hover:text-gray-900 font-medium text-sm">
+        <a href="{{ route('branch.packages.index', $branch) }}" class="text-gray-600 hover:text-gray-900 font-medium text-sm">
             {{ __('Batal') }}
         </a>
-        <x-primary-button class="px-6">
+        <x-buttons.primary class="px-6">
             {{ $submit_text ?? 'Simpan Paket' }}
-        </x-primary-button>
+        </x-buttons.primary>
     </div>
 
 </div>

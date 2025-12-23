@@ -18,15 +18,15 @@
         @method('patch')
 
         <div>
-            <x-input-label for="name" :value="__('Nama')" />
-            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
-            <x-input-error class="mt-2" :messages="$errors->get('name')" />
+            <x-inputs.label for="name" :value="__('Nama')" />
+            <x-inputs.text id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
+            <x-inputs.error class="mt-2" :messages="$errors->get('name')" />
         </div>
 
         <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" required autocomplete="username" />
-            <x-input-error class="mt-2" :messages="$errors->get('email')" />
+            <x-inputs.label for="email" :value="__('Email')" />
+            <x-inputs.text id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" required autocomplete="username" />
+            <x-inputs.error class="mt-2" :messages="$errors->get('email')" />
 
             @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
                 <div>
@@ -54,16 +54,16 @@
 
                 {{-- Phone --}}
                 <div class="mb-4">
-                    <x-input-label for="phone" value="No. Telepon / WhatsApp" />
-                    <x-text-input id="phone" name="phone" type="text" class="mt-1 block w-full" :value="old('phone', $user->tutor?->phone)" />
-                    <x-input-error class="mt-2" :messages="$errors->get('phone')" />
+                    <x-inputs.label for="phone" value="No. Telepon / WhatsApp" />
+                    <x-inputs.text id="phone" name="phone" type="text" class="mt-1 block w-full" :value="old('phone', $user->tutor?->phone)" />
+                    <x-inputs.error class="mt-2" :messages="$errors->get('phone')" />
                 </div>
 
                 {{-- Address --}}
                 <div class="mb-4">
-                    <x-input-label for="address" value="Alamat Domisili" />
+                    <x-inputs.label for="address" value="Alamat Domisili" />
                     <textarea id="address" name="address" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" rows="3">{{ old('address', $user->tutor?->address) }}</textarea>
-                    <x-input-error class="mt-2" :messages="$errors->get('address')" />
+                    <x-inputs.error class="mt-2" :messages="$errors->get('address')" />
                 </div>
 
                 {{-- Photo Profile --}}
@@ -76,7 +76,7 @@
                         }
                     }
                 }">
-                     <x-input-label for="image" value="Foto Profil" />
+                     <x-inputs.label for="image" value="Foto Profil" />
                      
                      <div class="flex items-center gap-4 mt-2">
                         
@@ -103,31 +103,31 @@
                             "/>
                         </label>
                      </div>
-                     <x-input-error class="mt-2" :messages="$errors->get('image')" />
+                     <x-inputs.error class="mt-2" :messages="$errors->get('image')" />
                 </div>
 
                 {{-- Jobs --}}
                 <div class="mb-4">
-                    <x-input-label for="jobs" value="Pekerjaan / Keahlian (Pisahkan dengan koma)" />
-                    <x-text-input id="jobs" name="jobs" type="text" class="mt-1 block w-full" :value="old('jobs', implode(', ', $user->tutor?->jobs ?? []))" placeholder="Contoh: Matematika, Fisika, Guru SD" />
-                    <x-input-error class="mt-2" :messages="$errors->get('jobs')" />
+                    <x-inputs.label for="jobs" value="Pekerjaan / Keahlian (Pisahkan dengan koma)" />
+                    <x-inputs.text id="jobs" name="jobs" type="text" class="mt-1 block w-full" :value="old('jobs', implode(', ', $user->tutor?->jobs ?? []))" placeholder="Contoh: Matematika, Fisika, Guru SD" />
+                    <x-inputs.error class="mt-2" :messages="$errors->get('jobs')" />
                 </div>
 
                 {{-- Bio --}}
                 <div class="mb-4">
-                    <x-input-label for="bio" value="Bio Singkat" />
+                    <x-inputs.label for="bio" value="Bio Singkat" />
                     <textarea id="bio" name="bio" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" rows="3">{{ old('bio', $user->tutor?->bio) }}</textarea>
-                    <x-input-error class="mt-2" :messages="$errors->get('bio')" />
+                    <x-inputs.error class="mt-2" :messages="$errors->get('bio')" />
                 </div>
 
                 {{-- READ ONLY INFO --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 bg-gray-50 p-4 rounded-lg">
                     <div>
-                        <x-input-label value="Cabang (Tidak dapat diubah)" />
+                        <x-inputs.label value="Cabang (Tidak dapat diubah)" />
                         <div class="mt-1 text-gray-900 font-bold">{{ $user->tutor?->branch?->name ?? '-' }}</div>
                     </div>
                     <div>
-                        <x-input-label value="Paket yang Diampu (Hubungi Admin untuk ubah)" />
+                        <x-inputs.label value="Paket yang Diampu (Hubungi Admin untuk ubah)" />
                         <div class="mt-1 flex flex-wrap gap-2">
                              @forelse($user->tutor?->packages ?? [] as $pkg)
                                 <span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs font-bold">{{ $pkg->name }}</span>
@@ -141,7 +141,7 @@
         @endif
 
         <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Simpan') }}</x-primary-button>
+            <x-buttons.primary>{{ __('Simpan') }}</x-buttons.primary>
 
             @if (session('status') === 'profile-updated')
                 <p

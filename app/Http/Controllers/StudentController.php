@@ -60,7 +60,7 @@ class StudentController extends Controller
 
         // --- LOGIKA LIVE SEARCH ---
         if ($request->ajax()) {
-            return view('admin.student._list', compact('students'))->render();
+            return view('admin.student.partials.table', compact('students'))->render();
         }
 
         return view('admin.student.index', compact('students', 'branches', 'packages', 'grades'));
@@ -108,7 +108,7 @@ class StudentController extends Controller
             ->with('success', 'Data siswa berhasil diperbarui!');
     }
 
-   public function show(Student $student)
+    public function show(Student $student, StudentService $studentService)
     {
         $student->load([
             'package', // Load single package
@@ -122,35 +122,8 @@ class StudentController extends Controller
             }
         ]);
 
-        // Check if Period Over
-        $isPeriodOver = false;
-        if ($student->package && $student->join_date) {
-            $endDate = $student->join_date->copy();
-            
-            // Logic Weekly/Monthly same as Service
-            if ($student->billing_cycle === 'weekly') {
-                 $weeks = floor($student->package->duration / 7);
-                 $weeks = ($weeks < 1) ? 1 : $weeks;
-                 $endDate->addWeeks($weeks);
-            } else {
-                 $endDate->addDays($student->package->duration);
-            }
-
-            // Condition: 
-            // 1. Status finished
-            // 2. Or Next Billing Date >= End Date
-            // 3. Or Next Billing Date is NULL (meaning finished usually, but could be error? No, logic says null = finished)
-            
-            if ($student->status === 'finished') {
-                $isPeriodOver = true;
-            } elseif ($student->next_billing_date && $student->next_billing_date->gte($endDate)) {
-                $isPeriodOver = true;
-            } elseif (is_null($student->next_billing_date) && $student->status !== 'pending') {
-                // If active but null date? Should not happen unless manual edit.
-                // Assuming null date + not pending = finished.
-                $isPeriodOver = true;
-            }
-        }
+        // Check if Period Over using Service
+        $isPeriodOver = $studentService->isPeriodOver($student);
 
         return view('admin.student.show', compact('student', 'isPeriodOver'));
     }
@@ -164,328 +137,39 @@ class StudentController extends Controller
     /**
      * Fitur: Admin Manual Create Bill & Xendit Invoice
      */
-    public function storeBill(Request $request, Student $student)
+    public function storeBill(Request $request, Student $student, \App\Services\BillingService $billingService)
     {
-        // 1. Pastikan Siswa punya Paket Aktif
-        if (!$student->package) {
-            return back()->with('error', 'Siswa tidak memiliki paket aktif. Edit siswa untuk pilih paket dulu.');
-        }
-
-        if ($student->status === 'pending') {
-            return back()->with('error', 'Siswa masih status PENDING (Baru Daftar). Mohon lunasi tagihan pendaftaran pertama dulu sebelum membuat tagihan baru.');
-        }
-
-        $package = $student->package;
-
-        // 2. Cek Apakah Paket Masih Aktif (Belum Selesai)
-        $dueDate = $student->next_billing_date ?? now();
-        
-        // CHECK 1: MAX BILLS COUNT (Safeguard)
-        // Hitung estimasi jumlah tagihan berdasarkan durasi (mis: 6 bulan = 6 tagihan)
-        $maxBills = 999;
-        if ($student->billing_cycle === 'monthly') {
-            $maxBills = round($package->duration / 30);
-        } elseif ($student->billing_cycle === 'weekly') {
-            $maxBills = round($package->duration / 7);
-        }
-
-        // Hanya cek jika maxBills masuk akal (> 0) dan bukan cycle 'full' (karena full cuma 1x)
-        if ($maxBills > 0 && $student->billing_cycle !== 'full') {
-            $billCount = $student->bills()->count();
-            if ($billCount >= $maxBills) {
-                 return back()->with('error', "Batas max tagihan ({$maxBills}x) untuk paket ini sudah tercapai. Tidak bisa membuat tagihan ke-" . ($billCount + 1));
-            }
-        }
-
-        // CHECK 2: End Date
-        if ($student->join_date) {
-            $endDate = $student->join_date->copy()->addDays($package->duration);
-            
-            // Logika baru: Jika Due Date (Tagihan Selanjutnya) >= End Date, artinya sudah habis.
-            // Gunakan buffer 1 hari toleransi jika perlu
-            if ($dueDate->greaterThanOrEqualTo($endDate)) {
-                return back()->with('error', 'Paket siswa ini SUDAH SELESAI (' . $endDate->format('d M Y') . '). Tidak bisa menagih lagi. Silakan update status siswa jadi Finished.');
-            }
-        }
-
-        // 3. Hitung Nominal Tagihan (Logic sama dengan Registration)
-        // $package defined above.
-        $amount = $package->price; // Default Monthly
-
-        if ($student->billing_cycle === 'weekly') {
-            $amount = $package->price / 4;
-        } elseif ($student->billing_cycle === 'full') {
-            $months = ceil($package->duration / 30);
-            $amount = $package->price * ($months > 0 ? $months : 1);
-        }
-
-        // CEK DUPLIKAT: Jangan buat tagihan jika sudah ada tagihan di tanggal yang sama
-        $existingBill = \App\Models\Bill::where('student_id', $student->id)
-                                        ->whereDate('due_date', $dueDate)
-                                        ->first();
-        if ($existingBill) {
-             return back()->with('error', "Tagihan untuk periode " . $dueDate->format('d M Y') . " SUDAH ADA. Mohon cek daftar tagihan.");
-        }
-
-        // Judul Tagihan
-        $title = "Tagihan " . $package->name . " - Periode " . $dueDate->format('d M Y');
-
-        // 4. Buat Record 'Bill' (Tagihan Wajib)
-        $bill = $student->bills()->create([
-            'title'    => $title,
-            'amount'   => $amount,
-            'due_date' => $dueDate,
-            'status'   => 'UNPAID', // Awalnya UNPAID
-        ]);
-
-        // 5. Generate Transaksi & Xendit Invoice Otomatis
-        // Agar link langsung muncul di Portal
-        $invoiceCode = 'INV-' . time() . '-' . $student->id . '-B' . $bill->id; // Unique Code
-        
-        $transaction = $student->transactions()->create([
-            'invoice_code' => $invoiceCode,
-            'total_amount' => $amount,
-            'status'       => 'PENDING',
-            'payment_url'  => '#',
-            'transaction_date' => now(),
-        ]);
-
-        // Call Xendit Service
-        $txService = new \App\Services\TransactionService();
-        
-        // Redirect URL untuk Xendit (Balik ke Portal biar user biasa lihat status)
-        // UPDATE: User minta diarahkan ke Struk Pembayaran (sama seperti daftar awal)
-        $successUrl = route('landing.payment.show', ['invoice_code' => $invoiceCode, 'status' => 'success']);
-        $failureUrl = route('student.portal.index', ['token' => $student->access_token]);
-
-        $description = "Pembayaran " . $title;
-        $result = $txService->createInvoice($transaction, $student, $description, $successUrl, $failureUrl);
+        $result = $billingService->createNextBill($student);
 
         if ($result['success']) {
-            // Update Bill dengan Transaction ID
-            $bill->update([
-                'transaction_id' => $transaction->id,
-                'status' => 'PENDING' // Berubah jadi Pending karena sudah ada invoice
-            ]);
-
-            // UPDATE NEXT BILLING DATE (SAMA PERSIS BRANCH CONTROLLER)
-            // Majukan tanggal tagihan berikutnya AGAR tidak menagih tanggal yang sama lagi.
-            $nextDate = $dueDate->copy();
-            
-            if ($student->billing_cycle === 'weekly') {
-                $nextDate->addWeek();
-            } elseif ($student->billing_cycle === 'monthly') {
-                $nextDate->addMonth();
-            } elseif ($student->billing_cycle === 'full') {
-                $nextDate->addMonths($package->duration); // Langsung lompat jauh
-            }
-
-            $student->update(['next_billing_date' => $nextDate]);
-
-            // SEND WHATSAPP NOTIFICATION
-            try {
-               if ($student->parent_phone || $student->name) {
-                   $waService = app(\App\Services\WhatsApp\WhatsAppServiceInterface::class);
-                   $target = $student->parent_phone;
-                   $portalLink = $student->portal_link;
-                   $amountRp = number_format($amount, 0, ',', '.');
-                   
-                   // Schedule Link
-                   $scheduleLink = route('schedules.index');
-
-                   $msg = "🔔 *TAGIHAN BARU DITERBITKAN* 🔔\n\n"
-                        . "Halo Orang Tua *{$student->name}*,\n"
-                        . "Tagihan baru telah diterbitkan oleh Admin Pusat.\n\n"
-                        . "📝 *Detail Tagihan:*\n"
-                        . "🏷️ Judul: {$title}\n"
-                        . "💰 Jumlah: Rp {$amountRp}\n\n"
-                        . "Silakan cek dan bayar melalui Portal Siswa:\n"
-                        . "👉 Portal: {$portalLink}\n"
-                        . "📅 Jadwal: {$scheduleLink}\n\n"
-                        . "ℹ️ *Info:* Klik link di atas untuk melihat detail tagihan.\n\n"
-                        . "Terima kasih! 🙏";
-
-                   if ($target) {
-                        $waService->sendMessage($target, $msg);
-                   }
-               }
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error("WA Manual Bill Failed: " . $e->getMessage());
-            }
-
-            return back()->with('success', 'Tagihan berhasil dibuat! Invoice Xendit aktif.');
+            return back()->with('success', $result['message']);
         } else {
-            // Jika gagal ke Xendit, Bill tetap UNPAID tapi tanpa Link
-            return back()->with('error', 'Tagihan dibuat tapi GAGAL generate Xendit Invoice: ' . $result['message']);
+            return back()->with('error', $result['message']);
         }
     }
+
     /**
      * Fitur: Admin Manual Payment (Bayar Tunai / Lunas Langsung)
      */
-    public function storeManualPayment(Request $request, Student $student, \App\Services\StudentService $studentService)
+    public function storeManualPayment(Request $request, Student $student, \App\Services\BillingService $billingService)
     {
-        if (!$student->package) {
-            return back()->with('error', 'Siswa tidak memiliki paket aktif.');
+        $result = $billingService->processManualPayment($student);
+
+        if ($result['success']) {
+            return back()->with('success', $result['message']);
+        } else {
+            return back()->with('error', $result['message']);
         }
-
-        // 1. Hitung Nominal
-        $package = $student->package;
-        $amount = $package->price;
-        if ($student->billing_cycle === 'weekly') {
-            $amount = $package->price / 4;
-        } elseif ($student->billing_cycle === 'full') {
-            $months = ceil($package->duration / 30);
-            $amount = $package->price * ($months > 0 ? $months : 1);
-        }
-
-        $dueDate = $student->next_billing_date ?? now();
-        $title = "Pembayaran Tunai " . $package->name . " - Periode " . $dueDate->format('d M Y');
-
-        // 2. Buat Transaction (PAID)
-        $invoiceCode = 'INV-CASH-' . time() . '-' . $student->id;
-        
-        $transaction = $student->transactions()->create([
-            'invoice_code' => $invoiceCode,
-            'total_amount' => $amount,
-            'status'       => 'PAID', // Langsung LUNAS
-            'payment_url'  => '#',
-            'transaction_date' => now(),
-            'paid_at'      => now(),
-            'payment_method' => 'CASH',
-            'payment_channel' => 'ADMIN_MANUAL'
-        ]);
-
-        // 3. Buat Bill (PAID)
-        $student->bills()->create([
-            'title'    => $title,
-            'amount'   => $amount,
-            'due_date' => $dueDate,
-            'status'   => 'PAID',
-            'transaction_id' => $transaction->id
-        ]);
-
-        // 4. Update Next Billing Date & Status (Via Service)
-        // Pass false to suppress generic WA, because we send custom one below
-        $studentService->processPaymentSuccess($student, false);
-
-        // SEND WHATSAPP NOTIFICATION
-        try {
-           if ($student->parent_phone || $student->name) {
-               $waService = app(\App\Services\WhatsApp\WhatsAppServiceInterface::class);
-               $target = $student->parent_phone;
-               $portalLink = $student->portal_link;
-               $amountRp = number_format($amount, 0, ',', '.');
-               
-                // Schedule Link
-                $scheduleLink = route('schedules.index');
-
-                $msg = "✅ *PEMBAYARAN TUNAI DITERIMA!* ✅\n\n"
-                     . "Halo Orang Tua *{$student->name}*,\n"
-                     . "Pembayaran tunai untuk tagihan *{$title}* telah kami terima.\n\n"
-                     . "💰 Jumlah: Rp {$amountRp}\n"
-                     . "✅ Status: *LUNAS*\n\n"
-                     . "Bukti pembayaran & jadwal belajar dapat dilihat di Portal Siswa:\n"
-                     . "👉 Portal: {$portalLink}\n"
-                     . "📅 Jadwal: {$scheduleLink}\n\n"
-                     . "Terima kasih! 🙏";
-
-               if ($target) {
-                    $waService->sendMessage($target, $msg);
-               }
-           }
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("WA Manual Payment Failed: " . $e->getMessage());
-        }
-
-        return back()->with('success', 'Pembayaran Tunai berhasil dicatat! Transaksi LUNAS.');
     }
 
-    /**
-     * Fitur: Lunaskan Tagihan Tertentu (Bypass Xendit / Bayar Tunai untuk Bill yang sudah ada)
-     */
-    public function payBillManually(Request $request, Student $student, \App\Models\Bill $bill)
+    public function payBillManually(Request $request, Student $student, \App\Models\Bill $bill, \App\Services\BillingService $billingService)
     {
-        // Validasi Bill milik Student
-        if ($bill->student_id !== $student->id) {
-            abort(403, 'Tagihan tidak valid untuk siswa ini.');
+        $result = $billingService->payExistingBillManually($student, $bill);
+
+        if ($result['success']) {
+            return back()->with('success', $result['message']);
+        } else {
+            return back()->with('error', $result['message']);
         }
-
-        if ($bill->status === 'PAID') {
-            return back()->with('error', 'Tagihan ini sudah lunas.');
-        }
-
-        DB::transaction(function() use ($student, $bill) {
-            // 1. Buat Transaksi Lunas
-            $invoiceCode = 'INV-MANUAL-' . time() . '-' . $student->id . '-B' . $bill->id;
-            
-            $transaction = $student->transactions()->create([
-                'invoice_code' => $invoiceCode,
-                'total_amount' => $bill->amount,
-                'status'       => 'PAID',
-                'payment_url'  => '#',
-                'transaction_date' => now(),
-                'paid_at'      => now(),
-                'payment_method' => 'CASH',     // Dianggap Tunai
-                'payment_channel' => 'MANUAL_BY_ADMIN'
-            ]);
-
-            // 2. Update Bill
-            $bill->update([
-                'status' => 'PAID',
-                'transaction_id' => $transaction->id
-            ]);
-
-            // SEND WHATSAPP NOTIFICATION
-            try {
-               // Perlu ambil data student ulang atau pakai use($student) yang ada
-               if ($student->parent_phone || $student->name) {
-                   $waService = app(\App\Services\WhatsApp\WhatsAppServiceInterface::class);
-                   $target = $student->parent_phone;
-                   $portalLink = $student->portal_link;
-                   $amountRp = number_format($bill->amount, 0, ',', '.');
-                   
-                   // Schedule Link
-                   $scheduleLink = route('schedules.index');
-                   
-                   $msg = "✅ *PEMBAYARAN DITERIMA!* ✅\n\n"
-                        . "Halo Orang Tua *{$student->name}*,\n"
-                        . "Pembayaran untuk tagihan *{$bill->title}* telah diselesaikan secara manual oleh Admin.\n\n"
-                        . "💰 Jumlah: Rp {$amountRp}\n"
-                        . "✅ Status: *LUNAS*\n\n"
-                        . "Bukti pembayaran & jadwal belajar dapat dilihat di Portal Siswa:\n"
-                        . "👉 Portal: {$portalLink}\n"
-                        . "📅 Jadwal: {$scheduleLink}\n\n"
-                        . "Terima kasih! 🙏";
-
-                   if ($target) {
-                        $waService->sendMessage($target, $msg);
-                   }
-               }
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error("WA Pay Bill Manually Failed: " . $e->getMessage());
-            }
-
-            // 3. Logic Status
-            if ($student->status === 'pending') {
-                $student->update(['status' => 'active']);
-            }
-
-            // 4. Cek apakah Siswa Selesai (Logic Status)
-            // Cek Period Over & No Unpaid Bills
-            if ($student->package && $student->join_date && $student->next_billing_date) {
-                // ... logic unchanged ...
-                $endDate = $student->join_date->copy()->addDays($student->package->duration);
-                $isPeriodOver = $student->next_billing_date->gte($endDate);
-                
-                // Unpaid count harusnya 0 sekarang (karena baru saja dilunaskan 1)
-                $hasUnpaidBills = $student->bills()->where('status', '!=', 'PAID')->exists(); // Pakai query langsung agar real-time
-
-                if ($isPeriodOver && !$hasUnpaidBills) {
-                    $student->update(['status' => 'finished']);
-                }
-            }
-        });
-
-        return back()->with('success', 'Tagihan berhasil dilunaskan secara manual.');
     }
 }

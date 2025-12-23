@@ -51,7 +51,7 @@
                     </a>
                 </div>
                 <div class="relative ms-3">
-                    <x-dropdown align="right" width="48">
+                    <x-layout.dropdown align="right" width="48">
                         <x-slot name="trigger">
                             <button
                                 class="inline-flex items-center gap-2 px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-full text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
@@ -86,20 +86,20 @@
                             <div class="px-4 py-2 border-b border-gray-100 text-xs text-gray-400">
                                 Manajemen Akun
                             </div>
-                            <x-dropdown-link :href="route('profile.edit')">
+                            <x-layout.dropdown-link :href="route('profile.edit')">
                                 {{ __('Profile Saya') }}
-                            </x-dropdown-link>
+                            </x-layout.dropdown-link>
 
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <x-dropdown-link :href="route('logout')"
+                                <x-layout.dropdown-link :href="route('logout')"
                                     onclick="event.preventDefault(); this.closest('form').submit();"
                                     class="text-red-600 hover:bg-red-50">
                                     {{ __('Keluar') }}
-                                </x-dropdown-link>
+                                </x-layout.dropdown-link>
                             </form>
                         </x-slot>
-                    </x-dropdown>
+                    </x-layout.dropdown>
                 </div>
             </div>
         </div>
@@ -119,113 +119,10 @@
 
         <div class="pt-2 pb-3 space-y-1">
             @if($isBranchRoute && $currentBranch)
-                {{-- MENU CABANG (Context-Aware) --}}
-                
-                @if(Auth::user()->isCentralAdmin())
-                    <x-responsive-nav-link :href="route('admin.dashboard')" class="bg-indigo-50 text-indigo-700 font-bold border-l-4 border-indigo-500">
-                        &larr; {{ __('Kembali ke Dashboard Pusat') }}
-                    </x-responsive-nav-link>
-                @endif
-
-                <x-responsive-nav-link :href="route('branch.dashboard', $currentBranch)" :active="request()->routeIs('branch.dashboard')">
-                    {{ __('Dashboard Cabang') }}
-                </x-responsive-nav-link>
-
-                <div class="px-4 pt-2 pb-1 text-xs text-gray-400 font-bold uppercase">Akademik</div>
-                
-                <x-responsive-nav-link :href="route('branch.students.index', $currentBranch)" :active="request()->routeIs('branch.students.*')">
-                    {{ __('Data Siswa') }}
-                </x-responsive-nav-link>
-
-                <x-responsive-nav-link :href="route('branch.packages.index', $currentBranch)" :active="request()->routeIs('branch.packages.*')">
-                    {{ __('Paket Belajar') }}
-                </x-responsive-nav-link>
-
-                <x-responsive-nav-link :href="route('branch.courses.index', $currentBranch)" :active="request()->routeIs('branch.courses.*')">
-                    {{ __('Data Kelas') }}
-                </x-responsive-nav-link>
-
-                <x-responsive-nav-link :href="route('branch.schedules.index', $currentBranch)" :active="request()->routeIs('branch.schedules.*')">
-                    {{ __('Jadwal Belajar') }}
-                </x-responsive-nav-link>
-
-                <div class="px-4 pt-2 pb-1 text-xs text-gray-400 font-bold uppercase">Keuangan</div>
-
-                <x-responsive-nav-link :href="route('branch.transactions.index', $currentBranch)" :active="request()->routeIs('branch.transactions.*')">
-                    {{ __('Riwayat Transaksi') }}
-                </x-responsive-nav-link>
-
-                <x-responsive-nav-link :href="route('branch.reports.index', $currentBranch)" :active="request()->routeIs('branch.reports.index')">
-                    {{ __('Laporan Pemasukan') }}
-                </x-responsive-nav-link>
-
-                <x-responsive-nav-link :href="route('branch.reports.students', $currentBranch)" :active="request()->routeIs('branch.reports.students')">
-                    {{ __('Laporan Siswa') }}
-                </x-responsive-nav-link>
-
+                <x-layout.branch-mobile-menu :branch="$currentBranch" />
             @elseif(Auth::user()->isCentralAdmin())
-                {{-- MENU ADMIN PUSAT --}}
-                <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                    {{ __('Dashboard') }}
-                </x-responsive-nav-link>
-
-                <div class="px-4 pt-2 pb-1 text-xs text-gray-400 font-bold uppercase">Master Data</div>
-                
-                <x-responsive-nav-link :href="route('admin.students.index')" :active="request()->routeIs('admin.students.*')">
-                    {{ __('Data Siswa') }}
-                </x-responsive-nav-link>
-                
-                <x-responsive-nav-link :href="route('admin.tutors.index')" :active="request()->routeIs('admin.tutors.*')">
-                    {{ __('Data Tutor') }}
-                </x-responsive-nav-link>
-
-                <x-responsive-nav-link :href="route('admin.packages.index')" :active="request()->routeIs('admin.packages.*')">
-                    {{ __('Paket Belajar') }}
-                </x-responsive-nav-link>
-
-                <x-responsive-nav-link :href="route('admin.package-categories.index')" :active="request()->routeIs('admin.package-categories.*')">
-                    {{ __('Kategori Paket') }}
-                </x-responsive-nav-link>
-
-                <x-responsive-nav-link :href="route('admin.schedules.index')" :active="request()->routeIs('admin.schedules.*')">
-                    {{ __('Jadwal Belajar') }}
-                </x-responsive-nav-link>
-
-                <x-responsive-nav-link :href="route('admin.branches.index')" :active="request()->routeIs('admin.branches.*')">
-                    {{ __('Data Cabang') }}
-                </x-responsive-nav-link>
-
-                <x-responsive-nav-link :href="route('admin.contents.index')" :active="request()->routeIs('admin.contents.*')">
-                    {{ __('Galeri & Konten') }}
-                </x-responsive-nav-link>
-
-                <div class="px-4 pt-2 pb-1 text-xs text-gray-400 font-bold uppercase">Keuangan</div>
-                
-                <x-responsive-nav-link :href="route('admin.transactions.index')" :active="request()->routeIs('admin.transactions.*')">
-                    {{ __('Riwayat Transaksi') }}
-                </x-responsive-nav-link>
-
-                <div class="px-4 pt-2 pb-1 text-xs text-gray-400 font-bold uppercase">Laporan & Log</div>
-                
-                <x-responsive-nav-link :href="route('admin.reports.index')" :active="request()->routeIs('admin.reports.index')">
-                    {{ __('Laporan Keuangan') }}
-                </x-responsive-nav-link>
-                
-                <x-responsive-nav-link :href="route('admin.reports.students')" :active="request()->routeIs('admin.reports.students')">
-                    {{ __('Laporan Siswa') }}
-                </x-responsive-nav-link>
-
-                <x-responsive-nav-link :href="route('admin.activity-logs.index')" :active="request()->routeIs('admin.activity-logs.index*')">
-                    {{ __('Log Aktivitas') }}
-                </x-responsive-nav-link>
-
-                <div class="px-4 pt-2 pb-1 text-xs text-gray-400 font-bold uppercase">Pengaturan</div>
-                
-                <x-responsive-nav-link :href="route('admin.settings.index')" :active="request()->routeIs('admin.settings.*')">
-                    {{ __('Pengaturan Website') }}
-                </x-responsive-nav-link>
-
-           @endif
+                <x-layout.admin-mobile-menu />
+            @endif
         </div>
 
         <div class="pt-4 pb-4 border-t border-gray-200 bg-gray-50">
@@ -247,17 +144,17 @@
             </div>
 
             <div class="mt-3 space-y-1 px-2">
-                <x-responsive-nav-link :href="route('profile.edit')" class="rounded-md">
+                <x-layout.responsive-nav-link :href="route('profile.edit')" class="rounded-md">
                     {{ __('Profile') }}
-                </x-responsive-nav-link>
+                </x-layout.responsive-nav-link>
 
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <x-responsive-nav-link :href="route('logout')"
+                    <x-layout.responsive-nav-link :href="route('logout')"
                         onclick="event.preventDefault(); this.closest('form').submit();"
                         class="text-red-600 rounded-md">
                         {{ __('Keluar') }}
-                    </x-responsive-nav-link>
+                    </x-layout.responsive-nav-link>
                 </form>
             </div>
         </div>

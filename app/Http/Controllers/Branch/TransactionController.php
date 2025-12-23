@@ -35,7 +35,7 @@ class TransactionController extends Controller
             ->withQueryString();
 
         if ($request->ajax()) {
-            return view('branch.transaction._list', compact('transactions', 'branch'))->render();
+            return view('branch.transaction.partials.table', compact('transactions', 'branch'))->render();
         }
 
         return view('branch.transaction.index', compact('transactions', 'branch'));

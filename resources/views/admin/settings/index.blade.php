@@ -68,7 +68,7 @@
                             
                             @foreach($settings['general'] ?? [] as $setting)
                                 <div>
-                                    <x-input-label :for="$setting->key" :value="ucwords(str_replace(['site_', '_'], ['',' '], $setting->key))" />
+                                    <x-inputs.label :for="$setting->key" :value="ucwords(str_replace(['site_', '_'], ['',' '], $setting->key))" />
                                     
                                     @if($setting->type === 'image')
                                         <div class="mt-2" x-data="{ preview: '{{ $setting->value ? (str_contains($setting->value, 'http') ? $setting->value : asset('storage/' . $setting->value)) : '' }}' }">
@@ -91,7 +91,7 @@
                                             @endif
                                         </div>
                                     @else
-                                        <x-text-input id="{{ $setting->key }}" name="{{ $setting->key }}" type="text" class="mt-1 block w-full" :value="old($setting->key, $setting->value)" />
+                                        <x-inputs.text id="{{ $setting->key }}" name="{{ $setting->key }}" type="text" class="mt-1 block w-full" :value="old($setting->key, $setting->value)" />
                                     @endif
 
                                     @if($setting->hint)
@@ -107,7 +107,7 @@
                             
                             @foreach($settings['hero'] ?? [] as $setting)
                                 <div>
-                                    <x-input-label :for="$setting->key" :value="ucwords(str_replace(['hero_', '_'], ['',' '], $setting->key))" />
+                                    <x-inputs.label :for="$setting->key" :value="ucwords(str_replace(['hero_', '_'], ['',' '], $setting->key))" />
                                     
                                     @if($setting->type === 'textarea')
                                         <textarea id="{{ $setting->key }}" name="{{ $setting->key }}" rows="3" 
@@ -131,7 +131,7 @@
                                             @endif
                                         </div>
                                     @else
-                                        <x-text-input id="{{ $setting->key }}" name="{{ $setting->key }}" type="text" class="mt-1 block w-full" :value="old($setting->key, $setting->value)" />
+                                        <x-inputs.text id="{{ $setting->key }}" name="{{ $setting->key }}" type="text" class="mt-1 block w-full" :value="old($setting->key, $setting->value)" />
                                     @endif
 
                                     @if($setting->hint)
@@ -148,13 +148,13 @@
                             
                             @foreach($settings['features'] ?? [] as $setting)
                                 <div>
-                                    <x-input-label :for="$setting->key" :value="ucwords(str_replace(['feature_', '_'], ['Fitur ',' '], $setting->key))" />
+                                    <x-inputs.label :for="$setting->key" :value="ucwords(str_replace(['feature_', '_'], ['Fitur ',' '], $setting->key))" />
                                     
                                     @if($setting->type === 'textarea')
                                         <textarea id="{{ $setting->key }}" name="{{ $setting->key }}" rows="3" 
                                             class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old($setting->key, $setting->value) }}</textarea>
                                     @else
-                                        <x-text-input id="{{ $setting->key }}" name="{{ $setting->key }}" type="text" class="mt-1 block w-full" :value="old($setting->key, $setting->value)" />
+                                        <x-inputs.text id="{{ $setting->key }}" name="{{ $setting->key }}" type="text" class="mt-1 block w-full" :value="old($setting->key, $setting->value)" />
                                     @endif
                                 </div>
                             @endforeach
@@ -167,7 +167,7 @@
                             
                             @foreach($settings['faq'] ?? [] as $setting)
                                 <div class="border-b border-gray-100 pb-6 mb-6 last:border-0 last:mb-0 last:pb-0">
-                                    <x-input-label :for="$setting->key" :value="ucwords(str_replace(['faq_', '_'], ['',' '], $setting->key == 'faq_data' ? 'Daftar Pertanyaan (FAQ)' : $setting->key))" />
+                                    <x-inputs.label :for="$setting->key" :value="ucwords(str_replace(['faq_', '_'], ['',' '], $setting->key == 'faq_data' ? 'Daftar Pertanyaan (FAQ)' : $setting->key))" />
                                     
                                     @if($setting->type === 'json_list')
                                         <div x-data="{ items: {{ $setting->value ? $setting->value : '[]' }} }">
@@ -205,7 +205,7 @@
                                         <textarea id="{{ $setting->key }}" name="{{ $setting->key }}" rows="3" 
                                             class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old($setting->key, $setting->value) }}</textarea>
                                     @else
-                                        <x-text-input id="{{ $setting->key }}" name="{{ $setting->key }}" type="text" class="mt-1 block w-full bg-gray-50" :value="old($setting->key, $setting->value)" placeholder="Pertanyaan..." />
+                                        <x-inputs.text id="{{ $setting->key }}" name="{{ $setting->key }}" type="text" class="mt-1 block w-full bg-gray-50" :value="old($setting->key, $setting->value)" placeholder="Pertanyaan..." />
                                     @endif
                                 </div>
                             @endforeach
@@ -217,13 +217,13 @@
                             
                             @foreach($settings['about'] ?? [] as $setting)
                                 <div>
-                                    <x-input-label :for="$setting->key" :value="ucwords(str_replace(['about_', '_'], ['',' '], $setting->key))" />
+                                    <x-inputs.label :for="$setting->key" :value="ucwords(str_replace(['about_', '_'], ['',' '], $setting->key))" />
                                     
                                     @if($setting->type === 'textarea')
                                         <textarea id="{{ $setting->key }}" name="{{ $setting->key }}" rows="4" 
                                             class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old($setting->key, $setting->value) }}</textarea>
                                     @else
-                                        <x-text-input id="{{ $setting->key }}" name="{{ $setting->key }}" type="text" class="mt-1 block w-full" :value="old($setting->key, $setting->value)" />
+                                        <x-inputs.text id="{{ $setting->key }}" name="{{ $setting->key }}" type="text" class="mt-1 block w-full" :value="old($setting->key, $setting->value)" />
                                     @endif
                                 </div>
                             @endforeach
@@ -235,14 +235,14 @@
                             
                             @foreach($settings['contact'] ?? [] as $setting)
                                 <div>
-                                    <x-input-label :for="$setting->key" :value="ucwords(str_replace(['contact_', '_'], ['',' '], $setting->key))" />
-                                    <x-text-input id="{{ $setting->key }}" name="{{ $setting->key }}" type="text" class="mt-1 block w-full" :value="old($setting->key, $setting->value)" />
+                                    <x-inputs.label :for="$setting->key" :value="ucwords(str_replace(['contact_', '_'], ['',' '], $setting->key))" />
+                                    <x-inputs.text id="{{ $setting->key }}" name="{{ $setting->key }}" type="text" class="mt-1 block w-full" :value="old($setting->key, $setting->value)" />
                                 </div>
                             @endforeach
                         </div>
 
                         <div class="flex justify-end pt-6 border-t border-gray-100 mt-6">
-                            <x-primary-button>Simpan Perubahan</x-primary-button>
+                            <x-buttons.primary>Simpan Perubahan</x-buttons.primary>
                         </div>
                     </form>
 

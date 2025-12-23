@@ -44,33 +44,33 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
-            <x-input-label for="name" :value="__('Nama Lengkap')" />
-            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full"
+            <x-inputs.label for="name" :value="__('Nama Lengkap')" />
+            <x-inputs.text id="name" name="name" type="text" class="mt-1 block w-full"
                 :value="old('name', $tutor?->user->name)" required />
-            <x-input-error class="mt-2" :messages="$errors->get('name')" />
+            <x-inputs.error class="mt-2" :messages="$errors->get('name')" />
         </div>
 
         <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" name="email" type="email" class="mt-1 block w-full"
+            <x-inputs.label for="email" :value="__('Email')" />
+            <x-inputs.text id="email" name="email" type="email" class="mt-1 block w-full"
                 :value="old('email', $tutor?->user->email)" required />
-            <x-input-error class="mt-2" :messages="$errors->get('email')" />
+            <x-inputs.error class="mt-2" :messages="$errors->get('email')" />
         </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
-            <x-input-label for="password" :value="__('Password')" />
-            <x-text-input id="password" name="password" type="password" class="mt-1 block w-full" />
+            <x-inputs.label for="password" :value="__('Password')" />
+            <x-inputs.text id="password" name="password" type="password" class="mt-1 block w-full" />
             <p class="text-xs text-gray-500 mt-1">
                 {{ $tutor ? 'Kosongkan jika tidak ingin mengganti password.' : 'Wajib diisi untuk akun baru.' }}
             </p>
-            <x-input-error class="mt-2" :messages="$errors->get('password')" />
+            <x-inputs.error class="mt-2" :messages="$errors->get('password')" />
         </div>
 
         <div>
-            <x-input-label for="password_confirmation" :value="__('Konfirmasi Password')" />
-            <x-text-input id="password_confirmation" name="password_confirmation" type="password"
+            <x-inputs.label for="password_confirmation" :value="__('Konfirmasi Password')" />
+            <x-inputs.text id="password_confirmation" name="password_confirmation" type="password"
                 class="mt-1 block w-full" />
         </div>
     </div>
@@ -80,25 +80,24 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
-            <x-input-label for="phone" :value="__('No. Telepon')" />
-            <x-text-input id="phone" name="phone" type="text" class="mt-1 block w-full"
+            <x-inputs.label for="phone" :value="__('No. Telepon')" />
+            <x-inputs.text id="phone" name="phone" type="text" class="mt-1 block w-full"
                 :value="old('phone', $tutor?->phone)" />
-            <x-input-error class="mt-2" :messages="$errors->get('phone')" />
+            <x-inputs.error class="mt-2" :messages="$errors->get('phone')" />
         </div>
 
         <div>
-            <x-input-label for="address" :value="__('Alamat Domisili')" />
-            <x-text-input id="address" name="address" type="text" class="mt-1 block w-full"
+            <x-inputs.label for="address" :value="__('Alamat Domisili')" />
+            <x-inputs.text id="address" name="address" type="text" class="mt-1 block w-full"
                 :value="old('address', $tutor?->address)" />
-            <x-input-error class="mt-2" :messages="$errors->get('address')" />
+            <x-inputs.error class="mt-2" :messages="$errors->get('address')" />
         </div>
     </div>
 
     <div class="mb-4">
-        <x-input-label for="branch_id" :value="__('Penempatan Cabang')" />
+        <x-inputs.label for="branch_id" :value="__('Penempatan Cabang')" />
 
-        <select id="branch_id" name="branch_id" x-model="branchId"
-            class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+        <x-inputs.select id="branch_id" name="branch_id" x-model="branchId" class="mt-1 block w-full">
             <option value="" disabled selected>-- Pilih Cabang --</option>
 
             @foreach($branches as $branch)
@@ -109,26 +108,25 @@
                 {{ $branch->name }}
             </option>
             @endforeach
-        </select>
+        </x-inputs.select>
 
-        <x-input-error class="mt-2" :messages="$errors->get('branch_id')" />
+        <x-inputs.error class="mt-2" :messages="$errors->get('branch_id')" />
     </div>
 
     <div class="mb-4">
-        <x-input-label for="bio" :value="__('Biografi Singkat')" />
+        <x-inputs.label for="bio" :value="__('Biografi Singkat')" />
         <textarea id="bio" name="bio" rows="3"
             class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old('bio', $tutor?->bio) }}</textarea>
-        <x-input-error class="mt-2" :messages="$errors->get('bio')" />
+        <x-inputs.error class="mt-2" :messages="$errors->get('bio')" />
     </div>
 
     {{-- BAGIAN 3: PAKET YANG DIAMPU (BARU) --}}
     <h3 class="text-lg font-medium text-gray-900 mb-4 border-b pb-2 mt-8">Paket / Kelas yang Diampu</h3>
     
     <div class="mb-6">
-        <x-input-label for="packages" :value="__('Pilih Paket Belajar (Bisa Lebih dari 1)')" />
+        <x-inputs.label for="packages" :value="__('Pilih Paket Belajar (Bisa Lebih dari 1)')" />
         <div class="mt-1">
-            <select name="packages[]" id="packages" multiple
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 h-40">
+            <x-inputs.select name="packages[]" id="packages" multiple class="block w-full h-40">
                 
                 {{-- Opsi Default jika belum pilih cabang --}}
                 <option value="" disabled x-show="!branchId">-- Pilih Cabang Terlebih Dahulu --</option>
@@ -142,12 +140,12 @@
                         <span x-text="pkg.name"></span> (<span x-text="pkg.branch?.name || '-'"></span>)
                     </option>
                 </template>
-            </select>
+            </x-inputs.select>
             <p class="mt-1 text-xs text-gray-500">
                 💡 Tips: Tahan tombol <strong>CTRL</strong> (Windows) atau <strong>CMD</strong> (Mac) untuk memilih
                 beberapa paket sekaligus.
             </p>
-            <x-input-error class="mt-2" :messages="$errors->get('packages')" />
+            <x-inputs.error class="mt-2" :messages="$errors->get('packages')" />
             @if($errors->has('packages.*'))
                 <ul class="mt-2 text-sm text-red-600 space-y-1">
                     @foreach($errors->get('packages.*') as $errorsArray)
@@ -162,13 +160,13 @@
 
     {{-- FITUR DYNAMIC INPUT (PEKERJAAN/JOBS) --}}
     <div class="mb-6">
-        <x-input-label :value="__('Riwayat Pekerjaan / Keahlian')" class="mb-2" />
+        <x-inputs.label :value="__('Riwayat Pekerjaan / Keahlian')" class="mb-2" />
 
         {{-- Loop input berdasarkan state Alpine 'jobs' --}}
         <template x-for="(job, index) in jobs" :key="index">
             <div class="flex flex-col mb-2">
                 <div class="flex gap-2">
-                    <x-text-input name="jobs[]" type="text" class="block w-full"
+                    <x-inputs.text name="jobs[]" type="text" class="block w-full"
                         placeholder="Contoh: Guru Matematika SMAN 1" x-model="jobs[index]" />
 
                     <button type="button" @click="removeJob(index)"
@@ -186,7 +184,7 @@
             + Tambah Pekerjaan Lain
         </button>
         
-        <x-input-error class="mt-2" :messages="$errors->get('jobs')" />
+        <x-inputs.error class="mt-2" :messages="$errors->get('jobs')" />
         @if($errors->has('jobs.*'))
             <ul class="mt-2 text-sm text-red-600 space-y-1">
                 @foreach($errors->get('jobs.*') as $errorsArray)
@@ -200,7 +198,7 @@
 
     {{-- FITUR PREVIEW IMAGE --}}
     <div class="mb-6">
-        <x-input-label for="image" :value="__('Foto Profil')" />
+        <x-inputs.label for="image" :value="__('Foto Profil')" />
 
         <div class="mt-2 flex items-center gap-x-3">
             <div
@@ -223,13 +221,13 @@
                 <p class="mt-1 text-xs text-gray-500">JPG, PNG, max 2MB.</p>
             </div>
         </div>
-        <x-input-error class="mt-2" :messages="$errors->get('image')" />
+        <x-inputs.error class="mt-2" :messages="$errors->get('image')" />
     </div>
 
     <div class="flex items-center justify-end gap-4 border-t pt-4">
         <a href="{{ route('admin.tutors.index') }}" class="text-gray-600 hover:text-gray-900">{{ __('Batal') }}</a>
-        <x-primary-button>
+        <x-buttons.primary>
             {{ $submit_text ?? 'Simpan Data' }}
-        </x-primary-button>
+        </x-buttons.primary>
     </div>
 </div>

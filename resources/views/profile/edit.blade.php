@@ -20,7 +20,7 @@
             @include('profile.partials.update-profile-information-form')
         </section>
 
-        <x-section-border />
+        <x-ui.section-border />
 
         {{-- Update Password --}}
         <section>
@@ -35,7 +35,7 @@
             @include('profile.partials.update-password-form')
         </section>
 
-        <x-section-border />
+        <x-ui.section-border />
 
         {{-- Delete User --}}
         <section>

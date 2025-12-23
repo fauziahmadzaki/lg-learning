@@ -48,7 +48,7 @@ class TutorController extends Controller
         $allJobs = Tutor::pluck('jobs')->collapse()->unique()->values()->sort();
 
         if ($request->ajax()) {
-            return view('admin.tutor._list', compact('tutors'))->render();
+            return view('admin.tutor.partials.list', compact('tutors'))->render();
         }
 
         return view('admin.tutor.index', compact('tutors', 'branches', 'allJobs'));

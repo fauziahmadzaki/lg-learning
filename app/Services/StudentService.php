@@ -308,7 +308,7 @@ class StudentService
 
         // Jika next billing sudah melewati atau sama dengan end date, berarti selesai
         if ($endDate && $finalNextDate->gte($endDate)) {
-            $status = 'finished'; 
+            $status = 'inactive'; // Package finished 
         }
 
         $student->update([
@@ -363,5 +363,36 @@ class StudentService
                 \Illuminate\Support\Facades\Log::error("Failed to send WA in Service: " . $e->getMessage());
             }
         }
+    }
+
+    /**
+     * Check if a student's package period is potentially over.
+     */
+    public function isPeriodOver(Student $student): bool
+    {
+        if (!$student->package || !$student->join_date) {
+            return false;
+        }
+
+        $endDate = $student->join_date->copy();
+        
+        // Logic Weekly/Monthly
+        if ($student->billing_cycle === 'weekly') {
+             $weeks = floor($student->package->duration / 7);
+             $weeks = ($weeks < 1) ? 1 : $weeks;
+             $endDate->addWeeks($weeks);
+        } else {
+             $endDate->addDays($student->package->duration);
+        }
+
+        if ($student->status === 'finished') {
+            return true;
+        } elseif ($student->next_billing_date && $student->next_billing_date->gte($endDate)) {
+            return true;
+        } elseif (is_null($student->next_billing_date) && $student->status !== 'pending') {
+            return true;
+        }
+
+        return false;
     }
 }
