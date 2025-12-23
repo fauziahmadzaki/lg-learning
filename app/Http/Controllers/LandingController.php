@@ -62,7 +62,7 @@ class LandingController extends Controller
         }
         
         // Restore missing data fetching
-        $packages = \App\Models\Package::with('branch')->get();
+        $packages = \App\Models\Package::with(['branch', 'packageCategory'])->get();
         $tutors = \App\Models\Tutor::with('user')->limit(4)->get(); 
         
         // Carousel Slides
