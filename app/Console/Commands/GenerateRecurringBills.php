@@ -87,14 +87,24 @@ class GenerateRecurringBills extends Command
                     }
                 }
 
-                // Kalkulasi Amount (Sama kayak di Register)
-                $amount = $package->price; 
+                // Kalkulasi Amount (Sama kayak di Register & BillingService)
+                $isDailyRate = $package->duration < 30;
+                $amount = $package->price;
+
                 if ($student->billing_cycle === 'weekly') {
-                    $amount = $package->price / 4;
+                    $amount = $isDailyRate ? ($package->price * 7) : ceil($package->price / 4);
+                } elseif ($student->billing_cycle === 'daily') {
+                    $amount = $isDailyRate ? $package->price : ceil($package->price / 30);
+                } elseif ($student->billing_cycle === 'monthly') {
+                    $amount = $isDailyRate ? ($package->price * 30) : $package->price;
                 } elseif ($student->billing_cycle === 'full') {
-                     // Harusnya 'active' + 'full' gak masuk sini kecuali perpanjang?
-                     // Asumsi: Full payment = selesai. Tapi kalau logicnya "Tagihan Baru", ya buat full lagi.
-                     $amount = $package->price; 
+                     if ($isDailyRate) {
+                        $amount = $package->price * $package->duration;
+                     } else {
+                        $months = ceil($package->duration / 30);
+                        // Asumsi: Full payment = selesai.
+                        $amount = $package->price * ($months > 0 ? $months : 1);
+                     }
                 }
 
                 // 1. Buat Bill
@@ -110,6 +120,7 @@ class GenerateRecurringBills extends Command
                 // 2. Generate Transaction (Pending)
                 $invoiceCode = 'INV-REC-' . time() . '-' . $student->id;
                 $transaction = $student->transactions()->create([
+                    'branch_id'    => $student->branch_id,
                     'invoice_code' => $invoiceCode,
                     'total_amount' => $amount,
                     'status'       => 'PENDING',

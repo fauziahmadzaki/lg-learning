@@ -280,9 +280,13 @@
 
                         <div class="flex items-baseline mb-6">
                             <span class="text-lg font-bold text-gray-900">Rp </span>
-                            <span
-                                class="text-3xl font-extrabold text-gray-900 ml-1">{{ number_format($package->price, 0, ',', '.') }}</span>
-                            <span class="text-gray-400 text-sm ml-2">/ bulan</span>
+                            @if($package->duration < 30 && $package->duration > 0)
+                                <span class="text-3xl font-extrabold text-gray-900 ml-1">{{ number_format($package->price, 0, ',', '.') }}</span>
+                                <span class="text-gray-400 text-sm ml-2">/ hari</span>
+                            @else
+                                <span class="text-3xl font-extrabold text-gray-900 ml-1">{{ number_format($package->price, 0, ',', '.') }}</span>
+                                <span class="text-gray-400 text-sm ml-2">/ bulan</span>
+                            @endif
                         </div>
 
                         <ul class="space-y-3 mb-6">

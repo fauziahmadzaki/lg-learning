@@ -30,7 +30,7 @@ class StoreStudentRequest extends FormRequest
             // Tambahkan 'pending' agar sesuai dengan opsi di form view
             'status'         => ['required', 'in:active,inactive,pending'], 
             
-            'billing_cycle'  => ['required', 'in:weekly,monthly,full'],
+            'billing_cycle'  => ['required', 'in:daily,weekly,monthly,full'],
             'package_id'     => ['required', 'exists:packages,id'],
             
             // TAMBAHAN:

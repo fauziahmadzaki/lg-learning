@@ -20,6 +20,7 @@ class StudentController extends Controller
         $search = $request->input('search');
         $grade = $request->input('grade');
         $packageId = $request->input('package_id');
+        $status = $request->input('status');
 
         $query = Student::query()
             ->where('branch_id', $branch->id) // SCOPED
@@ -34,6 +35,7 @@ class StudentController extends Controller
             ->when($grade, function($q) use ($grade) {
                 $q->where('grade', $grade);
             })
+
             ->when($packageId, function($q) use ($packageId) {
                 $q->where('package_id', $packageId);
             });

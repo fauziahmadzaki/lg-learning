@@ -20,23 +20,25 @@ class StudentService
             
             $data['access_token'] = Str::random(32);
             $data['package_id'] = $packageId;
+
+            // Auto-assign Branch from Package if not provided (Admin Case)
+            if (!isset($data['branch_id'])) {
+                $data['branch_id'] = $package->branch_id;
+            }
             
             // 1. Create Student
             $student = Student::create($data);
 
-            // 2. Logic Tagihan
+            // 2. Logic Tagihan (Disesuaikan dengan Input Harga: Per Hari (<30) atau Per Bulan (>=30))
+            $isDailyRate = $package->duration < 30;
+
             $amount = match($data['billing_cycle']) {
-                'weekly'  => $package->price / 4,
-                'monthly' => $package->price,
-                'full'    => $package->price, // Perlu dikali durasi? User bilang "Full" = Lunas Langsung 
+                'daily'   => $isDailyRate ? $package->price : ceil($package->price / 30),
+                'weekly'  => $isDailyRate ? ($package->price * 7) : ceil($package->price / 4),
+                'monthly' => $isDailyRate ? ($package->price * 30) : $package->price,
+                'full'    => $isDailyRate ? ($package->price * $package->duration) : ($package->price * ceil($package->duration / 30)),
                 default   => 0,
             };
-
-            if ($data['billing_cycle'] == 'full') {
-                 // Hitung bulan:
-                 $months = ceil($package->duration / 30);
-                 $amount = $package->price * ($months > 0 ? $months : 1);
-            }
 
             // A. KASUS PENDING (Buat 1 Tagihan + Invoice Xendit)
             if ($data['status'] === 'pending') {
@@ -45,7 +47,9 @@ class StudentService
                 // Set Next Billing Date to NEXT PERIOD (Month 2) immediately
                 // preventing duplicate bill generation for Month 1
                 $nextPeriod = $dueDate->copy();
-                if ($data['billing_cycle'] == 'weekly') {
+                if ($data['billing_cycle'] == 'daily') {
+                    $nextPeriod->addDay();
+                } elseif ($data['billing_cycle'] == 'weekly') {
                     $nextPeriod->addWeek();
                 } elseif ($data['billing_cycle'] == 'monthly') {
                     $nextPeriod->addMonth();
@@ -68,6 +72,7 @@ class StudentService
                 // Generate Xendit Invoice
                 $invoiceCode = 'INV-' . time() . '-' . $student->id . '-REG';
                 $transaction = $student->transactions()->create([
+                    'branch_id'    => $package->branch_id,
                     'invoice_code' => $invoiceCode,
                     'total_amount' => $amount,
                     'status'       => 'PENDING',
@@ -107,11 +112,14 @@ class StudentService
                 $endDate = $joinDate->copy()->addDays($package->duration);
                 
                 // Calculate Max Bills (Match Logic with BillingService)
+                // Calculate Max Bills (Match Logic with BillingService)
                 $maxBills = 999;
-                if ($data['billing_cycle'] === 'weekly') {
-                    $maxBills = round($package->duration / 7);
+                if ($data['billing_cycle'] === 'daily') {
+                    $maxBills = ceil($package->duration);
+                } elseif ($data['billing_cycle'] === 'weekly') {
+                    $maxBills = ceil($package->duration / 7);
                 } elseif ($data['billing_cycle'] === 'monthly') {
-                    $maxBills = round($package->duration / 30);
+                    $maxBills = ceil($package->duration / 30);
                 }
 
                 $billCount = 0;
@@ -135,6 +143,7 @@ class StudentService
                     // Create Transaction (PAID - CASH/MANUAL)
                     $invoiceCode = 'INV-AUTO-' . $student->id . '-' . $currentDate->format('dmY');
                     $transaction = $student->transactions()->create([
+                        'branch_id'    => $package->branch_id,
                         'invoice_code' => $invoiceCode,
                         'total_amount' => $amount,
                         'status'       => 'PAID',
@@ -149,7 +158,9 @@ class StudentService
                     $billCount++;
 
                     // Advance Date
-                    if ($data['billing_cycle'] == 'weekly') {
+                    if ($data['billing_cycle'] == 'daily') {
+                        $currentDate->addDay();
+                    } elseif ($data['billing_cycle'] == 'weekly') {
                         $currentDate->addWeek();
                     } elseif ($data['billing_cycle'] == 'monthly') {
                         $currentDate->addMonth();
@@ -297,7 +308,9 @@ class StudentService
         $nextDate = $baseDate->copy();
 
         // Advance Logic
-        if ($student->billing_cycle === 'weekly') {
+        if ($student->billing_cycle === 'daily') {
+            $nextDate->addDay();
+        } elseif ($student->billing_cycle === 'weekly') {
             $nextDate->addWeek();
         } elseif ($student->billing_cycle === 'monthly') {
             $nextDate->addMonth();

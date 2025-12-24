@@ -104,4 +104,17 @@ class Package extends Model
             }
         );
     }
+
+    protected function durationString(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if ($this->duration % 30 == 0) {
+                    $months = $this->duration / 30;
+                    return $months . ' Bulan';
+                }
+                return $this->duration . ' Hari';
+            }
+        );
+    }
 }

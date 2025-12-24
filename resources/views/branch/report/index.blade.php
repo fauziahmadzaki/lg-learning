@@ -18,8 +18,25 @@
         </div>
 
         {{-- Filter Section --}}
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
-            <form method="GET" action="{{ route('branch.reports.index', $branch) }}" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6" x-data="{
+            search: '{{ request('search') }}',
+            submitSearch() {
+                this.$refs.filterForm.submit();
+            }
+        }">
+            <form method="GET" x-ref="filterForm" action="{{ route('branch.reports.index', $branch) }}" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                
+                {{-- Search --}}
+                <div class="md:col-span-1">
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Cari</label>
+                    <input type="text" 
+                           name="search" 
+                           x-model.debounce.500ms="search" 
+                           @input="submitSearch"
+                           value="{{ request('search') }}"
+                           placeholder="Invoice / Nama Siswa..." 
+                           class="w-full rounded-lg border-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
                 
                 {{-- Period Selector --}}
                 <div>
@@ -56,6 +73,16 @@
                                 {{ $pkg->name }}
                             </option>
                         @endforeach
+                    </x-inputs.select>
+                </div>
+
+                {{-- Category Filter --}}
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Kategori</label>
+                    <x-inputs.select name="category" class="w-full text-sm">
+                        <option value="">Semua Kategori</option>
+                        <option value="spp" @selected(request('category') == 'spp')>SPP / Bimbel</option>
+                        <option value="savings" @selected(request('category') == 'savings')>Tabungan</option>
                     </x-inputs.select>
                 </div>
 
@@ -150,7 +177,7 @@
              <div class="font-medium text-gray-900">{{ $trx->student?->name ?? 'Siswa Terhapus' }}</div>
         </x-ui.td>
         <x-ui.td class="text-gray-600">
-            {{ $trx->student?->branch?->name ?? 'Tanpa Cabang' }}
+            {{ $trx->branch?->name ?? $trx->student?->branch?->name ?? 'Tanpa Cabang' }}
         </x-ui.td>
         <x-ui.td>
              <span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs">{{ $trx->student?->package?->name ?? '-' }}</span>

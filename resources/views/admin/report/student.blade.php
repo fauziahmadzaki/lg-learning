@@ -40,6 +40,17 @@
                     </x-inputs.select>
                 </div>
 
+                {{-- Status Filter --}}
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 mb-1">Status</label>
+                    <x-inputs.select name="status" class="w-full text-sm">
+                        <option value="">Semua Status</option>
+                        <option value="active" @selected(request('status') == 'active')>Aktif</option>
+                        <option value="inactive" @selected(request('status') == 'inactive')>Tidak Aktif</option>
+                        <option value="pending" @selected(request('status') == 'pending')>Pending</option>
+                    </x-inputs.select>
+                </div>
+
                 {{-- Buttons --}}
                 <div class="flex gap-2 md:col-span-2">
                     <button type="submit" name="action" value="filter" class="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">

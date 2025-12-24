@@ -13,6 +13,7 @@ class Transaction extends Model
     protected $fillable = [
         'invoice_code',     // Kode Xendit (INV-BATCH-...)
         'student_id',
+        'branch_id',        // <--- NEW: Link Cabang
         'total_amount',     // Ganti 'amount' jadi 'total_amount' sesuai migrasi
         'status',           // PENDING, PAID, EXPIRED, FAILED
         'payment_url',      // Link Xendit
@@ -34,6 +35,11 @@ class Transaction extends Model
     public function student()
     {
         return $this->belongsTo(Student::class);
+    }
+
+    public function branch() 
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     public function package()

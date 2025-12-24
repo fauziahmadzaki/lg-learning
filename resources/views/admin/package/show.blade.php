@@ -41,13 +41,23 @@
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div class="bg-gray-50 p-4 rounded-lg">
                         <span class="block text-xs text-gray-500 uppercase font-bold">Harga</span>
-                        <span class="block text-lg font-bold text-gray-800">Rp {{ number_format($package->price, 0, ',', '.') }}</span>
-                        <span class="text-xs text-gray-400">/ Bulan</span>
+                        @if($package->duration < 30 && $package->duration > 0)
+                            <span class="block text-lg font-bold text-gray-800">Rp {{ number_format($package->price, 0, ',', '.') }}</span>
+                            <span class="text-xs text-gray-400">/ Hari</span>
+                        @else
+                            <span class="block text-lg font-bold text-gray-800">Rp {{ number_format($package->price, 0, ',', '.') }}</span>
+                            <span class="text-xs text-gray-400">/ Bulan</span>
+                        @endif
                     </div>
                     <div class="bg-gray-50 p-4 rounded-lg">
                         <span class="block text-xs text-gray-500 uppercase font-bold">Durasi</span>
-                        <span class="block text-lg font-bold text-gray-800">{{ $package->duration / 30 }} Bulan</span>
-                        <span class="text-xs text-gray-400">{{ $package->duration }} Hari</span>
+                        @if($package->duration < 30 || $package->duration % 30 != 0)
+                            <span class="block text-lg font-bold text-gray-800">{{ $package->duration }} Hari</span>
+                            <span class="text-xs text-gray-400">Total Hari</span>
+                        @else
+                            <span class="block text-lg font-bold text-gray-800">{{ $package->duration / 30 }} Bulan</span>
+                            <span class="text-xs text-gray-400">{{ $package->duration }} Hari</span>
+                        @endif
                     </div>
                     <div class="bg-gray-50 p-4 rounded-lg">
                         <span class="block text-xs text-gray-500 uppercase font-bold">Pertemuan</span>
@@ -59,6 +69,11 @@
                         <span class="block text-lg font-bold text-gray-800">{{ $students->total() }}</span>
                         <span class="text-xs text-gray-400">Aktif & Non-Aktif</span>
                     </div>
+                </div>
+
+                <div class="mb-6 border-b border-gray-100 pb-6">
+                    <h3 class="text-sm font-bold text-gray-800 uppercase mb-2">Deskripsi Paket</h3>
+                    <p class="text-sm text-gray-600 leading-relaxed">{{ $package->description ?? 'Tidak ada deskripsi untuk paket ini.' }}</p>
                 </div>
 
                 <div>
@@ -118,7 +133,27 @@
         {{-- Card 2: Daftar Siswa --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="p-6 border-b border-gray-100 bg-gray-50/50">
-                <h3 class="text-lg font-bold text-gray-800">Daftar Siswa Terdaftar</h3>
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">Daftar Siswa Terdaftar</h3>
+                        <div class="flex items-center gap-3 text-sm text-gray-500 mt-1">
+                            <span>Total {{ $students->total() }} siswa</span>
+                            <span class="text-gray-300">|</span>
+                            <span>Total Tabungan: <span class="font-bold text-gray-800">Rp {{ number_format($totalSavings, 0, ',', '.') }}</span></span>
+                        </div>
+                    </div>
+                    
+                    {{-- Status Filter --}}
+                    <form method="GET" action="{{ route('admin.packages.show', $package) }}" class="flex items-center gap-2">
+                        <select name="status" onchange="this.form.submit()" class="text-xs rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
+                            <option value="">Semua Status</option>
+                            <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Aktif</option>
+                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                            <option value="finished" {{ request('status') == 'finished' ? 'selected' : '' }}>Selesai</option>
+                        </select>
+                    </form>
+                </div>
             </div>
             
             <div class="overflow-x-auto">
@@ -128,6 +163,7 @@
                             <th class="px-6 py-3 text-xs font-bold uppercase tracking-wider">Nama Siswa</th>
                             <th class="px-6 py-3 text-xs font-bold uppercase tracking-wider">Kontak</th>
                             <th class="px-6 py-3 text-xs font-bold uppercase tracking-wider">Sekolah</th>
+                            <th class="px-6 py-3 text-xs font-bold uppercase tracking-wider">Saldo Tabungan</th>
                             <th class="px-6 py-3 text-xs font-bold uppercase tracking-wider">Status</th>
                             <th class="px-6 py-3 text-xs font-bold uppercase tracking-wider text-center">Aksi</th>
                         </tr>
@@ -153,6 +189,9 @@
                             <td class="px-6 py-4">
                                 <div class="text-sm text-gray-800">{{ $student->school }}</div>
                                 <div class="text-xs text-gray-500">{{ $student->grade }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-bold text-gray-800">Rp {{ number_format($student->savings_balance, 0, ',', '.') }}</div>
                             </td>
                             <td class="px-6 py-4">
                                 @if($student->status == 'active')

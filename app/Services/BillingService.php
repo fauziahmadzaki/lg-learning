@@ -51,6 +51,8 @@ class BillingService
             $maxBills = round($package->duration / 30);
         } elseif ($student->billing_cycle === 'weekly') {
             $maxBills = round($package->duration / 7);
+        } elseif ($student->billing_cycle === 'daily') {
+            $maxBills = round($package->duration);
         }
 
         if ($maxBills > 0 && $student->billing_cycle !== 'full') {
@@ -73,7 +75,9 @@ class BillingService
                                         ->whereDate('due_date', $dueDate)
                                         ->first();
         if ($existingBill) {
-            return ['success' => false, 'message' => "Tagihan untuk periode " . $dueDate->format('d M Y') . " SUDAH ADA."];
+            // SELF HEALING: If bill exists, advance the date and ask to retry
+            $this->advanceNextBillingDate($student, $package, $dueDate);
+            return ['success' => false, 'message' => "Tagihan untuk periode " . $dueDate->format('d M Y') . " SUDAH ADA. Sistem telah memperbarui tanggal tagihan berikutnya. Silakan coba buat lagi."];
         }
 
         // 5. Calculate Amount
@@ -85,6 +89,7 @@ class BillingService
         // We will stick to the controller logic order.
         
         $bill = $student->bills()->create([
+            'branch_id' => $student->branch_id,
             'title'    => $title,
             'amount'   => $amount,
             'due_date' => $dueDate,
@@ -94,6 +99,7 @@ class BillingService
         $invoiceCode = 'INV-' . time() . '-' . $student->id . '-B' . $bill->id;
         
         $transaction = $student->transactions()->create([
+            'branch_id'    => $student->branch_id,
             'invoice_code' => $invoiceCode,
             'total_amount' => $amount,
             'status'       => 'PENDING',
@@ -148,6 +154,7 @@ class BillingService
             $invoiceCode = 'INV-CASH-' . time() . '-' . $student->id;
             
             $transaction = $student->transactions()->create([
+                'branch_id'    => $student->branch_id,
                 'invoice_code' => $invoiceCode,
                 'total_amount' => $amount,
                 'status'       => 'PAID',
@@ -160,6 +167,7 @@ class BillingService
 
             // Create Bill (PAID)
             $student->bills()->create([
+                'branch_id' => $student->branch_id,
                 'title'    => $title,
                 'amount'   => $amount,
                 'due_date' => $dueDate,
@@ -196,6 +204,7 @@ class BillingService
             $invoiceCode = 'INV-MANUAL-' . time() . '-' . $student->id . '-B' . $bill->id;
             
             $transaction = $student->transactions()->create([
+                'branch_id'    => $student->branch_id,
                 'invoice_code' => $invoiceCode,
                 'total_amount' => $bill->amount,
                 'status'       => 'PAID',
@@ -235,14 +244,23 @@ class BillingService
 
     private function calculateAmount(Student $student, $package)
     {
-        $amount = $package->price;
+        $isDailyRate = $package->duration < 30;
+
         if ($student->billing_cycle === 'weekly') {
-            $amount = $package->price / 4;
+            return $isDailyRate ? ($package->price * 7) : ceil($package->price / 4);
+        } elseif ($student->billing_cycle === 'daily') {
+            return $isDailyRate ? $package->price : ceil($package->price / 30);
+        } elseif ($student->billing_cycle === 'monthly') {
+            return $isDailyRate ? ($package->price * 30) : $package->price;
         } elseif ($student->billing_cycle === 'full') {
-            $months = ceil($package->duration / 30);
-            $amount = $package->price * ($months > 0 ? $months : 1);
+            if ($isDailyRate) {
+                return $package->price * $package->duration;
+            } else {
+                $months = ceil($package->duration / 30);
+                return $package->price * ($months > 0 ? $months : 1);
+            }
         }
-        return $amount;
+        return $package->price;
     }
 
     private function advanceNextBillingDate(Student $student, $package, $currentDueDate)
@@ -250,6 +268,8 @@ class BillingService
         $nextDate = $currentDueDate->copy();
         if ($student->billing_cycle === 'weekly') {
             $nextDate->addWeek();
+        } elseif ($student->billing_cycle === 'daily') {
+            $nextDate->addDay();
         } elseif ($student->billing_cycle === 'monthly') {
             $nextDate->addMonth();
         } elseif ($student->billing_cycle === 'full') {

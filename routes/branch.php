@@ -59,4 +59,9 @@ Route::middleware(['auth', 'verified', 'branch.check'])
             Route::get('transaksi/{transaction}', 'show')->name('transactions.show');
         });
 
+        // Manual Book
+        Route::controller(\App\Http\Controllers\Branch\ManualBookController::class)->group(function() {
+            Route::get('panduan', 'index')->name('manual.index');
+        });
+
     });

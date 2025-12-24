@@ -42,7 +42,7 @@
       x-init="window.addEventListener('load', () => { setTimeout(() => isLoading = false, 800); })">
 
     {{-- Global Loader --}}
-    <div x-show="isLoading" 
+    <!-- <div x-show="isLoading" 
          x-transition:leave="transition ease-in duration-500"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
@@ -55,7 +55,7 @@
                 <div class="absolute top-0 w-3 h-3 rounded-full bg-orange-500"></div>
             </div>
          </div>
-    </div>
+    </div> -->
     <div class="min-h-screen">
 
         {{-- 1. Sidebar (Fixed Left) --}}

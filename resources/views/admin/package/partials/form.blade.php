@@ -169,11 +169,24 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <x-inputs.label for="duration" :value="__('Durasi Paket (Bulan)')" />
-                <div class="flex gap-2 items-center">
-                    <x-inputs.text id="duration" name="duration" type="number" class="mt-1 block w-full"
-                        :value="old('duration', $package?->duration ? $package->duration / 30 : '')" placeholder="6" />
-                    <span class="text-gray-500">Bulan</span>
+                <x-inputs.label for="duration" :value="__('Durasi Paket')" />
+                <div class="flex gap-2" x-data="{
+                    unit: '{{ ($package?->duration && $package->duration % 30 == 0) ? 'months' : 'days' }}',
+                    val: {{ ($package?->duration && $package->duration % 30 == 0) ? $package->duration / 30 : ($package?->duration ?? 1) }}
+                }">
+                    {{-- Hidden Input for Backend (Always in Days) --}}
+                    <input type="hidden" name="duration" :value="unit === 'months' ? val * 30 : val">
+
+                    <div class="relative flex-1">
+                        <x-inputs.text type="number" x-model="val" class="w-full" placeholder="1" required min="1" />
+                    </div>
+
+                    <div class="w-32">
+                        <select x-model="unit" class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                            <option value="months">Bulan</option>
+                            <option value="days">Hari</option>
+                        </select>
+                    </div>
                 </div>
                 <x-inputs.error class="mt-2" :messages="$errors->get('duration')" />
             </div>

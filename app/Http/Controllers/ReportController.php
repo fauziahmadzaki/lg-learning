@@ -61,7 +61,7 @@ class ReportController extends Controller
         // 2. Query Transactions
         // Hanya ambil yang PAID
         $query = \App\Models\Transaction::query()
-            ->with(['student', 'student.branch', 'student.package'])
+            ->with(['student', 'branch', 'package']) // Direct Branch Relation
             ->where('status', 'PAID')
             // Filter Date berdasarkan 'paid_at' (atau transaction_date jika paid_at null, just in case)
             ->where(function($q) use ($start, $end) {
@@ -73,14 +73,34 @@ class ReportController extends Controller
 
         // Filter Relations
         if ($branchId) {
-            $query->whereHas('student', function($q) use ($branchId) {
-                $q->where('branch_id', $branchId);
-            });
+            // Direct Filter on Transactions Table (More Accurate)
+            $query->where('branch_id', $branchId);
         }
 
         if ($packageId) {
              $query->whereHas('student', function($q) use ($packageId) {
                 $q->where('package_id', $packageId);
+            });
+        }
+
+        // Category Filter
+        $category = $request->input('category');
+        if ($category === 'spp') {
+            $query->where(function($q) {
+                $q->where('type', 'TUITION')
+                  ->orWhereNull('type');
+            });
+        } elseif ($category === 'savings') {
+            $query->whereIn('type', ['SAVINGS_DEPOSIT', 'SAVINGS_WITHDRAWAL']);
+        }
+
+        // Search Filter
+        if ($search = $request->input('search')) {
+            $query->where(function($q) use ($search) {
+                $q->where('invoice_code', 'like', "%{$search}%")
+                  ->orWhereHas('student', function($sub) use ($search) {
+                      $sub->where('name', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -160,6 +180,9 @@ class ReportController extends Controller
         }
         if ($request->filled('grade')) {
             $query->where('grade', $request->grade);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
         }
 
         // Action: Export

@@ -24,6 +24,8 @@
             <div class="text-xs text-gray-500">Kelas {{ $student->grade ?? '-' }}</div>
         </x-ui.td>
 
+
+
         {{-- 3. Paket --}}
         <x-ui.td>
             <div class="flex flex-wrap gap-1 max-w-[200px]">

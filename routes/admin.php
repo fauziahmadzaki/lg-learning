@@ -26,7 +26,9 @@ Route::middleware(['auth', 'verified', 'central.admin'])
     Route::resource('paket', PackageController::class)->names('packages')->parameters([
         'paket' => 'package'
     ]);
-    Route::resource('paket-kategori', \App\Http\Controllers\PackageCategoryController::class)->names('package-categories');
+    Route::resource('paket-kategori', \App\Http\Controllers\PackageCategoryController::class)->names('package-categories')->parameters([
+        'paket-kategori' => 'packageCategory'
+    ]);
     Route::resource('siswa', StudentController::class)->names('students')->parameters([
         'siswa' => 'student'
     ]);
@@ -59,4 +61,7 @@ Route::middleware(['auth', 'verified', 'central.admin'])
     // Site Settings (Pengaturan Website)
     Route::get('/settings', [\App\Http\Controllers\SiteSettingController::class, 'index'])->name('settings.index');
     Route::put('/settings', [\App\Http\Controllers\SiteSettingController::class, 'update'])->name('settings.update');
+
+    // Manual Book / Panduan Sistem
+    Route::get('/panduan', [\App\Http\Controllers\ManualBookController::class, 'index'])->name('manual.index');
 });

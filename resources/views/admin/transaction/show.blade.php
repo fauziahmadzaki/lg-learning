@@ -43,7 +43,7 @@
                     <div>
                         <p class="text-xs text-gray-500 uppercase tracking-wider font-bold">Total Tagihan</p>
                         <p class="text-3xl font-bold text-gray-800">Rp
-                            {{ number_format($transaction->amount, 0, ',', '.') }}
+                            {{ number_format($transaction->total_amount, 0, ',', '.') }}
                         </p>
                     </div>
                     <div class="text-right">
@@ -67,7 +67,7 @@
 
                     <div>
                         <h3 class="text-gray-500 text-sm font-bold uppercase mb-2">Detail Paket</h3>
-                        <p class="font-medium text-gray-900">{{ $transaction->package_name_snapshot }}</p>
+                        <p class="font-medium text-gray-900">{{ $transaction->student->package->name ?? 'Paket Tidak Ditemukan' }}</p>
                         <p class="text-gray-600 text-sm">Invoice: {{ $transaction->invoice_code }}</p>
                         {{-- <p class="text-gray-600 text-sm">Tgl: {{ $transaction->transaction_date->format('d M Y H:i') }}
                         --}}

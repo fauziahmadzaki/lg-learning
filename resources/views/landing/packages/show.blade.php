@@ -45,7 +45,11 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg></span>
-                            <span class="font-medium">{{ floor($package->duration / 30) }} Bulan</span>
+                            @if($package->duration < 30 || $package->duration % 30 != 0)
+                                <span class="font-medium">{{ $package->duration }} Hari</span>
+                            @else
+                                <span class="font-medium">{{ $package->duration / 30 }} Bulan</span>
+                            @endif
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="bg-purple-100 text-purple-600 p-2 rounded-lg"><svg class="w-5 h-5" fill="none"
@@ -126,12 +130,91 @@
                         <div class="p-8">
                             <div class="mb-2 text-sm text-gray-500 font-medium uppercase tracking-wide">Mulai Dari</div>
                             <div class="flex items-end gap-2 mb-6">
-                                <span class="text-4xl font-extrabold text-gray-900">Rp
-                                    {{ number_format($package->price, 0, ',', '.') }}</span>
-                                <span class="text-gray-500 mb-1">/ bulan</span>
+                                @if($package->duration < 30 && $package->duration > 0)
+                                    <span class="text-4xl font-extrabold text-gray-900">Rp
+                                        {{ number_format($package->price, 0, ',', '.') }}</span>
+                                    <span class="text-gray-500 mb-1">/ hari</span>
+                                @else
+                                    <span class="text-4xl font-extrabold text-gray-900">Rp
+                                        {{ number_format($package->price, 0, ',', '.') }}</span>
+                                    <span class="text-gray-500 mb-1">/ bulan</span>
+                                @endif
                             </div>
 
                             <hr class="border-gray-100 mb-6">
+
+                            {{-- Billing Cycle Options Display --}}
+                            <div class="mb-6">
+                                <h4 class="text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">Opsi Pembayaran</h4>
+                                <div class="space-y-3">
+                                    @php
+                                        $duration = $package->duration;
+                                        $price = $package->price;
+                                        $isDailyRate = $duration < 30;
+                                    @endphp
+
+                                    {{-- Daily --}}
+                                    @if($duration <= 7)
+                                    <div class="flex justify-between items-center p-3 rounded-lg bg-pink-50 border border-pink-100">
+                                        <div>
+                                            <span class="block font-bold text-gray-900 text-sm">Harian</span>
+                                            <span class="block text-xs text-gray-500">Bayar per hari</span>
+                                        </div>
+                                        <span class="font-bold text-pink-600">
+                                            Rp {{ number_format($price, 0, ',', '.') }}
+                                        </span>
+                                    </div>
+                                    @endif
+
+                                    {{-- Weekly --}}
+                                    @if($duration >= 7)
+                                    <div class="flex justify-between items-center p-3 rounded-lg bg-orange-50 border border-orange-100">
+                                        <div>
+                                            <span class="block font-bold text-gray-900 text-sm">Mingguan</span>
+                                            <span class="block text-xs text-gray-500">Bayar per minggu</span>
+                                        </div>
+                                        <span class="font-bold text-orange-600">
+                                            @php
+                                                $weeklyPrice = $isDailyRate ? ($price * 7) : ceil($price / 4);
+                                            @endphp
+                                            Rp {{ number_format($weeklyPrice, 0, ',', '.') }}
+                                        </span>
+                                    </div>
+                                    @endif
+
+                                    {{-- Monthly --}}
+                                    @if($duration >= 30)
+                                    <div class="flex justify-between items-center p-3 rounded-lg bg-blue-50 border border-blue-100">
+                                        <div>
+                                            <span class="block font-bold text-gray-900 text-sm">Bulanan</span>
+                                            <span class="block text-xs text-gray-500">Bayar per bulan</span>
+                                        </div>
+                                        <span class="font-bold text-blue-600">
+                                            Rp {{ number_format($price, 0, ',', '.') }}
+                                        </span>
+                                    </div>
+                                    @endif
+
+                                    {{-- Full --}}
+                                    <div class="flex justify-between items-center p-3 rounded-lg bg-green-50 border border-green-100">
+                                        <div>
+                                            <span class="block font-bold text-gray-900 text-sm">Lunas (Full)</span>
+                                            <span class="block text-xs text-gray-500">{{ $package->duration_string }}</span>
+                                        </div>
+                                        <span class="font-bold text-green-600">
+                                            @php
+                                                if ($isDailyRate) {
+                                                    $fullPrice = $price * $duration;
+                                                } else {
+                                                    $months = ceil($duration / 30);
+                                                    $fullPrice = $price * ($months > 0 ? $months : 1);
+                                                }
+                                            @endphp
+                                            Rp {{ number_format($fullPrice, 0, ',', '.') }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
 
                             <div class="space-y-4 mb-8">
                                 <div class="flex justify-between text-sm text-gray-600">
@@ -140,7 +223,7 @@
                                 </div>
                                 <div class="flex justify-between text-sm text-gray-600">
                                     <span>Total Sesi</span>
-                                    <span class="font-bold text-gray-900">{{ ($package->session_count ?? 4) * 4 }}
+                                    <span class="font-bold text-gray-900">{{ ceil($package->duration / 7) * ($package->session_count ?? 4) }}
                                         Sesi</span>
                                 </div>
                                 <div class="flex justify-between text-sm text-gray-600">

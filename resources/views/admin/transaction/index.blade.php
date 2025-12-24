@@ -64,17 +64,8 @@ $breadcrumbs = [
                 </div>
             </div>
 
-            {{-- Kanan: Tombol Tambah --}}
-            <a href="{{ route('admin.transactions.create') }}">
-                <x-buttons.primary class="flex items-center gap-2 shadow-lg shadow-indigo-200">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                    Buat Transaksi Baru
-                </x-buttons.primary>
-            </a>
-        </div>
+            {{-- Kanan: Tombol Tambah (Dihapus sesuai request) --}}
+            {{-- <a href="{{ route('admin.transactions.create') }}">...</a> --}}
 
         {{-- SECTION: Data Table Container --}}
         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"

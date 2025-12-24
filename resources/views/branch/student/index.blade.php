@@ -12,6 +12,7 @@ $breadcrumbs = [
             search: '{{ request('search') }}',
             grade: '{{ request('grade') }}', 
             packageId: '{{ request('package_id') }}',
+            status: '{{ request('status') }}',
             isLoading: false,
             deleteUrl: '',
             deleteName: '',
@@ -23,7 +24,10 @@ $breadcrumbs = [
                 const params = new URLSearchParams({
                     search: this.search,
                     grade: this.grade,
-                    package_id: this.packageId
+                    search: this.search,
+                    grade: this.grade,
+                    package_id: this.packageId,
+                    status: this.status
                 });
 
                 try {

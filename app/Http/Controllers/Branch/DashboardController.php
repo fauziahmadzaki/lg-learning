@@ -63,19 +63,30 @@ class DashboardController extends Controller
         return view('branch.courses.index', compact('branch', 'packages'));
     }
 
-    public function courseShow(Branch $branch, Package $package)
+    public function courseShow(Request $request, Branch $branch, Package $package)
     {
         if($package->branch_id !== $branch->id) {
             abort(404);
         }
 
-        $students = $package->students() // Relation defined as student() in Package model
-            ->where('branch_id', $branch->id)
-            ->where('status', 'active')
-            ->orderBy('name')
-            ->paginate(20);
+        $query = $package->students()
+            ->where('branch_id', $branch->id);
 
-        return view('branch.courses.show', compact('branch', 'package', 'students'));
+        // Filter Status (Optional)
+        if ($request->has('status') && $request->status != '') {
+             $query->where('status', $request->status);
+        }
+        // Jika tidak ada filter status, default tampilkan SEMUA (Active, Inactive, Pending, Finished) 
+        // Sesuai request user: "defaultnya semua tampil aktif tidak aktif"
+        
+        // Calculate Total Savings for this view (Filtered)
+        $totalSavings = (clone $query)->sum('savings_balance');
+
+        $students = $query->orderBy('name')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('branch.courses.show', compact('branch', 'package', 'students', 'totalSavings'));
     }
 
     public function reports(Branch $branch)

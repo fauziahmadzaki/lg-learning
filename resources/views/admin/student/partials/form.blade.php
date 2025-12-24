@@ -7,8 +7,37 @@
 --}}
 <div x-data="{ 
     status: '{{ old('status', $student?->status ?? 'pending') }}',
-    billing_cycle: '{{ old('billing_cycle', $student?->billing_cycle ?? 'monthly') }}'
-}" class="space-y-8">
+    billing_cycle: '{{ old('billing_cycle', $student?->billing_cycle ?? 'full') }}',
+    packageDuration: 0,
+
+    init() {
+        const select = document.getElementById('package_id');
+        if (select && select.value && select.options[select.selectedIndex]) {
+            this.packageDuration = parseInt(select.options[select.selectedIndex].dataset.duration) || 0;
+            this.validateCycle();
+        }
+    },
+
+    updatePackage(event) {
+        const option = event.target.options[event.target.selectedIndex];
+        this.packageDuration = parseInt(option.dataset.duration) || 0;
+        this.validateCycle();
+    },
+
+    validateCycle() {
+        // Strict logic checking:
+        // If current billing_cycle is not allowed, reset to 'full' (always allowed)
+        let allowed = ['full'];
+        
+        if (this.packageDuration <= 7 && this.packageDuration > 0) allowed.push('daily');
+        if (this.packageDuration >= 7 && this.packageDuration % 7 === 0) allowed.push('weekly');
+        if (this.packageDuration >= 30 && this.packageDuration % 30 === 0) allowed.push('monthly');
+
+        if (!allowed.includes(this.billing_cycle)) {
+            this.billing_cycle = 'full';
+        }
+    }
+}" x-init="init()" class="space-y-8">
 
     {{-- BAGIAN 1: DATA PRIBADI --}}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -18,22 +47,25 @@
             <x-inputs.label for="name" :value="__('Nama Lengkap Siswa')" />
             <x-inputs.text id="name" class="block mt-1 w-full" type="text" name="name"
                 :value="old('name', $student?->name)" required autofocus placeholder="Contoh: Muhammad Rizky" />
+            <p class="text-xs text-gray-500 mt-1">Gunakan nama lengkap sesuai rapor/sekolah.</p>
             <x-inputs.error :messages="$errors->get('name')" class="mt-2" />
         </div>
 
         {{-- Email Siswa --}}
         <div>
-            <x-inputs.label for="email" :value="__('Email Siswa')" />
+            <x-inputs.label for="email" :value="__('Email Orang Tua / Siswa')" />
             <x-inputs.text id="email" class="block mt-1 w-full" type="email" name="email"
                 :value="old('email', $student?->email)" required placeholder="email@contoh.com" />
+            <p class="text-xs text-gray-500 mt-1">Email cadangan jika nomor WhatsApp tidak bisa dihubungi.</p>
             <x-inputs.error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
         {{-- No HP Orang Tua --}}
         <div>
-            <x-inputs.label for="parent_phone" :value="__('No. WhatsApp Orang Tua')" />
+            <x-inputs.label for="parent_phone" :value="__('No. WhatsApp Orang Tua / Siswa')" />
             <x-inputs.text id="parent_phone" class="block mt-1 w-full" type="number" name="parent_phone"
                 :value="old('parent_phone', $student?->parent_phone)" required placeholder="0812xxxx" />
+            <p class="text-xs text-gray-500 mt-1">Nomor ini akan menerima notifikasi tagihan otomatis via WhatsApp.</p>
             <x-inputs.error :messages="$errors->get('parent_phone')" class="mt-2" />
         </div>
 
@@ -49,7 +81,7 @@
         <div>
             <x-inputs.label for="grade" :value="__('Kelas / Jenjang Sekolah')" />
             <x-inputs.text id="grade" class="block mt-1 w-full" type="text" name="grade"
-                :value="old('grade', $student?->grade)" required placeholder="Contoh: 12 SMA" />
+                :value="old('grade', $student?->grade)" required placeholder="Contoh: 4 SD" />
             <x-inputs.error :messages="$errors->get('grade')" class="mt-2" />
         </div>
 
@@ -101,6 +133,8 @@
                         Bulanan
                         @elseif($student->billing_cycle === 'weekly')
                         Mingguan
+                        @elseif($student->billing_cycle === 'daily')
+                        Harian
                         @elseif($student->billing_cycle === 'full')
                         Lunas / Full
                         @else
@@ -115,8 +149,19 @@
             @else
             {{-- MODE CREATE: Tampilkan Pilihan Radio --}}
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                
+                {{-- Opsi Daily (Harian) --}}
+                <label class="cursor-pointer relative" x-show="packageDuration <= 7 && packageDuration > 0" style="display: none;">
+                    <input type="radio" name="billing_cycle" value="daily" x-model="billing_cycle" class="sr-only">
+                    <div class="text-center p-3 rounded-lg border-2 transition-all"
+                        :class="billing_cycle === 'daily' ? 'border-pink-500 bg-white text-pink-700 shadow-md' : 'border-indigo-200 text-gray-500 bg-indigo-50/50 hover:bg-white'">
+                        <div class="font-bold text-sm">Harian</div>
+                        <div class="text-[10px]">Bayar per Hari</div>
+                    </div>
+                </label>
+
                 {{-- Opsi Monthly --}}
-                <label class="cursor-pointer relative">
+                <label class="cursor-pointer relative" x-show="packageDuration >= 30 && packageDuration % 30 == 0" style="display: none;">
                     <input type="radio" name="billing_cycle" value="monthly" x-model="billing_cycle" class="sr-only">
                     <div class="text-center p-3 rounded-lg border-2 transition-all"
                         :class="billing_cycle === 'monthly' ? 'border-indigo-500 bg-white text-indigo-700 shadow-md' : 'border-indigo-200 text-gray-500 bg-indigo-50/50 hover:bg-white'">
@@ -126,7 +171,7 @@
                 </label>
 
                 {{-- Opsi Weekly --}}
-                <label class="cursor-pointer relative">
+                <label class="cursor-pointer relative" x-show="packageDuration >= 7 && packageDuration % 7 == 0" style="display: none;">
                     <input type="radio" name="billing_cycle" value="weekly" x-model="billing_cycle" class="sr-only">
                     <div class="text-center p-3 rounded-lg border-2 transition-all"
                         :class="billing_cycle === 'weekly' ? 'border-orange-500 bg-white text-orange-700 shadow-md' : 'border-indigo-200 text-gray-500 bg-indigo-50/50 hover:bg-white'">
@@ -146,22 +191,21 @@
                 </label>
             </div>
             <x-inputs.error :messages="$errors->get('billing_cycle')" class="mt-2" />
+            <p class="text-xs text-gray-500 mt-2" x-show="packageDuration === 0">
+                * Pilih paket terlebih dahulu untuk melihat opsi pembayaran.
+            </p>
             @endif
         </div>
         {{-- B. Pilih Paket --}}
         <div>
             <x-inputs.label for="package_id" :value="__('Pilih Paket Belajar')" />
-            <x-inputs.select id="package_id" name="package_id" :disabled="$student"
+            <x-inputs.select id="package_id" name="package_id" :disabled="$student" x-on:change="updatePackage($event)"
                 class="mt-1 block w-full {{ $student ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : '' }}">
                 <option value="" disabled selected>-- Pilih Paket Bimbel --</option>
                 @foreach($packages as $package)
-                <option value="{{ $package->id }}" @if(old('package_id', $student?->package_id) == $package->id) selected @endif>
+                <option value="{{ $package->id }}" data-duration="{{ $package->duration }}" 
+                    @if(old('package_id', $student?->package_id) == $package->id) selected @endif>
                     {{ $package->name }} ({{ $package->branch->name ?? 'N/A' }})
-                    
-                    <span x-show="billing_cycle === 'monthly'">(Rp
-                        {{ number_format($package->price, 0, ',', '.') }}/bln)</span>
-                    <span x-show="billing_cycle === 'weekly'">(~Rp
-                        {{ number_format($package->price / 4, 0, ',', '.') }}/mgg)</span>
                 </option>
                 @endforeach
             </x-inputs.select>

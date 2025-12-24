@@ -13,17 +13,39 @@
         <div class="p-6 border-b border-gray-100 bg-gray-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
                 <h2 class="text-lg font-bold text-gray-800">Daftar Siswa</h2>
-                <p class="text-sm text-gray-500">Total {{ $students->total() }} siswa terdaftar di kelas ini.</p>
+                <div class="flex items-center gap-3 text-sm text-gray-500 mt-1">
+                    <span>Total {{ $students->total() }} siswa</span>
+                    <span class="text-gray-300">|</span>
+                    <span>Total Tabungan: <span class="font-bold text-gray-800">Rp {{ number_format($totalSavings, 0, ',', '.') }}</span></span>
+                </div>
             </div>
             
-            <div class="flex items-center gap-2">
-                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700">
-                    {{ $package->session_count }} Sesi / Minggu
-                 </span>
-                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold {{ $package->category == 'PRIVATE' ? 'bg-purple-100 text-purple-700' : 'bg-pink-100 text-pink-700' }}">
-                    {{ $package->category }}
-                 </span>
+            <div class="flex items-center gap-4">
+                 {{-- Status Filter --}}
+                 <form method="GET" action="{{ route('branch.courses.show', [$branch, $package]) }}" class="flex items-center gap-2">
+                    <select name="status" onchange="this.form.submit()" class="text-xs rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
+                        <option value="">Semua Status</option>
+                        <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Aktif</option>
+                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                        <option value="finished" {{ request('status') == 'finished' ? 'selected' : '' }}>Selesai</option>
+                    </select>
+                 </form>
+
+                 <div class="flex items-center gap-2">
+                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700">
+                        {{ $package->session_count }} Sesi / Minggu
+                     </span>
+                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold {{ $package->category == 'PRIVATE' ? 'bg-purple-100 text-purple-700' : 'bg-pink-100 text-pink-700' }}">
+                        {{ $package->category }}
+                     </span>
+                 </div>
             </div>
+        </div>
+
+        <div class="px-6 pb-6 mt-[-10px]">
+            <h3 class="text-sm font-bold text-gray-800 uppercase mb-2">Deskripsi Kelas</h3>
+            <p class="text-sm text-gray-600 leading-relaxed">{{ $package->description ?? 'Tidak ada deskripsi untuk kelas ini.' }}</p>
         </div>
 
         <div class="overflow-x-auto">
@@ -33,6 +55,7 @@
                         <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama Siswa</th>
                         <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Kontak Wali</th>
                         <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Sekolah / Kelas</th>
+                        <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Saldo Tabungan</th>
                         <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tanggal Bergabung</th>
                         <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Aksi</th>
@@ -58,6 +81,9 @@
                         <td class="px-6 py-4">
                             <div class="text-sm text-gray-900">{{ $student->school }}</div>
                             <div class="text-xs text-gray-500">{{ $student->grade }}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-bold text-gray-800">Rp {{ number_format($student->savings_balance, 0, ',', '.') }}</div>
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-600">
                             {{ $student->join_date ? $student->join_date->format('d M Y') : '-' }}

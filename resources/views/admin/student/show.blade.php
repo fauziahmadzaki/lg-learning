@@ -135,6 +135,10 @@ $breadcrumbs = [
                                     <span
                                         class="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-orange-100 text-orange-800">Mingguan
                                         (Weekly)</span>
+                                    @elseif($student->billing_cycle == 'daily')
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-pink-100 text-pink-800">Harian
+                                        (Daily)</span>
                                     @else
                                     <span
                                         class="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-green-100 text-green-800">Full
@@ -203,10 +207,24 @@ $breadcrumbs = [
                                      @php
                                         // Hitung Estimasi Nominal (Untuk Display di Modal)
                                         $estAmount = $student->package->price;
-                                        if ($student->billing_cycle === 'weekly') $estAmount /= 4;
+                                        $isDailyRate = $student->package->duration < 30;
+
+                                        if ($student->billing_cycle === 'daily') {
+                                            $estAmount = $isDailyRate ? $estAmount : ceil($estAmount / 30);
+                                        }
+                                        elseif ($student->billing_cycle === 'weekly') {
+                                            $estAmount = $isDailyRate ? ($estAmount * 7) : ceil($estAmount / 4);
+                                        }
+                                        elseif ($student->billing_cycle === 'monthly') {
+                                             $estAmount = $isDailyRate ? ($estAmount * 30) : $estAmount;
+                                        }
                                         elseif ($student->billing_cycle === 'full') {
-                                            $m = ceil($student->package->duration / 30);
-                                            $estAmount *= ($m > 0 ? $m : 1);
+                                            if ($isDailyRate) {
+                                                $estAmount = $estAmount * $student->package->duration;
+                                            } else {
+                                                $m = ceil($student->package->duration / 30);
+                                                $estAmount *= ($m > 0 ? $m : 1);
+                                            }
                                         }
                                      @endphp
                                      
