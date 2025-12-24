@@ -37,6 +37,12 @@ Route::middleware(['auth', 'verified', 'branch.check'])
         Route::post('siswa/{student}/bill/{bill}/pay', [\App\Http\Controllers\Branch\StudentController::class, 'payBillManually'])
             ->name('students.bills.pay_manual');
 
+        // Tabungan
+        Route::post('siswa/{student}/savings/deposit', [\App\Http\Controllers\Branch\StudentController::class, 'storeDeposit'])
+            ->name('students.savings.deposit');
+        Route::post('siswa/{student}/savings/withdraw', [\App\Http\Controllers\Branch\StudentController::class, 'storeWithdraw'])
+            ->name('students.savings.withdraw');
+
         // Route Reports (Branch Specific)
         Route::controller(App\Http\Controllers\Branch\ReportController::class)->group(function() {
             Route::get('reports', 'index')->name('reports.index');

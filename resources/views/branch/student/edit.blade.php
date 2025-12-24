@@ -24,7 +24,8 @@
                     'student' => $student,
                     'packages' => $packages,
                     'submit_text' => 'Perbarui Data',
-                    'branch' => $branch
+                    'branch' => $branch,
+                    'cancel_route' => route('branch.students.index', $branch)
                     ])
 
                 </form>

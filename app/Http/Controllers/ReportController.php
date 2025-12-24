@@ -88,15 +88,34 @@ class ReportController extends Controller
         $transactions = $query->latest('paid_at')->get();
 
         // 3. Summaries
-        $totalIncome = $transactions->sum('total_amount');
-        $transactionCount = $transactions->count();
-        // Disini bisa hitung Expense jika ada tabel Expense nantinya
-        // $netProfit = $totalIncome - $totalExpense; 
-        $netProfit = $totalIncome; // Sementara sama
+        // A. Pemasukan Bimbel (TUITION)
+        $tuitionTransactions = $transactions->where('type', 'TUITION')->merge($transactions->whereNull('type')); // Handle legacy
+        $tuitionIncome = $tuitionTransactions->sum('total_amount');
+        
+        // B. Tabungan Masuk (SAVINGS_DEPOSIT)
+        $savingsDepositTransactions = $transactions->where('type', 'SAVINGS_DEPOSIT');
+        $savingsIncome = $savingsDepositTransactions->sum('total_amount');
+        
+        // C. Penarikan Tabungan (SAVINGS_WITHDRAWAL)
+        $savingsWithdrawalTransactions = $transactions->where('type', 'SAVINGS_WITHDRAWAL');
+        $savingsWithdrawal = $savingsWithdrawalTransactions->sum('total_amount');
 
-        // Charts Logic (Optional: Group by Date)
-        // Group per hari untuk grafik
-        $chartData = $transactions->groupBy(function($item) {
+        // Total Income (Bimbel + Tabungan Masuk - Penarikan?)
+        // Usually, Financial Reports show Gross Income.
+        // Let's pass them separate.
+        $totalIncome = $tuitionIncome + $savingsIncome;
+        
+        $transactionCount = $transactions->count();
+        
+        // Net Profit (Assuming Expense is 0 for now, minus Withdrawals?)
+        // If "Tabungan" is liability, it shouldn't be profit. 
+        // But user asked for "Pemasukan hasil bimbel dan tabungan".
+        // Let's just sum them for "Total Cash In". 
+        $netProfit = $totalIncome; 
+
+        // Charts Logic (Group by Date) - Focus on Tuition Income for the main chart? Or Total?
+        // Let's go with Tuition for consistency with "Earnings".
+        $chartData = $tuitionTransactions->groupBy(function($item) {
             return Carbon::parse($item->paid_at)->format('d M');
         })->map(function($group) {
             return $group->sum('total_amount');
@@ -124,6 +143,9 @@ class ReportController extends Controller
             'branches', 
             'packages',
             'chartData',
+            'tuitionIncome',
+            'savingsIncome',
+            'savingsWithdrawal',
             'start', 'end' // Pass date range for UI display
         ));
     }

@@ -34,6 +34,9 @@ Route::middleware(['auth', 'verified', 'central.admin'])
     Route::post('/siswa/{student}/bill', [StudentController::class, 'storeBill'])->name('students.bill.store');
     Route::post('/siswa/{student}/pay-manual', [StudentController::class, 'storeManualPayment'])->name('students.pay.manual');
     Route::post('/siswa/{student}/bill/{bill}/pay', [StudentController::class, 'payBillManually'])->name('students.bills.pay_manual');
+    // Tabungan (Savings)
+    Route::post('/siswa/{student}/savings/deposit', [StudentController::class, 'storeDeposit'])->name('students.savings.deposit');
+    Route::post('/siswa/{student}/savings/withdraw', [StudentController::class, 'storeWithdraw'])->name('students.savings.withdraw');
     Route::resource('/transaksi', TransactionController::class)->names('transactions')->parameters([
         'transaksi' => 'transaction'
     ]);

@@ -94,7 +94,7 @@
         </div>
 
         {{-- Cards Summary --}}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             {{-- Total Income --}}
             <div class="bg-white p-6 rounded-xl shadow-sm border border-indigo-100 flex items-center gap-4">
                 <div class="p-3 bg-indigo-50 rounded-lg text-indigo-600">
@@ -103,34 +103,51 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="text-sm text-gray-500">Total Pendapatan</p>
-                    <p class="text-2xl font-bold text-gray-900">Rp {{ number_format($totalIncome, 0, ',', '.') }}</p>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide font-bold">Total Cash Masuk</p>
+                    <p class="text-xl font-bold text-gray-900">Rp {{ number_format($totalIncome, 0, ',', '.') }}</p>
+                    <p class="text-[10px] text-gray-400">Bimbel + Tabungan</p>
                 </div>
             </div>
 
-            {{-- Total Transactions --}}
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-indigo-100 flex items-center gap-4">
-                <div class="p-3 bg-blue-50 rounded-lg text-blue-600">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-                    </svg>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500">Total Transaksi</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ $transactionCount }}</p>
-                </div>
-            </div>
-
-            {{-- Net Profit --}}
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-indigo-100 flex items-center gap-4">
+            {{-- Pemasukan Bimbel --}}
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-green-100 flex items-center gap-4">
                 <div class="p-3 bg-green-50 rounded-lg text-green-600">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                     </svg>
                 </div>
                 <div>
-                    <p class="text-sm text-gray-500">Bersih (Net Profit)</p>
-                    <p class="text-2xl font-bold text-gray-900">Rp {{ number_format($netProfit, 0, ',', '.') }}</p>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide font-bold">Pemasukan Bimbel</p>
+                    <p class="text-xl font-bold text-gray-900">Rp {{ number_format($tuitionIncome, 0, ',', '.') }}</p>
+                    <p class="text-[10px] text-gray-400">SPP & Pendaftaran</p>
+                </div>
+            </div>
+
+            {{-- Tabungan Masuk --}}
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-blue-100 flex items-center gap-4">
+                <div class="p-3 bg-blue-50 rounded-lg text-blue-600">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide font-bold">Tabungan Masuk</p>
+                    <p class="text-xl font-bold text-gray-900">Rp {{ number_format($savingsIncome, 0, ',', '.') }}</p>
+                    <p class="text-[10px] text-gray-400">Deposit Siswa</p>
+                </div>
+            </div>
+
+            {{-- Penarikan Tabungan --}}
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-red-100 flex items-center gap-4">
+                <div class="p-3 bg-red-50 rounded-lg text-red-600">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
+                    </svg>
+                </div>
+                <div>
+                     <p class="text-xs text-gray-500 uppercase tracking-wide font-bold">Total Penarikan</p>
+                    <p class="text-xl font-bold text-red-600">Rp {{ number_format($savingsWithdrawal, 0, ',', '.') }}</p>
+                     <p class="text-[10px] text-gray-400">Pengeluaran Tabungan</p>
                 </div>
             </div>
         </div>
@@ -140,7 +157,7 @@
             <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
                 <h3 class="font-bold text-gray-800">Rincian Transaksi {{ $start->format('d M') }} - {{ $end->format('d M') }}</h3>
             </div>
-            <x-ui.table :headers="['Tanggal', 'Invoice', 'Siswa', 'Cabang', 'Paket', 'Nominal', 'Status']">
+            <x-ui.table :headers="['Tanggal', 'Invoice', 'Tipe', 'Deskripsi', 'Siswa', 'Cabang', 'Paket', 'Nominal', 'Status']">
     @forelse($transactions as $trx)
     <x-ui.tr>
         <x-ui.td>
@@ -148,13 +165,25 @@
         </x-ui.td>
         <x-ui.td class="font-mono text-xs">{{ $trx->invoice_code }}</x-ui.td>
         <x-ui.td>
+            @if($trx->type == 'SAVINGS_DEPOSIT')
+                <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-bold">DEPOSIT</span>
+            @elseif($trx->type == 'SAVINGS_WITHDRAWAL')
+                <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-bold">PENARIKAN</span>
+            @else
+                <span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs font-bold">SPP/BIMBEL</span>
+            @endif
+        </x-ui.td>
+        <x-ui.td class="text-xs text-gray-500 italic max-w-xs truncate">
+            {{ $trx->description ?? '-' }}
+        </x-ui.td>
+        <x-ui.td>
             <div class="font-medium text-gray-900">{{ $trx->student?->name ?? 'Siswa Terhapus' }}</div>
         </x-ui.td>
         <x-ui.td class="text-gray-600">
             {{ $trx->student?->branch?->name ?? 'Tanpa Cabang' }}
         </x-ui.td>
         <x-ui.td>
-            <span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs">{{ $trx->student?->package?->name ?? '-' }}</span>
+             <span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs">{{ $trx->student?->package?->name ?? '-' }}</span>
         </x-ui.td>
         <x-ui.td class="text-right font-medium text-green-600">Rp {{ number_format($trx->total_amount, 0, ',', '.') }}</x-ui.td>
         <x-ui.td>
@@ -169,7 +198,7 @@
     </x-ui.tr>
     @empty
     <x-ui.tr>
-        <x-ui.td colspan="7" class="text-center py-10 text-gray-400">
+        <x-ui.td colspan="9" class="text-center py-10 text-gray-400">
             Tidak ada data transaksi untuk periode ini.
         </x-ui.td>
     </x-ui.tr>

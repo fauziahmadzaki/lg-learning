@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use App\Services\StudentService;
 use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
+use App\Services\ActivityLogger; // <--- MANUAL LOGGING
 use Carbon\Carbon;
 
 class StudentController extends Controller
@@ -83,7 +84,10 @@ class StudentController extends Controller
             return back()->with('error', 'Paket tidak valid untuk cabang ini.');
         }
 
-        $studentService->registerStudent($validatedData, $request->package_id);
+        $student = $studentService->registerStudent($validatedData, $request->package_id);
+ 
+        // Log Manual
+        ActivityLogger::log("Admin cabang ({$branch->name}) mendaftarkan siswa baru: {$student->name}", $student);
 
         return redirect()->route('branch.students.index', $branch)
             ->with('success', 'Siswa berhasil didaftarkan!');
@@ -113,6 +117,9 @@ class StudentController extends Controller
             $studentData, 
             [] // No package update here to keep simple, modify if needed
         );
+
+        // Log Manual
+        ActivityLogger::log("Admin cabang ({$branch->name}) memperbarui data siswa: {$student->name}", $student);
 
         return redirect()->route('branch.students.index', $branch)
             ->with('success', 'Data siswa berhasil diperbarui!');
@@ -153,6 +160,7 @@ class StudentController extends Controller
         $result = $billingService->createNextBill($student, $senderName);
 
         if ($result['success']) {
+            ActivityLogger::log("Admin cabang ({$branch->name}) membuat tagihan manual untuk siswa: {$student->name}", $student);
             return back()->with('success', $result['message']);
         } else {
             return back()->with('error', $result['message']);
@@ -172,6 +180,7 @@ class StudentController extends Controller
         $result = $billingService->processManualPayment($student, $senderName);
 
         if ($result['success']) {
+            ActivityLogger::log("Admin cabang ({$branch->name}) melakukan pembayaran manual untuk siswa: {$student->name}", $student);
             return back()->with('success', $result['message']);
         } else {
             return back()->with('error', $result['message']);
@@ -190,6 +199,52 @@ class StudentController extends Controller
         $result = $billingService->payExistingBillManually($student, $bill, $senderName);
 
         if ($result['success']) {
+            $invoice = $bill->transaction->invoice_code ?? '-';
+            ActivityLogger::log("Admin cabang ({$branch->name}) melunasi tagihan (Invoice: {$invoice}) untuk siswa: {$student->name}", $student);
+            return back()->with('success', $result['message']);
+        } else {
+            return back()->with('error', $result['message']);
+        }
+    }
+
+    /**
+     * Fitur: Tabungan (Deposit) - Branch
+     */
+    public function storeDeposit(Request $request, Branch $branch, Student $student, \App\Services\SavingService $savingService)
+    {
+        if ($student->branch_id !== $branch->id) { abort(403); }
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:1000',
+            'description' => 'nullable|string'
+        ]);
+
+        $senderName = "Cabang {$branch->name}";
+        $result = $savingService->deposit($student, $validated['amount'], $validated['description'], $senderName);
+
+        if ($result['success']) {
+            return back()->with('success', $result['message']);
+        } else {
+            return back()->with('error', $result['message']);
+        }
+    }
+
+    /**
+     * Fitur: Tabungan (Withdraw) - Branch
+     */
+    public function storeWithdraw(Request $request, Branch $branch, Student $student, \App\Services\SavingService $savingService)
+    {
+        if ($student->branch_id !== $branch->id) { abort(403); }
+
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:1000',
+            'description' => 'nullable|string'
+        ]);
+
+        $senderName = "Cabang {$branch->name}";
+        $result = $savingService->withdraw($student, $validated['amount'], $validated['description'], $senderName);
+
+        if ($result['success']) {
             return back()->with('success', $result['message']);
         } else {
             return back()->with('error', $result['message']);
@@ -201,6 +256,8 @@ class StudentController extends Controller
         if ($student->branch_id !== $branch->id) {
             abort(403);
         }
+        $name = $student->name;
+        ActivityLogger::log("Admin cabang ({$branch->name}) menghapus siswa: {$name}", $student);
         $student->delete();
         return redirect()->route('branch.students.index', $branch)->with('success', 'Data siswa berhasil dihapus');
     }

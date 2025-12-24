@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Tutor;
 use App\Models\Branch;
+use App\Services\ActivityLogger; // <--- MANUAL LOGGING
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -96,6 +97,12 @@ class TutorController extends Controller
             }
         });
     
+
+
+        // Log Manual - Harus di luar transaction atau ambil data dari request karena $tutor scope terbatas di closure (kecuali di return)
+        // Kita bisa log user name dari request
+        ActivityLogger::log("Admin mendaftarkan tutor baru: {$request->name}");
+    
         return redirect()->route('admin.tutors.index')->with('success', 'Tutor berhasil ditambahkan!');
     }
 
@@ -155,6 +162,10 @@ class TutorController extends Controller
             }
         });
 
+
+
+    ActivityLogger::log("Admin memperbarui data tutor: {$tutor->user->name}", $tutor);
+
     return redirect()->route('admin.tutors.index')->with('success', 'Data tutor diperbarui!');
     }
 
@@ -168,6 +179,11 @@ class TutorController extends Controller
             // Hapus user (Tutor ikut terhapus karena cascade)
             $tutor->user->delete();
         });
+
+
+
+        $name = $tutor->user->name ?? 'Unknown';
+        ActivityLogger::log("Admin menghapus tutor: {$name}", $tutor);
 
         return redirect()->route('admin.tutors.index')->with('success', 'Tutor dihapus!');
     }

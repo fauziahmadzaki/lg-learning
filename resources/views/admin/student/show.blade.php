@@ -401,6 +401,15 @@ $breadcrumbs = [
                             <div x-show="activeTab === 'history'"
                                 class="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600"></div>
                         </button>
+
+                        {{-- Tab Tabungan --}}
+                        <button @click="activeTab = 'savings'"
+                            class="flex-1 py-4 text-sm font-bold text-center transition focus:outline-none relative"
+                            :class="activeTab === 'savings' ? 'text-indigo-600 bg-white' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'">
+                            Tabungan
+                             <div x-show="activeTab === 'savings'"
+                                class="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600"></div>
+                        </button>
                     </div>
 
                     {{-- 2. Content Tab: TAGIHAN (BILLS) --}}
@@ -529,7 +538,7 @@ $breadcrumbs = [
                     <div x-show="activeTab === 'history'" x-transition.opacity class="p-0" style="display: none;">
                         @if($student->transactions->count() > 0)
                         <div class="overflow-x-auto">
-                            <x-ui.table :headers="['Invoice', 'Tanggal Bayar', 'Metode', 'Total', 'Status']">
+                            <x-ui.table :headers="['Invoice', 'Tanggal Bayar', 'Paket', 'Metode', 'Total', 'Status']">
     @foreach($student->transactions as $trx)
     <x-ui.tr>
         <x-ui.td class="font-medium text-indigo-600">
@@ -537,6 +546,9 @@ $breadcrumbs = [
         </x-ui.td>
         <x-ui.td class="text-gray-600">
             {{ $trx->paid_at ? $trx->paid_at->format('d M Y H:i') : $trx->created_at->format('d M Y') }}
+        </x-ui.td>
+        <x-ui.td>
+             <span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs">{{ $trx->student->package->name ?? '-' }}</span>
         </x-ui.td>
         <x-ui.td class="text-gray-600">
             <span class="uppercase text-xs font-bold">{{ $trx->payment_method ?? '-' }}</span>
@@ -584,7 +596,114 @@ $breadcrumbs = [
                         </div>
                         @endif
                     </div>
+                
+                {{-- 4. Content Tab: TABUNGAN (SAVINGS) --}}
+                <div x-show="activeTab === 'savings'" x-transition.opacity class="p-6" style="display: none;">
+                    
+                    {{-- Balance Card --}}
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 text-white mb-6 flex justify-between items-center shadow-lg">
+                        <div>
+                            <p class="text-blue-100 text-sm font-medium uppercase tracking-wider mb-1">Total Tabungan</p>
+                            <h3 class="text-3xl font-bold">Rp {{ number_format($student->savings_balance, 0, ',', '.') }}</h3>
+                        </div>
+                        <div class="flex gap-3">
+                            {{-- Deposit Button --}}
+                            <button x-on:click.prevent="$dispatch('open-modal', 'savings-deposit-modal')" 
+                                class="bg-white text-blue-700 hover:bg-blue-50 px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                Deposit
+                            </button>
+                            {{-- Withdraw Button --}}
+                            <button x-on:click.prevent="$dispatch('open-modal', 'savings-withdraw-modal')"
+                                class="bg-indigo-800 text-white hover:bg-indigo-900 px-4 py-2 rounded-lg text-sm font-bold shadow transition flex items-center gap-2 border border-indigo-600">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+                                Tarik
+                            </button>
+                        </div>
+                    </div>
 
+                    {{-- History Savings --}}
+                    <h4 class="font-bold text-gray-800 mb-3">Riwayat Transaksi Tabungan</h4>
+                    <div class="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+                        <x-ui.table :headers="['Tanggal', 'Tipe', 'Keterangan', 'Nominal']">
+                            @forelse($student->transactions()->whereIn('type', ['SAVINGS_DEPOSIT', 'SAVINGS_WITHDRAWAL'])->latest()->take(10)->get() as $log)
+                            <x-ui.tr>
+                                <x-ui.td class="text-gray-600">{{ $log->created_at->format('d M Y H:i') }}</x-ui.td>
+                                <x-ui.td>
+                                    @if($log->type == 'SAVINGS_DEPOSIT')
+                                        <span class="text-green-600 font-bold text-xs uppercase bg-green-100 px-2 py-1 rounded">Deposit</span>
+                                    @else
+                                        <span class="text-red-600 font-bold text-xs uppercase bg-red-100 px-2 py-1 rounded">Penarikan</span>
+                                    @endif
+                                </x-ui.td>
+                                <x-ui.td class="text-gray-500 text-sm">{{ $log->description ?? '-' }}</x-ui.td>
+                                <x-ui.td class="text-right font-bold {{ $log->type == 'SAVINGS_WITHDRAWAL' ? 'text-red-600' : 'text-green-600' }}">
+                                    {{ $log->type == 'SAVINGS_WITHDRAWAL' ? '-' : '+' }} Rp {{ number_format($log->total_amount, 0, ',', '.') }}
+                                </x-ui.td>
+                            </x-ui.tr>
+                            @empty
+                            <x-ui.tr>
+                                <x-ui.td colspan="4" class="text-center py-6 text-gray-400">Belum ada transaksi tabungan.</x-ui.td>
+                            </x-ui.tr>
+                            @endforelse
+                        </x-ui.table>
+                    </div>
+
+                    {{-- MODALS --}}
+                    {{-- Deposit Modal --}}
+                    <x-ui.modal name="savings-deposit-modal" focusable>
+                        <form method="POST" action="{{ route('admin.students.savings.deposit', $student) }}" class="p-6">
+                            @csrf
+                            <h2 class="text-lg font-medium text-gray-900 mb-4">Tambah Deposit Tabungan</h2>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Nominal Deposit (Rp)</label>
+                                    <input type="number" name="amount" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Contoh: 50000" required min="1000">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Catatan (Opsional)</label>
+                                    <textarea name="description" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Contoh: Setoran tunai mingguan"></textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 flex justify-end gap-3">
+                                <x-buttons.secondary x-on:click="$dispatch('close')">Batal</x-buttons.secondary>
+                                <x-buttons.primary class="bg-green-600 hover:bg-green-700">Simpan Deposit</x-buttons.primary>
+                            </div>
+                        </form>
+                    </x-ui.modal>
+
+                    {{-- Withdraw Modal --}}
+                    <x-ui.modal name="savings-withdraw-modal" focusable>
+                        <form method="POST" action="{{ route('admin.students.savings.withdraw', $student) }}" class="p-6">
+                            @csrf
+                            <h2 class="text-lg font-medium text-gray-900 mb-4">Tarik Saldo Tabungan</h2>
+                             <div class="bg-red-50 p-3 rounded-lg border border-red-100 mb-4">
+                                <p class="text-sm text-red-700">Saldo saat ini: <strong>Rp {{ number_format($student->savings_balance, 0, ',', '.') }}</strong></p>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Nominal Penarikan (Rp)</label>
+                                    <input type="number" name="amount" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Contoh: 50000" required min="1000" max="{{ $student->savings_balance }}">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Catatan / Alasan</label>
+                                    <textarea name="description" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Contoh: Untuk bayar outbond"></textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 flex justify-end gap-3">
+                                <x-buttons.secondary x-on:click="$dispatch('close')">Batal</x-buttons.secondary>
+                                <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-900 focus:outline-none focus:border-red-900 focus:ring ring-red-300 disabled:opacity-25 transition ease-in-out duration-150">
+                                    Konfirmasi Penarikan
+                                </button>
+                            </div>
+                        </form>
+                    </x-ui.modal>
+
+                </div>
                 </div>
 
             </div>

@@ -7,7 +7,8 @@ use App\Models\Package;
 use App\Models\Student;
 use App\Models\Tutor;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Services\ActivityLogger; // <--- MANUAL LOGGING
+
 
 class LandingController extends Controller
 {
@@ -245,6 +246,9 @@ class LandingController extends Controller
             return back()->with('error', 'Gagal membuat tagihan pembayaran: ' . $result['message']);
         }
 
+        // Log Manual
+        ActivityLogger::log("Siswa baru mendaftar (Pending Payment): {$student->name} - Paket {$package->name}", $student);
+
         // Redirect ke Url Xendit
         return redirect($result['redirect_url']);
     }
@@ -273,6 +277,9 @@ class LandingController extends Controller
                     // Activate Student Logic
                     // Pass transaction to ensure idempotent next_billing_date calculation
                     $studentService->processPaymentSuccess($transaction->student, $transaction);
+                    
+                    // Log Manual
+                    ActivityLogger::log("Pembayaran Berhasil (Xendit Check): {$transaction->student->name} melunasi tagihan {$transaction->invoice_code}", $transaction->student);
                     
                     session()->flash('success', 'Status Pembayaran Berhasil Diperbarui!');
                 }

@@ -6,6 +6,7 @@ use App\Models\Package;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use App\Services\StudentService;
+use App\Services\ActivityLogger; // <--- MANUAL LOGGING
 use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
 use Carbon\Carbon;           // <--- WAJIB: Untuk atur tanggal
@@ -77,7 +78,10 @@ class StudentController extends Controller
         {
             $validatedData = $request->safe()->except(['package_id']);
   
-            $studentService->registerStudent($validatedData, $request->package_id);
+            $student = $studentService->registerStudent($validatedData, $request->package_id);
+
+            // Log Manual
+            ActivityLogger::log("Admin mendaftarkan siswa baru: {$student->name}", $student);
 
             return redirect()->route('admin.students.index')
                 ->with('success', 'Siswa berhasil didaftarkan! Tagihan dan jadwal telah diatur otomatis.');
@@ -103,6 +107,9 @@ class StudentController extends Controller
             $studentData, 
             [] // Empty array = No Package Update
         );
+
+        // Log Manual
+        ActivityLogger::log("Admin memperbarui data siswa: {$student->name}", $student);
 
         return redirect()->route('admin.students.index')
             ->with('success', 'Data siswa berhasil diperbarui!');
@@ -130,6 +137,8 @@ class StudentController extends Controller
 
     public function destroy(Student $student)
     {
+        $name = $student->name; // Capture name before delete
+        ActivityLogger::log("Admin menghapus siswa: {$name}", $student);
         $student->delete();
         return redirect()->route('admin.students.index')->with('success', 'Data siswa berhasil dihapus');
     }
@@ -142,6 +151,7 @@ class StudentController extends Controller
         $result = $billingService->createNextBill($student);
 
         if ($result['success']) {
+            ActivityLogger::log("Admin membuat tagihan manual untuk siswa: {$student->name}", $student);
             return back()->with('success', $result['message']);
         } else {
             return back()->with('error', $result['message']);
@@ -165,6 +175,46 @@ class StudentController extends Controller
     public function payBillManually(Request $request, Student $student, \App\Models\Bill $bill, \App\Services\BillingService $billingService)
     {
         $result = $billingService->payExistingBillManually($student, $bill);
+
+        if ($result['success']) {
+            $invoice = $bill->transaction->invoice_code ?? '-';
+            ActivityLogger::log("Admin melunasi tagihan (Invoice: {$invoice}) untuk siswa: {$student->name}", $student);
+            return back()->with('success', $result['message']);
+        } else {
+            return back()->with('error', $result['message']);
+        }
+    }
+
+    /**
+     * Fitur: Tabungan (Deposit)
+     */
+    public function storeDeposit(Request $request, Student $student, \App\Services\SavingService $savingService)
+    {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:1000',
+            'description' => 'nullable|string'
+        ]);
+
+        $result = $savingService->deposit($student, $validated['amount'], $validated['description'], auth()->user()->name);
+
+        if ($result['success']) {
+            return back()->with('success', $result['message']);
+        } else {
+            return back()->with('error', $result['message']);
+        }
+    }
+
+    /**
+     * Fitur: Tabungan (Withdraw)
+     */
+    public function storeWithdraw(Request $request, Student $student, \App\Services\SavingService $savingService)
+    {
+        $validated = $request->validate([
+            'amount' => 'required|numeric|min:1000',
+            'description' => 'nullable|string'
+        ]);
+
+        $result = $savingService->withdraw($student, $validated['amount'], $validated['description'], auth()->user()->name);
 
         if ($result['success']) {
             return back()->with('success', $result['message']);

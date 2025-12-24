@@ -5,7 +5,6 @@ namespace App\Exports;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-// use Maatwebsite\Excel\Concerns\ShouldAutoSize; // Removed
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
@@ -41,6 +40,8 @@ class FinancialReportExport implements FromCollection, WithHeadings, WithMapping
             [ // Row 2: Headers
                 'Tanggal',
                 'No. Invoice',
+                'Kategori', // New
+                'Keterangan', // New
                 'Nama Siswa',
                 'Cabang',
                 'Paket',
@@ -63,12 +64,22 @@ class FinancialReportExport implements FromCollection, WithHeadings, WithMapping
             $paymentMethod = '-';
         }
 
+        // Format Type
+        $type = match($transaction->type) {
+            'TUITION' => 'Pemasukan Bimbel',
+            'SAVINGS_DEPOSIT' => 'Tabungan Masuk',
+            'SAVINGS_WITHDRAWAL' => 'Penarikan Tabungan',
+            default => $transaction->type,
+        };
+
         return [
             $transaction->paid_at ? \Carbon\Carbon::parse($transaction->paid_at)->translatedFormat('Y-m-d') : $transaction->created_at->translatedFormat('Y-m-d'),
             $transaction->invoice_code,
+            $type,
+            $transaction->description ?? '-',
             $transaction->student?->name ?? 'Siswa Terhapus',
             $transaction->student?->branch?->name ?? 'Tanpa Cabang',
-            $transaction->student?->package?->name ?? 'Paket Terhapus',
+            $transaction->student?->package?->name ?? '-',
             $transaction->total_amount,
             $paymentMethod,
             $transaction->paid_at ? \Carbon\Carbon::parse($transaction->paid_at)->format('H:i:s') : '-',
@@ -78,7 +89,7 @@ class FinancialReportExport implements FromCollection, WithHeadings, WithMapping
     public function columnFormats(): array
     {
         return [
-            'F' => '_("Rp"* #,##0_);_("Rp"* (#,##0);_("Rp"* "-"_);_(@_)', // Accounting format for "Nominal (Rp)"
+            'H' => '_("Rp"* #,##0_);_("Rp"* (#,##0);_("Rp"* "-"_);_(@_)', // Accounting format for "Nominal (Rp)" (Column H)
         ];
     }
 
@@ -87,12 +98,14 @@ class FinancialReportExport implements FromCollection, WithHeadings, WithMapping
         return [
             'A' => 15, // Tanggal
             'B' => 18, // No. Invoice
-            'C' => 25, // Nama Siswa
-            'D' => 15, // Cabang
-            'E' => 23, // Paket
-            'F' => 18, // Nominal
-            'G' => 20, // Metode Pembayaran
-            'H' => 15, // Waktu Pembayaran
+            'C' => 20, // Kategori
+            'D' => 25, // Keterangan
+            'E' => 25, // Nama Siswa
+            'F' => 15, // Cabang
+            'G' => 20, // Paket
+            'H' => 18, // Nominal
+            'I' => 20, // Metode Pembayaran
+            'J' => 15, // Waktu Pembayaran
         ];
     }
 
@@ -142,9 +155,15 @@ class FinancialReportExport implements FromCollection, WithHeadings, WithMapping
             ],
             // Center align specific columns
             'A' => ['alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]], // Tanggal
-            'B' => ['alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]], // No. Invoice
-            'G' => ['alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]], // Metode Pembayaran
-            'H' => ['alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]], // Waktu Pembayaran
+            'B' => ['alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]], // Invoice
+            'C' => ['alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]], // Kategori
+            // D Left (Deskripsi)
+            // E Left (Siswa)
+            // F Left (Cabang)
+            'G' => ['alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]], // Paket
+            // H Right (Nominal) is default for numbers
+            'I' => ['alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]], // Metode
+            'J' => ['alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]], // Waktu
         ];
     }
 
@@ -160,39 +179,55 @@ class FinancialReportExport implements FromCollection, WithHeadings, WithMapping
                 $sheet->getPageSetup()->setOrientation(PageSetup::ORIENTATION_LANDSCAPE);
                 $sheet->getPageSetup()->setPaperSize(PageSetup::PAPERSIZE_A4);
                 $sheet->getPageSetup()->setFitToWidth(1);
-                $sheet->getPageSetup()->setFitToHeight(0); // 0 means unlimited height
+                $sheet->getPageSetup()->setFitToHeight(0); 
 
-                // Merge Title Row (A1:H1)
-                $sheet->mergeCells('A1:H1');
+                // Merge Title Row (A1:J1)
+                $sheet->mergeCells('A1:J1');
                 
-                // --- TOTAL INCOME ROW ---
-                $totalRow = $highestRow + 1;
-                $sheet->setCellValue('E' . $totalRow, 'TOTAL PENDAPATAN');
-                $sheet->setCellValue('F' . $totalRow, '=SUM(F3:F' . $highestRow . ')'); // Sum Column F (Nominal)
+                // --- SUMMARY SECTION ---
+                $summaryStartRow = $highestRow + 2;
+
+                // 1. Total Cash Masuk (Tuition + Savings Deposit)
+                $sheet->setCellValue('G' . $summaryStartRow, 'TOTAL CASH MASUK');
+                $sheet->setCellValue('H' . $summaryStartRow, '=SUMIF(C3:C'.$highestRow.', "Pemasukan Bimbel", H3:H'.$highestRow.') + SUMIF(C3:C'.$highestRow.', "Tabungan Masuk", H3:H'.$highestRow.')');
                 
-                // Style Total Row
-                $sheet->getStyle('E' . $totalRow . ':H' . $totalRow)->getFont()->setBold(true);
-                $sheet->getStyle('F' . $totalRow)->getNumberFormat()->setFormatCode('_("Rp"* #,##0_);_("Rp"* (#,##0);_("Rp"* "-"_);_(@_)');
-                $sheet->getStyle('A' . $totalRow . ':H' . $totalRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+                // 2. Pemasukan Bimbel
+                $sheet->setCellValue('G' . ($summaryStartRow + 1), 'Pemasukan Bimbel');
+                $sheet->setCellValue('H' . ($summaryStartRow + 1), '=SUMIF(C3:C'.$highestRow.', "Pemasukan Bimbel", H3:H'.$highestRow.')');
+
+                // 3. Tabungan Masuk
+                $sheet->setCellValue('G' . ($summaryStartRow + 2), 'Tabungan Masuk');
+                $sheet->setCellValue('H' . ($summaryStartRow + 2), '=SUMIF(C3:C'.$highestRow.', "Tabungan Masuk", H3:H'.$highestRow.')');
+
+                // 4. Penarikan Tabungan
+                $sheet->setCellValue('G' . ($summaryStartRow + 3), 'Total Penarikan');
+                $sheet->setCellValue('H' . ($summaryStartRow + 3), '=SUMIF(C3:C'.$highestRow.', "Penarikan Tabungan", H3:H'.$highestRow.')');
+                $sheet->getStyle('H' . ($summaryStartRow + 3))->getFont()->getColor()->setARGB('FFFF0000'); // Red for withdrawal
+
+                // Style Summary
+                $summaryRange = 'G' . $summaryStartRow . ':H' . ($summaryStartRow + 3);
+                $sheet->getStyle($summaryRange)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+                $sheet->getStyle('G' . $summaryStartRow . ':G' . ($summaryStartRow + 3))->getFont()->setBold(true);
+                $sheet->getStyle('H' . $summaryStartRow . ':H' . ($summaryStartRow + 3))->getNumberFormat()->setFormatCode('_("Rp"* #,##0_);_("Rp"* (#,##0);_("Rp"* "-"_);_(@_)');
 
                 // --- SIGNATURE SECTION ---
-                $signatureStartRow = $totalRow + 3; // Leave 2 empty rows after Total
+                $signatureStartRow = $summaryStartRow + 6; 
 
                 // Add "Dibuat Oleh" and "Disetujui Oleh"
                 $sheet->setCellValue('B' . $signatureStartRow, 'Dibuat Oleh,');
-                $sheet->setCellValue('F' . $signatureStartRow, 'Disetujui Oleh,'); 
+                $sheet->setCellValue('H' . $signatureStartRow, 'Disetujui Oleh,'); 
 
                 // Center align signature titles
                 $sheet->getStyle('B' . $signatureStartRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle('F' . $signatureStartRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle('H' . $signatureStartRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
                 // Add lines for signature
                 $sheet->setCellValue('B' . ($signatureStartRow + 4), '( .............................. )');
-                $sheet->setCellValue('F' . ($signatureStartRow + 4), '( .............................. )');
+                $sheet->setCellValue('H' . ($signatureStartRow + 4), '( .............................. )');
 
                 // Center align signature lines
                 $sheet->getStyle('B' . ($signatureStartRow + 4))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle('F' . ($signatureStartRow + 4))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle('H' . ($signatureStartRow + 4))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             },
         ];
     }

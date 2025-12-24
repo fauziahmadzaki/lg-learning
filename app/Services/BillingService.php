@@ -192,7 +192,7 @@ class BillingService
             return ['success' => false, 'message' => 'Tagihan ini sudah lunas.'];
         }
 
-        return DB::transaction(function() use ($student, $bill) {
+        return DB::transaction(function() use ($student, $bill, $senderName) {
             $invoiceCode = 'INV-MANUAL-' . time() . '-' . $student->id . '-B' . $bill->id;
             
             $transaction = $student->transactions()->create([
@@ -220,7 +220,7 @@ class BillingService
             if ($this->studentService->isPeriodOver($student)) {
                  $hasUnpaidBills = $student->bills()->where('status', '!=', 'PAID')->exists();
                  if (!$hasUnpaidBills) {
-                     $student->update(['status' => 'finished']);
+                     $student->update(['status' => 'inactive']);
                  }
             }
 

@@ -8,7 +8,7 @@
         if (auth()->user()->isCentralAdmin()) {
             $dashboardRoute = route('admin.dashboard');
         } elseif (auth()->user()->branch_id) {
-            $dashboardRoute = route('branch.dashboard', ['branch' => auth()->user()->branch_id]);
+            $dashboardRoute = route('branch.dashboard', auth()->user()->branch);
         }
     }
 @endphp

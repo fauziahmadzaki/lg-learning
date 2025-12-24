@@ -75,7 +75,7 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="text-xs font-medium text-gray-500 uppercase">Omset (Bln Ini)</p>
+                    <p class="text-xs font-medium text-gray-500 uppercase">Pemasukan Bulan Ini</p>
                     <h4 class="text-xl font-bold text-gray-800">Rp {{ number_format($revenue, 0, ',', '.') }}</h4>
                 </div>
             </div>
@@ -89,7 +89,7 @@
             <div class="lg:col-span-2 border border-gray-200 rounded-xl p-6 bg-white shadow-sm flex flex-col h-full">
                 <div class="flex items-center justify-between mb-6">
                     <div>
-                        <h3 class="text-gray-900 font-bold text-lg">Statistik Pendapatan</h3>
+                        <h3 class="text-gray-900 font-bold text-lg">Statistik Pemasukan</h3>
                         <p class="text-sm text-gray-500">Grafik pemasukan 7 hari terakhir</p>
                     </div>
                 </div>
@@ -109,7 +109,7 @@
                             data: {
                                 labels: @json($chartLabels),
                                 datasets: [{
-                                    label: 'Pendapatan (Rp)',
+                                    label: 'Pemasukan (Rp)',
                                     data: @json($chartValues),
                                     borderColor: '#4F46E5', 
                                     backgroundColor: 'rgba(79, 70, 229, 0.1)',

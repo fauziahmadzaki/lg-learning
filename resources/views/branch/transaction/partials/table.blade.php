@@ -44,7 +44,7 @@
 
                 {{-- Kolom 3: Paket --}}
                 <td class="px-6 py-4">
-                    <div class="font-medium text-gray-800">{{ $transaction->package_name_snapshot ?? ($transaction->package->name ?? '-') }}</div>
+                    <div class="font-medium text-gray-800">{{ $transaction->package_name_snapshot ?? ($transaction->student->package?->name ?? '-') }}</div>
                     <div class="font-bold text-indigo-600 mt-0.5">
                         Rp {{ number_format($transaction->total_amount ?? $transaction->amount, 0, ',', '.') }}
                     </div>

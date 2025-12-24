@@ -104,7 +104,24 @@ class StudentService
                 // 5. Repeat until next cycle > today.
                 // 6. That future date is 'next_billing_date'.
 
+                $endDate = $joinDate->copy()->addDays($package->duration);
+                
+                // Calculate Max Bills (Match Logic with BillingService)
+                $maxBills = 999;
+                if ($data['billing_cycle'] === 'weekly') {
+                    $maxBills = round($package->duration / 7);
+                } elseif ($data['billing_cycle'] === 'monthly') {
+                    $maxBills = round($package->duration / 30);
+                }
+
+                $billCount = 0;
+
                 do {
+                    // Check Max Bills Limit
+                    if ($billCount >= $maxBills && $data['billing_cycle'] !== 'full') {
+                        break;
+                    }
+
                     // Create Bill (PAID)
                     $bill = Bill::create([
                         'student_id' => $student->id,
@@ -129,6 +146,7 @@ class StudentService
                     ]);
                     
                     $bill->update(['transaction_id' => $transaction->id]);
+                    $billCount++;
 
                     // Advance Date
                     if ($data['billing_cycle'] == 'weekly') {
@@ -137,9 +155,11 @@ class StudentService
                         $currentDate->addMonth();
                     } elseif ($data['billing_cycle'] == 'full') {
                         $currentDate->addDays($package->duration);
-                        // Kalau full, biasanya cuma 1x bayar di awal. Jadi break loop setelah 1x.
-                        // Kecuali paketnya berulang? Asumsi paket Regular.
-                        // Untuk 'full', kita set next billing jauh ke depan dan break.
+                    }
+
+                    // BREAK IF PACKGE FINISHED (Prevent Infinite Loop)
+                    if ($currentDate->gte($endDate)) {
+                        break;
                     }
 
                 } while ($currentDate->lt($today) && $data['billing_cycle'] !== 'full');
@@ -151,7 +171,15 @@ class StudentService
                      // Tapi karena loop di atas sudah addDays, $currentDate sudah benar.
                 }
 
-                $student->update(['next_billing_date' => $currentDate]);
+                // Check if the package is already finished based on the calculated dates
+                if ($currentDate->gte($endDate)) {
+                    $student->update([
+                        'next_billing_date' => $currentDate,
+                        'status' => 'inactive'
+                    ]);
+                } else {
+                    $student->update(['next_billing_date' => $currentDate]);
+                }
             }
 
 
@@ -348,7 +376,7 @@ class StudentService
                     }
 
                     // 2. Course Finished
-                    if ($status === 'finished') {
+                    if ($status === 'inactive') {
                         $msgFinish = "Selamat {$student->name}!\n\n"
                             . "Anda telah menyelesaikan program {$package->name}.\n"
                             . "Terima kasih telah belajar bersama LG Learning.\n"

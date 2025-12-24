@@ -252,7 +252,7 @@
 
     {{-- TOMBOL AKSI --}}
     <div class="flex items-center justify-end gap-3 border-t border-gray-100 pt-6">
-        <a href="{{ route('admin.students.index') }}"
+        <a href="{{ $cancel_route ?? route('admin.students.index') }}"
             class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium transition">
             Batal
         </a>
