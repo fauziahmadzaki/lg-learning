@@ -168,6 +168,17 @@
                                 </p>
                             </div>
 
+                            <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+                                <h4 class="font-bold text-blue-700 text-sm mb-2">🧠 Konsep Dasar Sistem Keuangan</h4>
+                                <p class="text-blue-800 text-sm mb-2">
+                                    Sistem ini menggunakan konsep <strong>Subscription (Berlangganan)</strong> per periode hari/bulan.
+                                </p>
+                                <ul class="list-disc pl-5 text-xs text-blue-700 space-y-1">
+                                    <li><strong>Kenapa Harus Begini?</strong> Sistem 'mengunci' paket yang sedang berjalan untuk menjaga <strong>Integritas Data</strong>. Mengubah paket di tengah jalan tanpa mengikuti SOP dapat menyebabkan selisih pada laporan keuangan.</li>
+                                    <li><strong>Solusi:</strong> Admin diharapkan mengikuti SOP di bawah ini (selesaikan periode berjalan dulu) sebelum mengganti skema pembayaran siswa.</li>
+                                    <li><strong>Contoh Skenario:</strong> Siswa ambil paket Mingguan dan sudah bayar untuk 2 minggu. Lalu ia minta ganti ke Bulanan. Jika langsung diganti HARI INI, maka sistem akan menganggap dia sudah bayar 'bulanan' padahal uang yang masuk baru setara 2 minggu. Ini akan membuat sekolah rugi. Maka, tagih dulu sisa 2 minggunya, baru ganti ke status bulanan.</li>
+                                </ul>
+                            </div>
                             <div>
                                 <h3 class="font-bold text-lg text-gray-900 mb-2">Buat Tagihan Manual</h3>
                                 <p class="text-gray-600 text-sm">
@@ -223,15 +234,16 @@
                                         </p>
                                     </div>
                                     
-                                    {{-- Skenario 4 --}}
                                     <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                                        <h4 class="font-bold text-indigo-700 text-sm mb-1">Kasus 4: Pindah Paket</h4>
+                                        <h4 class="font-bold text-indigo-700 text-sm mb-1">Kasus 4: Pindah Paket (Ganti Program)</h4>
                                         <p class="text-xs text-gray-600">
-                                            <strong>Masalah:</strong> Siswa ingin ganti dari Paket Mingguan ke Bulanan. <br>
-                                            <strong>Tindakan:</strong>
-                                            1. Edit Siswa -> Pilih Paket Baru.<br>
-                                            2. Jika tagihan lama masih pending, biarkan expired atau admin bisa membuat tagihan baru manual setelah edit paket.<br>
-                                            3. Perubahan harga efektif di tagihan berikutnya.
+                                            <strong>Tindakan:</strong> Edit data siswa -> Pilih Paket Baru.<br>
+                                            <strong>Efek Harga:</strong> Tagihan <em>berikutnya</em> yang dibuat sistem akan mengikuti harga paket baru. Tagihan lama yang sudah terbit tidak berubah.<br>
+                                            <strong>Efek Durasi (PENTING):</strong>
+                                            <ul class="list-disc pl-4 mt-1">
+                                                <li>Jika ganti ke durasi lebih <strong>PANJANG</strong>: Aman. Masa les bertambah.</li>
+                                                <li>Jika ganti ke durasi lebih <strong>PENDEK</strong>: Cek tanggal gabung! Jika (Tanggal Gabung + Durasi Baru) sudah terlewat dari Hari Ini, sistem akan menganggap siswa sudah <strong>FINISHED</strong> dan berhenti menagih.</li>
+                                            </ul>
                                         </p>
                                     </div>
 
@@ -259,6 +271,31 @@
                                                 <li><code>Pending</code>: Data butuh verifikasi.</li>
                                             </ul>
                                             <strong>Tindakan:</strong> Edit data siswa tersebut, lalu ubah status menjadi <strong>Active</strong>. Sistem akan melanjutkan perhitungan tagihan secara otomatis pada siklus berikutnya.
+                                        </p>
+                                    </div>
+
+                                    {{-- Skenario 7 --}}
+                                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                        <h4 class="font-bold text-red-700 text-sm mb-1">Kasus 7: SOP Mengubah Mingguan ke Bulanan (PENTING)</h4>
+                                        <p class="text-xs text-gray-600">
+                                            <strong>Masalah:</strong> Siswa ingin ganti ke Bulanan padahal baru berjalan 2 minggu (Mingguan).<br>
+                                            <strong>Resiko:</strong> Jika langsung diganti, siswa akan dapat masa aktif 1 bulan penuh (Rugi Bandar).<br>
+                                            <strong>SOP Wajib:</strong>
+                                            <ol class="list-decimal pl-4 mt-1">
+                                                <li>Jangan ubah status dulu.</li>
+                                                <li>Gunakan fitur <strong>Buat Tagihan Manual</strong> untuk menagih sisa minggu di bulan ini.</li>
+                                                <li>Minta siswa melunasi sisa tagihan tersebut.</li>
+                                                <li>Setelah lunas (bulan ini beres), baru ubah status menjadi <strong>Bulanan</strong> untuk bulan depan.</li>
+                                            </ol>
+                                        </p>
+                                    </div>
+
+                                    {{-- Skenario 8 --}}
+                                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                        <h4 class="font-bold text-red-700 text-sm mb-1">Kasus 8: Mengubah Tanggal Gabung (Resiko Fatal)</h4>
+                                        <p class="text-xs text-gray-600">
+                                            <strong>Peringatan:</strong> Mengubah <strong>Tanggal Gabung</strong> ke masa lalu dapat menyebabkan paket siswa langsung dianggap <strong>FINISHED (Selesai)</strong> oleh sistem jika durasinya terlampaui.<br>
+                                            <strong>Efek Samping:</strong> Tanggal tagihan rutin (Next Billing Date) <strong>TIDAK BERGESER</strong> otomatis. Hanya ubah tanggal ini jika ada kesalahan input administratif, bukan untuk mengatur jadwal tagihan.
                                         </p>
                                     </div>
                                 </div>
@@ -367,3 +404,4 @@
         </div>
     </div>
 </x-app-layout>
+

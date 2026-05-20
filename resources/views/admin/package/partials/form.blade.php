@@ -154,7 +154,7 @@
             </div>
 
             <div>
-                <x-inputs.label for="price" :value="__('Harga Total (Rp)')" />
+                <x-inputs.label for="price" :value="__('Harga (Rp)')" />
                 <div class="relative mt-1 rounded-md shadow-sm">
                     <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                         <span class="text-gray-500 sm:text-sm">Rp</span>

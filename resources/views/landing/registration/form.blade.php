@@ -140,7 +140,7 @@
                             </div>
 
                             <div class="mt-8 pt-6 border-t border-gray-100 flex justify-end">
-                                <button type="submit" class="px-8 py-3 bg-orange-500 text-white font-bold rounded-xl shadow-lg hover:bg-orange-600 transition">
+                                <button type="button" class="px-8 py-3 bg-orange-500 text-white font-bold rounded-xl shadow-lg hover:bg-orange-600 transition">
                                     Lanjut ke Pembayaran &rarr;
                                 </button>
                             </div>

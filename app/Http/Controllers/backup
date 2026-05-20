@@ -98,15 +98,14 @@ class StudentController extends Controller
     public function update(UpdateStudentRequest $request, Student $student, StudentService $studentService)
     {
         // 1. Ambil data validasi (exclude package_id & billing_cycle)
-        // $studentData = $request->safe()->except(['package_id', 'billing_cycle']);
-	$studentData = $request->safe()->all();
+        $studentData = $request->safe()->except(['package_id', 'billing_cycle']);
 
         // 2. Delegate ke Service
         // Kirim array kosong untuk package_id agar paket tidak berubah saat Edit
         $studentService->updateStudent(
             $student, 
             $studentData, 
-            []
+            [] // Empty array = No Package Update
         );
 
         // Log Manual

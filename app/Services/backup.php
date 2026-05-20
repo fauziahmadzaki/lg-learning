@@ -30,7 +30,15 @@ class StudentService
             $student = Student::create($data);
 
             // 2. Logic Tagihan (Disesuaikan dengan Input Harga: Per Hari (<30) atau Per Bulan (>=30))
-            $amount = $this->calculateAmount($package, $data['billing_cycle']);
+            $isDailyRate = $package->duration < 30;
+
+            $amount = match($data['billing_cycle']) {
+                'daily'   => $isDailyRate ? $package->price : ceil($package->price / 30),
+                'weekly'  => $isDailyRate ? ($package->price * 7) : ceil($package->price / 4),
+                'monthly' => $isDailyRate ? ($package->price * 30) : $package->price,
+                'full'    => $isDailyRate ? ($package->price * $package->duration) : ($package->price * ceil($package->duration / 30)),
+                default   => 0,
+            };
 
             // A. KASUS PENDING (Buat 1 Tagihan + Invoice Xendit)
             if ($data['status'] === 'pending') {
@@ -246,99 +254,21 @@ class StudentService
     {
         return DB::transaction(function () use ($student, $data, $packageIds) {
             
-            // 1. Handle Package ID change
+            // Handle Package ID change
             if (!empty($packageIds)) {
+                // Ambil ID pertama saja karena sekarang logicnya 1 siswa 1 paket
+                // $packageIds dikirim sebagai array dari Controller (biar konsisten params), tapi kita ambil yg pertama
                 $newPackageId = is_array($packageIds) ? $packageIds[0] : $packageIds;
                 $data['package_id'] = $newPackageId;
             }
 
-            // Detect Changes
-            $oldPackageId = $student->package_id;
-            $oldCycle = $student->billing_cycle;
-            
-            // Update Student Data
             $student->update($data);
             
-            // 2. CHECK FOR PENDING BILLS (CORE FEATURE REQUEST)
-            // Jika Cycle atau Package berubah, update tagihan yang masih UNPAID.
-            if (
-                ($data['billing_cycle'] !== $oldCycle) || 
-                (isset($data['package_id']) && $data['package_id'] != $oldPackageId)
-            ) {
-                // Find Pending Bill
-                $pendingBill = Bill::where('student_id', $student->id)
-                                   ->where('status', 'UNPAID')
-                                   ->orderBy('created_at', 'desc') // Ambil yang paling baru
-                                   ->first();
-
-                if ($pendingBill) {
-                    $package = $student->package; // Sudah updated relation
-                    
-                    // Recalculate Amount
-                    $newAmount = $this->calculateAmount($package, $student->billing_cycle);
-                    
-                    // Update Bill
-                    $pendingBill->update([
-                        'amount' => $newAmount,
-                        'title' => 'Tagihan Periode ' . $pendingBill->due_date->format('d M Y') . ' (Updated)',
-                    ]);
-
-                    // Update Transaction if exists
-                    if ($pendingBill->transaction_id) {
-                        $transaction = \App\Models\Transaction::find($pendingBill->transaction_id);
-                        if ($transaction && $transaction->status === 'PENDING') {
-                            
-                            // Update Amount
-                            $transaction->update(['total_amount' => $newAmount]);
-
-                            // RE-GENERATE XENDIT INVOICE (Optional but recommended)
-                            // Karena kalau tidak, link lama masih pakai harga lama.
-                            // Kita mark link lama jadi '#' biar user generate ulang / otomatis generate baru.
-                            
-                            $newInvoiceCode = 'INV-UPD-' . time() . '-' . $student->id;
-                            $transaction->update([
-                                'invoice_code' => $newInvoiceCode,
-                                'payment_url' => '#' // Reset URL
-                            ]);
-
-                            // Try generate new invoice immediately
-                            try {
-                                $txService = new TransactionService();
-                                $successUrl = route('landing.payment.show', ['invoice_code' => $newInvoiceCode, 'status' => 'success']);
-                                $failureUrl = route('student.portal.index', ['token' => $student->access_token]);
-                                
-                                $result = $txService->createInvoice($transaction, $student, $pendingBill->title, $successUrl, $failureUrl);
-                                
-                                if ($result['success']) {
-                                    // Sudah otomatis save payment_url di service
-                                    \Illuminate\Support\Facades\Log::info("Updated Invoice for Student {$student->id} to Rp {$newAmount}");
-                                }
-                            } catch (\Exception $e) {
-                                \Illuminate\Support\Facades\Log::error("Failed to regenerate Xendit Invoice on Update: " . $e->getMessage());
-                            }
-                        }
-                    }
-                }
-            }
+            // TIDAK PERLU SYNC
+            // $student->packages()->sync($packageIds);
             
             return true;
         });
-    }
-
-    /**
-     * Helper to calculate billing amount based on package and cycle.
-     */
-    public function calculateAmount(Package $package, string $cycle): float
-    {
-        $isDailyRate = $package->duration < 30;
-        
-        return match($cycle) {
-            'daily'   => $isDailyRate ? $package->price : ceil($package->price / 30),
-            'weekly'  => $isDailyRate ? ($package->price * 7) : ceil($package->price / 4),
-            'monthly' => $isDailyRate ? ($package->price * 30) : $package->price,
-            'full'    => $isDailyRate ? ($package->price * $package->duration) : ($package->price * ceil($package->duration / 30)),
-            default   => 0,
-        };
     }
 
     /**
@@ -498,19 +428,7 @@ class StudentService
 
         if ($student->status === 'finished') {
             return true;
-        }
-
-        // --- DYNAMIC TOLERANCE LOGIC (Match GenerateRecurringBills) ---
-        $cycleDays = match($student->billing_cycle) {
-            'monthly' => 30,
-            'weekly'  => 7,
-            'daily'   => 1,
-            default   => 30
-        };
-        $toleranceDays = ceil($cycleDays * 0.2);
-        $cutoffDate = $endDate->copy()->subDays($toleranceDays);
-
-        if ($student->next_billing_date && $student->next_billing_date->greaterThanOrEqualTo($cutoffDate)) {
+        } elseif ($student->next_billing_date && $student->next_billing_date->gte($endDate)) {
             return true;
         } elseif (is_null($student->next_billing_date) && $student->status !== 'pending') {
             return true;

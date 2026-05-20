@@ -26,7 +26,7 @@ class UpdateStudentRequest extends FormRequest
         // Samakan opsi statusnya
         'status'         => ['required', 'in:active,inactive,pending'],
         
-        // 'billing_cycle'  => ['required', 'in:weekly,monthly,full'],
+        'billing_cycle'  => ['required', 'in:dayly,weekly,monthly,full'],
         'package_id'     => ['required', 'exists:packages,id'],
         'join_date'      => ['required', 'date'],
     ];

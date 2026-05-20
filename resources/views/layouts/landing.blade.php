@@ -140,7 +140,7 @@
                         class="text-sm font-bold text-gray-700 hover:text-orange-600 transition px-4 py-2">
                         Masuk
                     </a>
-                    <a href="{{ route('register') }}">
+                    <a href="/paket">
                         <button
                             class="px-5 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-bold hover:bg-gray-800 transition shadow-lg shadow-gray-200 hover:-translate-y-0.5 transform duration-200">
                             Daftar Sekarang

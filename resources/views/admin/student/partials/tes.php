@@ -89,14 +89,13 @@
         <div>
             <x-inputs.label for="join_date" :value="__('Tanggal Bergabung')" />
             <x-inputs.text id="join_date"
-                class="block mt-1 w-full"
+                class="block mt-1 w-full {{ $student ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : '' }}"
                 type="date" name="join_date"
                 :value="old('join_date', $student?->join_date ? $student->join_date->format('Y-m-d') : date('Y-m-d'))"
-                required />
-            <p class="text-xs text-gray-500 mt-1">
-                ⚠️ <strong>Hati-hati:</strong> Mengubah tanggal ini mempengaruhi kapan paket berakhir (Finished). 
-                Jadwal tagihan bulanan <strong>TIDAK</strong> akan bergeser otomatis.
-            </p>
+                required :readonly="$student ? true : false" />
+            @if($student)
+            <p class="text-xs text-red-500 mt-1">* Tanggal gabung tidak dapat diubah.</p>
+            @endif
             <x-inputs.error :messages="$errors->get('join_date')" class="mt-2" />
         </div>
 
@@ -117,7 +116,38 @@
         <div class="mb-6">
             <x-inputs.label :value="__('Siklus Pembayaran')" class="mb-2" />
 
-            {{-- Mode Edit & Create: Tampilkan Pilihan Radio (Unified) --}}
+            @if($student)
+            {{-- MODE EDIT: Tampilkan Read-Only --}}
+            <div class="p-4 bg-gray-100 border border-gray-200 rounded-lg flex items-start gap-3">
+                <div class="bg-indigo-100 p-2 rounded-full text-indigo-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                        </path>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 font-medium">Siklus Pembayaran Terpilih:</p>
+                    <p class="text-lg font-bold text-gray-900 uppercase tracking-wide">
+                        @if($student->billing_cycle === 'monthly')
+                        Bulanan
+                        @elseif($student->billing_cycle === 'weekly')
+                        Mingguan
+                        @elseif($student->billing_cycle === 'daily')
+                        Harian
+                        @elseif($student->billing_cycle === 'full')
+                        Lunas / Full
+                        @else
+                        {{ $student->billing_cycle }}
+                        @endif
+                    </p>
+                    <p class="text-xs text-red-500 mt-1">
+                        * Metode pembayaran tidak dapat diubah setelah pendaftaran.
+                    </p>
+                </div>
+            </div>
+            @else
+            {{-- MODE CREATE: Tampilkan Pilihan Radio --}}
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 
                 {{-- Opsi Daily (Harian) --}}
@@ -164,12 +194,13 @@
             <p class="text-xs text-gray-500 mt-2" x-show="packageDuration === 0">
                 * Pilih paket terlebih dahulu untuk melihat opsi pembayaran.
             </p>
+            @endif
         </div>
         {{-- B. Pilih Paket --}}
         <div>
             <x-inputs.label for="package_id" :value="__('Pilih Paket Belajar')" />
-            <x-inputs.select id="package_id" name="package_id" x-on:change="updatePackage($event)"
-                class="mt-1 block w-full">
+            <x-inputs.select id="package_id" name="package_id" :disabled="$student" x-on:change="updatePackage($event)"
+                class="mt-1 block w-full {{ $student ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : '' }}">
                 <option value="" disabled selected>-- Pilih Paket Bimbel --</option>
                 @foreach($packages as $package)
                 <option value="{{ $package->id }}" data-duration="{{ $package->duration }}" 
@@ -178,7 +209,11 @@
                 </option>
                 @endforeach
             </x-inputs.select>
-            <p class="text-xs text-gray-500 mt-1">Mengganti paket tidak akan menghapus tagihan yang sudah terlanjur dibuat.</p>
+
+            @if($student)
+            <input type="hidden" name="package_id" value="{{ $student->package_id }}">
+            <p class="text-xs text-red-500 mt-1">* Paket tidak dapat diubah setelah pendaftaran.</p>
+            @endif
             <p class="text-xs text-gray-500 mt-1" x-show="billing_cycle === 'weekly'">
                 *Harga mingguan adalah estimasi (Harga Paket / 4).
             </p>
