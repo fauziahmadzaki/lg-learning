@@ -78,25 +78,24 @@ $breadcrumbs = [
 
                     {{-- FILTER KATEGORI --}}
                     <div class="w-40">
-                        <select x-model="category" @change="performSearch()"
-                            class="block w-full rounded-lg border-gray-300 bg-gray-50 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <x-inputs.select x-model="category" @change="performSearch()" class="block w-full rounded-lg bg-gray-50 text-sm">
                             <option value="">Semua Kategori</option>
                             <option value="PRIVATE">Private</option>
                             <option value="ROMBEL">Rombel</option>
-                        </select>
+                        </x-inputs.select>
                     </div>
                 </div>
             </div>
 
             {{-- Kanan: Tombol Tambah --}}
             <a href="{{ route('branch.packages.create', $branch) }}">
-                <x-primary-button class="flex items-center gap-2 shadow-lg shadow-indigo-200">
+                <x-buttons.primary class="flex items-center gap-2 shadow-lg shadow-indigo-200">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
                     Buat Paket Baru
-                </x-primary-button>
+                </x-buttons.primary>
             </a>
         </div>
 
@@ -126,11 +125,11 @@ $breadcrumbs = [
 
         {{-- GRID PAKET (Container) --}}
         <div id="package-list-container">
-            @include('branch.package._list', ['branch' => $branch])
+            @include('branch.package.partials.table')
         </div>
 
         {{-- MODAL HAPUS --}}
-        <x-modal name="confirm-package-deletion" focusable>
+        <x-ui.modal name="confirm-package-deletion" focusable>
             <form method="post" :action="deleteAction" class="p-6">
                 @csrf
                 @method('DELETE')
@@ -157,16 +156,16 @@ $breadcrumbs = [
                 </p>
 
                 <div class="mt-6 flex justify-end gap-3">
-                    <x-secondary-button x-on:click="$dispatch('close')">
+                    <x-buttons.secondary x-on:click="$dispatch('close')">
                         {{ __('Batal') }}
-                    </x-secondary-button>
+                    </x-buttons.secondary>
 
-                    <x-danger-button>
+                    <x-buttons.danger>
                         {{ __('Ya, Hapus Paket') }}
-                    </x-danger-button>
+                    </x-buttons.danger>
                 </div>
             </form>
-        </x-modal>
+        </x-ui.modal>
 
     </div>
 </x-app-layout>

@@ -26,21 +26,16 @@ $breadcrumbs = [
 
             {{-- Action Button --}}
             <a href="{{ route('admin.contents.create') }}">
-                <x-primary-button class="flex items-center gap-2">
+                <x-buttons.primary class="flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
                     Tambah Konten
-                </x-primary-button>
+                </x-buttons.primary>
             </a>
         </div>
 
-        @if(session('success'))
-            <div class="mb-4 p-4 bg-green-50 text-green-700 rounded-md shadow-sm border border-green-100 flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                {{ session('success') }}
-            </div>
-        @endif
+
 
         {{-- Table Container --}}
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-100">

@@ -27,6 +27,8 @@
                     'description' => $p->description,
                     'price' => $p->price,
                     'price_formatted' => number_format($p->price, 0, ',', '.'),
+                    'display_price' => number_format($p->price, 0, ',', '.'),
+                    'unit' => ($p->duration < 30 && $p->duration > 0) ? '/ hari' : '/ bulan',
                     'grade' => $p->packageCategory->name ?? 'Umum',
                     'category' => $p->category,
                     'branch_id' => $p->branch_id,
@@ -135,8 +137,8 @@
                             
                             <div class="flex items-baseline mb-6">
                                 <span class="text-lg font-bold text-gray-900">Rp </span>
-                                <span x-text="pkg.price_formatted" class="text-3xl font-extrabold text-gray-900 ml-1"></span>
-                                <span class="text-gray-400 text-sm ml-2">/ bulan</span>
+                                <span x-text="pkg.display_price" class="text-3xl font-extrabold text-gray-900 ml-1"></span>
+                                <span x-text="pkg.unit" class="text-gray-400 text-sm ml-2"></span>
                             </div>
 
                             <ul class="space-y-3 mb-6">

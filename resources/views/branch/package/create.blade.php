@@ -17,7 +17,7 @@
                 <form action="{{ route('branch.packages.store', $branch) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     {{-- Pass $branch so _form knows we are in branch context (optional logic) --}}
-                    @include('branch.package._form', [
+                    @include('branch.package.partials.form', [
                     'submit_text' => 'Simpan & Terbitkan Paket',
                     'branch' => $branch
                     ])

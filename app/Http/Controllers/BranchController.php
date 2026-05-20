@@ -25,7 +25,7 @@ class BranchController extends Controller
             ->withQueryString();
 
         if ($request->ajax()) {
-            return view('admin.branch._list', compact('branches'))->render();
+            return view('admin.branch.partials.list', compact('branches'))->render();
         }
 
         return view('admin.branch.index', compact('branches'));
@@ -68,5 +68,26 @@ class BranchController extends Controller
 
         return redirect()->route('admin.branches.index')
                          ->with('success', 'Cabang berhasil dihapus!');
+    }
+
+    public function show(Branch $branch)
+    {
+        // Summary Counts
+        $branch->loadCount(['students', 'tutors', 'packages']);
+
+        // Load Relations
+        // 1. Tutors (Relatively few, so get all)
+        $tutors = $branch->tutors()->with('user')->get();
+
+        // 2. Packages (Might be many, but manageable list usually)
+        $packages = $branch->packages()->withCount('students')->get();
+
+        // 3. Students (Likely many, paginate this)
+        $students = $branch->students()
+            ->with(['package'])
+            ->latest()
+            ->paginate(20);
+
+        return view('admin.branch.show', compact('branch', 'tutors', 'packages', 'students'));
     }
 }

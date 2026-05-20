@@ -18,7 +18,7 @@
     <div class="min-h-screen">
 
         {{-- 1. Sidebar (Fixed Left) --}}
-        <x-branch-sidebar :branch="$branch" />
+        <x-layout.branch-sidebar :branch="$branch" />
 
         {{-- 2. Navbar (Fixed Top) --}}
         @include('layouts.navigation')
@@ -40,7 +40,7 @@
                                 {{-- Breadcrumb Implementation (Optional if passed from controller) --}}
                                 @if(isset($breadcrumbs))
                                     <div>
-                                        <x-breadcrumb :links="$breadcrumbs" />
+                                        <x-layout.breadcrumb :links="$breadcrumbs" />
                                     </div>
                                 @endif
                             </div>

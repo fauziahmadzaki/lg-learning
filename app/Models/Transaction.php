@@ -2,17 +2,18 @@
 
 namespace App\Models;
 
-use App\Traits\LogsActivity;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Transaction extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory;
 
     protected $fillable = [
         'invoice_code',     // Kode Xendit (INV-BATCH-...)
         'student_id',
+        'branch_id',        // <--- NEW: Link Cabang
         'total_amount',     // Ganti 'amount' jadi 'total_amount' sesuai migrasi
         'status',           // PENDING, PAID, EXPIRED, FAILED
         'payment_url',      // Link Xendit
@@ -20,6 +21,8 @@ class Transaction extends Model
         'payment_channel',
         'paid_at',
         'transaction_date', // Waktu user klik bayar
+        'type',             // TUITION, SAVINGS_DEPOSIT, SAVINGS_WITHDRAWAL
+        'description',      // Catatan manual
     ];
 
     protected $casts = [
@@ -32,6 +35,11 @@ class Transaction extends Model
     public function student()
     {
         return $this->belongsTo(Student::class);
+    }
+
+    public function branch() 
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     public function package()
@@ -56,5 +64,17 @@ class Transaction extends Model
             'FAILED'    => 'red',
             default     => 'gray'
         };
+    }
+
+    // --- SCOPES ---
+    public function scopeTuition($query)
+    {
+        return $query->where('type', 'TUITION')
+                     ->orWhereNull('type'); // Backward compatibility
+    }
+
+    public function scopeSavings($query)
+    {
+        return $query->whereIn('type', ['SAVINGS_DEPOSIT', 'SAVINGS_WITHDRAWAL']);
     }
 }

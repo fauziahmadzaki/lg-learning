@@ -20,10 +20,11 @@
 
                     {{-- Panggil Admin Partial --}}
                     {{-- Perlu pass $branch jika _form membutuhkannya --}}
-                    @include('admin.student._form', [
+                    @include('admin.student.partials.form', [
                     'submit_text' => 'Simpan & Daftarkan Siswa',
                     'packages' => $packages,
-                    'branch' => $branch // Pass just in case
+                    'branch' => $branch,
+                    'cancel_route' => route('branch.students.index', $branch)
                     ])
 
                 </form>

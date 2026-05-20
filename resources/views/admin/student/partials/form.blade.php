@@ -1,0 +1,273 @@
+@props(['student' => null, 'packages' => []])
+
+{{--
+    SETUP ALPINE JS 
+    Kita inisialisasi state untuk 'status' dan 'billing_cycle'.
+    Prioritas nilai: 1. Old Input (Validasi Gagal) -> 2. Data Database (Edit) -> 3. Default
+--}}
+<div x-data="{ 
+    status: '{{ old('status', $student?->status ?? 'pending') }}',
+    billing_cycle: '{{ old('billing_cycle', $student?->billing_cycle ?? 'full') }}',
+    packageDuration: 0,
+
+    init() {
+        const select = document.getElementById('package_id');
+        if (select && select.value && select.options[select.selectedIndex]) {
+            this.packageDuration = parseInt(select.options[select.selectedIndex].dataset.duration) || 0;
+            this.validateCycle();
+        }
+    },
+
+    updatePackage(event) {
+        const option = event.target.options[event.target.selectedIndex];
+        this.packageDuration = parseInt(option.dataset.duration) || 0;
+        this.validateCycle();
+    },
+
+    validateCycle() {
+        // Strict logic checking:
+        // If current billing_cycle is not allowed, reset to 'full' (always allowed)
+        let allowed = ['full'];
+        
+        if (this.packageDuration <= 7 && this.packageDuration > 0) allowed.push('daily');
+        if (this.packageDuration >= 7 && (this.packageDuration % 7 === 0 || this.packageDuration % 30 === 0)) allowed.push('weekly');
+        if (this.packageDuration >= 30 && this.packageDuration % 30 === 0) allowed.push('monthly');
+
+        if (!allowed.includes(this.billing_cycle)) {
+            this.billing_cycle = 'full';
+        }
+    }
+}" x-init="init()" class="space-y-8">
+
+    {{-- BAGIAN 1: DATA PRIBADI --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        {{-- Nama Siswa --}}
+        <div class="col-span-1 md:col-span-2">
+            <x-inputs.label for="name" :value="__('Nama Lengkap Siswa')" />
+            <x-inputs.text id="name" class="block mt-1 w-full" type="text" name="name"
+                :value="old('name', $student?->name)" required autofocus placeholder="Contoh: Muhammad Rizky" />
+            <p class="text-xs text-gray-500 mt-1">Gunakan nama lengkap sesuai rapor/sekolah.</p>
+            <x-inputs.error :messages="$errors->get('name')" class="mt-2" />
+        </div>
+
+        {{-- Email Siswa --}}
+        <div>
+            <x-inputs.label for="email" :value="__('Email Orang Tua / Siswa')" />
+            <x-inputs.text id="email" class="block mt-1 w-full" type="email" name="email"
+                :value="old('email', $student?->email)" required placeholder="email@contoh.com" />
+            <p class="text-xs text-gray-500 mt-1">Email cadangan jika nomor WhatsApp tidak bisa dihubungi.</p>
+            <x-inputs.error :messages="$errors->get('email')" class="mt-2" />
+        </div>
+
+        {{-- No HP Orang Tua --}}
+        <div>
+            <x-inputs.label for="parent_phone" :value="__('No. WhatsApp Orang Tua / Siswa')" />
+            <x-inputs.text id="parent_phone" class="block mt-1 w-full" type="number" name="parent_phone"
+                :value="old('parent_phone', $student?->parent_phone)" required placeholder="0812xxxx" />
+            <p class="text-xs text-gray-500 mt-1">Nomor ini akan menerima notifikasi tagihan otomatis via WhatsApp.</p>
+            <x-inputs.error :messages="$errors->get('parent_phone')" class="mt-2" />
+        </div>
+
+        {{-- Asal Sekolah --}}
+        <div>
+            <x-inputs.label for="school" :value="__('Asal Sekolah')" />
+            <x-inputs.text id="school" class="block mt-1 w-full" type="text" name="school"
+                :value="old('school', $student?->school)" required placeholder="Contoh: SMAN 1 Jakarta" />
+            <x-inputs.error :messages="$errors->get('school')" class="mt-2" />
+        </div>
+
+        {{-- Jenjang / Kelas (Sekolah) --}}
+        <div>
+            <x-inputs.label for="grade" :value="__('Kelas / Jenjang Sekolah')" />
+            <x-inputs.text id="grade" class="block mt-1 w-full" type="text" name="grade"
+                :value="old('grade', $student?->grade)" required placeholder="Contoh: 4 SD" />
+            <x-inputs.error :messages="$errors->get('grade')" class="mt-2" />
+        </div>
+
+        {{-- Tanggal Gabung --}}
+        <div>
+            <x-inputs.label for="join_date" :value="__('Tanggal Bergabung')" />
+            <x-inputs.text id="join_date"
+                class="block mt-1 w-full"
+                type="date" name="join_date"
+                :value="old('join_date', $student?->join_date ? $student->join_date->format('Y-m-d') : date('Y-m-d'))"
+                required />
+            <p class="text-xs text-gray-500 mt-1">
+                ⚠️ <strong>Hati-hati:</strong> Mengubah tanggal ini mempengaruhi kapan paket berakhir (Finished). 
+                Jadwal tagihan bulanan <strong>TIDAK</strong> akan bergeser otomatis.
+            </p>
+            <x-inputs.error :messages="$errors->get('join_date')" class="mt-2" />
+        </div>
+
+    </div>
+
+    {{-- BAGIAN 2: PENGATURAN BILLING & PAKET (BARU) --}}
+    <div class="bg-indigo-50 p-5 rounded-lg border border-indigo-100">
+        <h3 class="text-lg font-bold text-indigo-900 mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z">
+                </path>
+            </svg>
+            Pengaturan Tagihan & Paket
+        </h3>
+
+        {{-- A. Tipe Tagihan (Billing Cycle) --}}
+        <div class="mb-6">
+            <x-inputs.label :value="__('Siklus Pembayaran')" class="mb-2" />
+
+            {{-- Mode Edit & Create: Tampilkan Pilihan Radio (Unified) --}}
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                
+                {{-- Opsi Daily (Harian) --}}
+                <label class="cursor-pointer relative" x-show="packageDuration <= 7 && packageDuration > 0" style="display: none;">
+                    <input type="radio" name="billing_cycle" value="daily" x-model="billing_cycle" class="sr-only">
+                    <div class="text-center p-3 rounded-lg border-2 transition-all"
+                        :class="billing_cycle === 'daily' ? 'border-pink-500 bg-white text-pink-700 shadow-md' : 'border-indigo-200 text-gray-500 bg-indigo-50/50 hover:bg-white'">
+                        <div class="font-bold text-sm">Harian</div>
+                        <div class="text-[10px]">Bayar per Hari</div>
+                    </div>
+                </label>
+
+                {{-- Opsi Monthly --}}
+                <label class="cursor-pointer relative" x-show="packageDuration >= 30 && packageDuration % 30 == 0" style="display: none;">
+                    <input type="radio" name="billing_cycle" value="monthly" x-model="billing_cycle" class="sr-only">
+                    <div class="text-center p-3 rounded-lg border-2 transition-all"
+                        :class="billing_cycle === 'monthly' ? 'border-indigo-500 bg-white text-indigo-700 shadow-md' : 'border-indigo-200 text-gray-500 bg-indigo-50/50 hover:bg-white'">
+                        <div class="font-bold text-sm">Bulanan</div>
+                        <div class="text-[10px]">Bayar per Bulan</div>
+                    </div>
+                </label>
+
+                {{-- Opsi Weekly --}}
+                <label class="cursor-pointer relative" x-show="(packageDuration >= 7 && packageDuration % 7 == 0) || (packageDuration >= 30 && packageDuration % 30 == 0)" style="display: none;">
+                    <input type="radio" name="billing_cycle" value="weekly" x-model="billing_cycle" class="sr-only">
+                    <div class="text-center p-3 rounded-lg border-2 transition-all"
+                        :class="billing_cycle === 'weekly' ? 'border-orange-500 bg-white text-orange-700 shadow-md' : 'border-indigo-200 text-gray-500 bg-indigo-50/50 hover:bg-white'">
+                        <div class="font-bold text-sm">Mingguan</div>
+                        <div class="text-[10px]">Dicicil 4x Sebulan</div>
+                    </div>
+                </label>
+
+                {{-- Opsi Full --}}
+                <label class="cursor-pointer relative">
+                    <input type="radio" name="billing_cycle" value="full" x-model="billing_cycle" class="sr-only">
+                    <div class="text-center p-3 rounded-lg border-2 transition-all"
+                        :class="billing_cycle === 'full' ? 'border-green-500 bg-white text-green-700 shadow-md' : 'border-indigo-200 text-gray-500 bg-indigo-50/50 hover:bg-white'">
+                        <div class="font-bold text-sm">Lunas / Full</div>
+                        <div class="text-[10px]">Bayar Langsung</div>
+                    </div>
+                </label>
+            </div>
+            <x-inputs.error :messages="$errors->get('billing_cycle')" class="mt-2" />
+            <p class="text-xs text-gray-500 mt-2" x-show="packageDuration === 0">
+                * Pilih paket terlebih dahulu untuk melihat opsi pembayaran.
+            </p>
+        </div>
+        {{-- B. Pilih Paket --}}
+        <div>
+            <x-inputs.label for="package_id" :value="__('Pilih Paket Belajar')" />
+            <x-inputs.select id="package_id" name="package_id" x-on:change="updatePackage($event)"
+                class="mt-1 block w-full">
+                <option value="" disabled selected>-- Pilih Paket Bimbel --</option>
+                @foreach($packages as $package)
+                <option value="{{ $package->id }}" data-duration="{{ $package->duration }}" 
+                    @if(old('package_id', $student?->package_id) == $package->id) selected @endif>
+                    {{ $package->name }} ({{ $package->branch->name ?? 'N/A' }})
+                </option>
+                @endforeach
+            </x-inputs.select>
+            <p class="text-xs text-gray-500 mt-1">Mengganti paket tidak akan menghapus tagihan yang sudah terlanjur dibuat.</p>
+            <p class="text-xs text-gray-500 mt-1" x-show="billing_cycle === 'weekly'">
+                *Harga mingguan adalah estimasi (Harga Paket / 4).
+            </p>
+            <x-inputs.error :messages="$errors->get('package_id')" class="mt-2" />
+        </div>
+    </div>
+
+    {{-- BAGIAN 3: STATUS SISWA --}}
+    <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
+        <x-inputs.label :value="__('Status Keaktifan Siswa')" class="mb-3 text-lg" />
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            @if(!($student && $student->status === 'active'))
+            {{-- Opsi 1: PENDING --}}
+            <label class="cursor-pointer relative group">
+                <input type="radio" name="status" value="pending" x-model="status" class="sr-only">
+                <div class="h-full p-4 rounded-lg border-2 transition duration-200" :class="status === 'pending' 
+                        ? 'border-yellow-400 bg-yellow-50 ring-1 ring-yellow-400' 
+                        : 'border-gray-200 bg-white hover:bg-gray-50'">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold" :class="status === 'pending' ? 'text-yellow-800' : 'text-gray-700'">
+                            Pending (Baru Daftar)
+                        </span>
+                        <div x-show="status === 'pending'" class="text-yellow-500">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500">Siswa baru mendaftar, belum ada pembayaran masuk.</p>
+                </div>
+            </label>
+            @endif
+
+            {{-- Opsi 2: ACTIVE --}}
+            <label class="cursor-pointer relative group">
+                <input type="radio" name="status" value="active" x-model="status" class="sr-only">
+                <div class="h-full p-4 rounded-lg border-2 transition duration-200" :class="status === 'active' 
+                        ? 'border-green-500 bg-green-50 ring-1 ring-green-500' 
+                        : 'border-gray-200 bg-white hover:bg-gray-50'">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold" :class="status === 'active' ? 'text-green-800' : 'text-gray-700'">
+                            Active (Siswa Aktif)
+                        </span>
+                        <div x-show="status === 'active'" class="text-green-600">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500">Siswa aktif mengikuti kegiatan belajar.</p>
+                </div>
+            </label>
+
+            {{-- Opsi 3: INACTIVE (Hanya muncul saat Edit atau jika statusnya memang inactive) --}}
+            @if($student)
+            <label class="cursor-pointer relative md:col-span-2 group">
+                <input type="radio" name="status" value="inactive" x-model="status" class="sr-only">
+                <div class="h-full p-4 rounded-lg border-2 transition duration-200" :class="status === 'inactive' 
+                        ? 'border-gray-500 bg-gray-100 ring-1 ring-gray-500' 
+                        : 'border-gray-200 bg-white hover:bg-gray-50'">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold" :class="status === 'inactive' ? 'text-gray-900' : 'text-gray-700'">
+                            Inactive (Cuti / Berhenti)
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-500">Tidak menerima tagihan dan tidak mengikuti kelas.</p>
+                </div>
+            </label>
+            @endif
+
+        </div>
+        <x-inputs.error :messages="$errors->get('status')" class="mt-2" />
+    </div>
+
+    {{-- TOMBOL AKSI --}}
+    <div class="flex items-center justify-end gap-3 border-t border-gray-100 pt-6">
+        <a href="{{ $cancel_route ?? route('admin.students.index') }}"
+            class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium transition">
+            Batal
+        </a>
+        <x-buttons.primary class="px-6">
+            {{ $submit_text ?? 'Simpan Data' }}
+        </x-buttons.primary>
+    </div>
+
+</div>

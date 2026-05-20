@@ -19,7 +19,7 @@
                     @csrf
                     @method('PUT')
 
-                    @include('branch.package._form', [
+                    @include('branch.package.partials.form', [
                     'submit_text' => 'Simpan & Perbarui Paket',
                     'package' => $package,
                     'branch' => $branch

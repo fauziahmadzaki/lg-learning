@@ -34,7 +34,7 @@ class PackageController extends Controller
         $grades = \App\Models\PackageCategory::pluck('name', 'id');
 
         if ($request->ajax()) {
-            return view('branch.package._list', compact('packages', 'grades', 'branch'))->render();
+            return view('branch.package.partials.table', compact('packages', 'grades', 'branch'))->render();
         }
 
         return view('branch.package.index', compact('packages', 'grades', 'branch'));

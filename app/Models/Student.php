@@ -3,13 +3,13 @@
 namespace App\Models;
 
 use App\Models\Branch;
-use App\Traits\LogsActivity;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Student extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory;
 
     protected $fillable = [
         'name',
@@ -24,12 +24,14 @@ class Student extends Model
         'next_billing_date', // Kapan robot harus nagih
         'access_token',   // Token rahasia link portal
         'branch_id',
-        'package_id'
+        'package_id',
+        'savings_balance'
     ];
 
     protected $casts = [
         'join_date'      => 'date',
-        'next_billing_date' => 'date', // Fix Typo: next_bill_date -> next_billing_date
+        'next_billing_date' => 'date', 
+        'savings_balance' => 'decimal:2',
     ];
 
     // Relasi Paket (Belongs To) - Siswa cuma punya 1 paket

@@ -63,7 +63,7 @@ class ReportController extends Controller
 
         // 2. Query Transactions (Scoped to Branch)
         $query = Transaction::query()
-            ->with(['student', 'student.package'])
+            ->with(['student', 'branch', 'package'])
             ->whereHas('student', function($q) use ($branch) {
                 $q->where('branch_id', $branch->id);
             })
@@ -82,16 +82,51 @@ class ReportController extends Controller
             });
         }
 
+        // Category Filter
+        $category = $request->input('category');
+        if ($category === 'spp') {
+            $query->where(function($q) {
+                $q->where('type', 'TUITION')
+                  ->orWhereNull('type');
+            });
+        } elseif ($category === 'savings') {
+            $query->whereIn('type', ['SAVINGS_DEPOSIT', 'SAVINGS_WITHDRAWAL']);
+        }
+
+        // Search Filter
+        if ($search = $request->input('search')) {
+            $query->where(function($q) use ($search) {
+                $q->where('invoice_code', 'like', "%{$search}%")
+                  ->orWhereHas('student', function($sub) use ($search) {
+                      $sub->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
         // Get Data
         $transactions = $query->latest('paid_at')->get();
 
-        // 3. Summaries
-        $totalIncome = $transactions->sum('total_amount');
-        $transactionCount = $transactions->count();
-        $netProfit = $totalIncome; 
+        // 3. Summaries (Enhanced for Savings)
+        // Group Transactions by Type
+        $tuitionIncome = $transactions->filter(function($t) {
+            return $t->type === 'TUITION' || $t->type === null; 
+        })->sum('total_amount');
 
-        // Charts Logic
-        $chartData = $transactions->groupBy(function($item) {
+        $savingsIncome = $transactions->where('type', 'SAVINGS_DEPOSIT')->sum('total_amount');
+        $savingsWithdrawal = $transactions->where('type', 'SAVINGS_WITHDRAWAL')->sum('total_amount');
+
+        // Total Cash Masuk (Tuition + Savings) -> Uang Fisik di Tangan
+        $totalIncome = $tuitionIncome + $savingsIncome;
+        
+        $transactionCount = $transactions->count();
+
+        // Net Profit (Omset Bimbel Murni) -> Hanya Tuition
+        $netProfit = $tuitionIncome; 
+
+        // Charts Logic (Stick to Tuition / Earnings)
+        $chartData = $transactions->filter(function($t) {
+             return $t->type === 'TUITION' || $t->type === null; 
+        })->groupBy(function($item) {
             return Carbon::parse($item->paid_at)->format('d M');
         })->map(function($group) {
             return $group->sum('total_amount');
@@ -113,6 +148,9 @@ class ReportController extends Controller
             'branch',
             'transactions', 
             'totalIncome', 
+            'tuitionIncome',     // Pemasukan Bimbel
+            'savingsIncome',     // Pemasukan Tabungan
+            'savingsWithdrawal', // Penarikan Tabungan
             'transactionCount', 
             'netProfit', 
             'packages',

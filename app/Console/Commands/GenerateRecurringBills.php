@@ -69,33 +69,36 @@ class GenerateRecurringBills extends Command
                 if ($student->join_date) {
                     $endDate = $student->join_date->copy()->addDays($package->duration);
                     
-                    // Jika Next Billing Date sudah melewati/sama dengan End Date, jangan tagih lagi.
-                    // Artinya paket sudah habis.
-                    if ($student->next_billing_date->greaterThanOrEqualTo($endDate)) {
-                        $this->info("Student {$student->name} package finished (End Date: {$endDate->format('Y-m-d')}). Marking as finished.");
+                    // --- DYNAMIC TOLERANCE LOGIC ---
+                    // Prevent creating a full bill if remaining duration is negligible.
+                    // Rule: Tolerance is 20% of the cycle.
+                    // Monthly (30) -> 6 days. Weekly (7) -> 2 days. Daily -> 0.
+                    $cycleDays = match($student->billing_cycle) {
+                        'monthly' => 30,
+                        'weekly'  => 7,
+                        'daily'   => 1,
+                        default   => 30
+                    };
+                    
+                    $toleranceDays = ceil($cycleDays * 0.2);
+                    $cutoffDate = $endDate->copy()->subDays($toleranceDays);
+
+                    // If Next Billing Date passed the Cutoff (meaning remaining days < Tolerance)
+                    // Mark as Finished.
+                    if ($student->next_billing_date->greaterThanOrEqualTo($cutoffDate)) {
+                        $this->info("Student {$student->name} package finishing (End: {$endDate->format('Y-m-d')}, Tolerasi: {$toleranceDays} hari). Marking as finished.");
                         
-                        // Update status jadi finished agar tidak dicek lagi besok
                         $student->update([
-                            'status' => 'finished'
+                            'status' => 'inactive'
                         ]);
                         
-                        // Kirim WA Notif Finished? (Opsional, di processPaymentSuccess sudah ada, tapi ini kasus auto-finish by time)
-                        // Boleh ditambahkan di sini jika perlu.
-
                         DB::commit();
                         continue;
                     }
                 }
 
-                // Kalkulasi Amount (Sama kayak di Register)
-                $amount = $package->price; 
-                if ($student->billing_cycle === 'weekly') {
-                    $amount = $package->price / 4;
-                } elseif ($student->billing_cycle === 'full') {
-                     // Harusnya 'active' + 'full' gak masuk sini kecuali perpanjang?
-                     // Asumsi: Full payment = selesai. Tapi kalau logicnya "Tagihan Baru", ya buat full lagi.
-                     $amount = $package->price; 
-                }
+                // Kalkulasi Amount (Standardized via StudentService)
+                $amount = app(\App\Services\StudentService::class)->calculateAmount($package, $student->billing_cycle);
 
                 // 1. Buat Bill
                 $bill = Bill::create([
@@ -110,6 +113,7 @@ class GenerateRecurringBills extends Command
                 // 2. Generate Transaction (Pending)
                 $invoiceCode = 'INV-REC-' . time() . '-' . $student->id;
                 $transaction = $student->transactions()->create([
+                    'branch_id'    => $student->branch_id,
                     'invoice_code' => $invoiceCode,
                     'total_amount' => $amount,
                     'status'       => 'PENDING',
@@ -183,3 +187,4 @@ class GenerateRecurringBills extends Command
         return 0;
     }
 }
+

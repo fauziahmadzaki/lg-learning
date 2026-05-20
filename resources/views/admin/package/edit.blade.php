@@ -22,7 +22,7 @@
 
                     {{-- Panggil Partial Form --}}
                     {{-- Variable $branches dan $tutors otomatis tembus dari controller ke sini, lalu ke partial --}}
-                    @include('admin.package._form', [
+                    @include('admin.package.partials.form', [
                     'submit_text' => 'Simpan & Terbitkan Paket',
                     'package' => $package,
                     'branches' => $branches

@@ -61,7 +61,7 @@ class ReportController extends Controller
         // 2. Query Transactions
         // Hanya ambil yang PAID
         $query = \App\Models\Transaction::query()
-            ->with(['student', 'student.branch', 'student.package'])
+            ->with(['student', 'branch', 'package']) // Direct Branch Relation
             ->where('status', 'PAID')
             // Filter Date berdasarkan 'paid_at' (atau transaction_date jika paid_at null, just in case)
             ->where(function($q) use ($start, $end) {
@@ -73,9 +73,8 @@ class ReportController extends Controller
 
         // Filter Relations
         if ($branchId) {
-            $query->whereHas('student', function($q) use ($branchId) {
-                $q->where('branch_id', $branchId);
-            });
+            // Direct Filter on Transactions Table (More Accurate)
+            $query->where('branch_id', $branchId);
         }
 
         if ($packageId) {
@@ -84,19 +83,59 @@ class ReportController extends Controller
             });
         }
 
+        // Category Filter
+        $category = $request->input('category');
+        if ($category === 'spp') {
+            $query->where(function($q) {
+                $q->where('type', 'TUITION')
+                  ->orWhereNull('type');
+            });
+        } elseif ($category === 'savings') {
+            $query->whereIn('type', ['SAVINGS_DEPOSIT', 'SAVINGS_WITHDRAWAL']);
+        }
+
+        // Search Filter
+        if ($search = $request->input('search')) {
+            $query->where(function($q) use ($search) {
+                $q->where('invoice_code', 'like', "%{$search}%")
+                  ->orWhereHas('student', function($sub) use ($search) {
+                      $sub->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
         // Get Data
         $transactions = $query->latest('paid_at')->get();
 
         // 3. Summaries
-        $totalIncome = $transactions->sum('total_amount');
-        $transactionCount = $transactions->count();
-        // Disini bisa hitung Expense jika ada tabel Expense nantinya
-        // $netProfit = $totalIncome - $totalExpense; 
-        $netProfit = $totalIncome; // Sementara sama
+        // A. Pemasukan Bimbel (TUITION)
+        $tuitionTransactions = $transactions->where('type', 'TUITION')->merge($transactions->whereNull('type')); // Handle legacy
+        $tuitionIncome = $tuitionTransactions->sum('total_amount');
+        
+        // B. Tabungan Masuk (SAVINGS_DEPOSIT)
+        $savingsDepositTransactions = $transactions->where('type', 'SAVINGS_DEPOSIT');
+        $savingsIncome = $savingsDepositTransactions->sum('total_amount');
+        
+        // C. Penarikan Tabungan (SAVINGS_WITHDRAWAL)
+        $savingsWithdrawalTransactions = $transactions->where('type', 'SAVINGS_WITHDRAWAL');
+        $savingsWithdrawal = $savingsWithdrawalTransactions->sum('total_amount');
 
-        // Charts Logic (Optional: Group by Date)
-        // Group per hari untuk grafik
-        $chartData = $transactions->groupBy(function($item) {
+        // Total Income (Bimbel + Tabungan Masuk - Penarikan?)
+        // Usually, Financial Reports show Gross Income.
+        // Let's pass them separate.
+        $totalIncome = $tuitionIncome + $savingsIncome;
+        
+        $transactionCount = $transactions->count();
+        
+        // Net Profit (Assuming Expense is 0 for now, minus Withdrawals?)
+        // If "Tabungan" is liability, it shouldn't be profit. 
+        // But user asked for "Pemasukan hasil bimbel dan tabungan".
+        // Let's just sum them for "Total Cash In". 
+        $netProfit = $totalIncome; 
+
+        // Charts Logic (Group by Date) - Focus on Tuition Income for the main chart? Or Total?
+        // Let's go with Tuition for consistency with "Earnings".
+        $chartData = $tuitionTransactions->groupBy(function($item) {
             return Carbon::parse($item->paid_at)->format('d M');
         })->map(function($group) {
             return $group->sum('total_amount');
@@ -124,6 +163,9 @@ class ReportController extends Controller
             'branches', 
             'packages',
             'chartData',
+            'tuitionIncome',
+            'savingsIncome',
+            'savingsWithdrawal',
             'start', 'end' // Pass date range for UI display
         ));
     }
@@ -138,6 +180,9 @@ class ReportController extends Controller
         }
         if ($request->filled('grade')) {
             $query->where('grade', $request->grade);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
         }
 
         // Action: Export

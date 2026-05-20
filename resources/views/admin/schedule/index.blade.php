@@ -19,14 +19,14 @@
             <div class="flex items-center gap-2">
                 {{-- Filter Branch (If many) --}}
                 <form method="GET" class="flex items-center">
-                    <select name="branch_id" onchange="this.form.submit()" class="text-sm border-gray-200 rounded-lg focus:border-indigo-500 focus:ring-indigo-500 mr-2">
+                    <x-inputs.select name="branch_id" onchange="this.form.submit()" class="text-sm mr-2 w-auto">
                         <option value="">-- Semua Cabang --</option>
                         @foreach($branches as $branch)
                             <option value="{{ $branch->id }}" {{ request('branch_id') == $branch->id ? 'selected' : '' }}>
                                 {{ $branch->code }} - {{ $branch->name }}
                             </option>
                         @endforeach
-                    </select>
+                    </x-inputs.select>
                 </form>
 
                 <button @click="showAddModal = true" class="px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg shadow-lg hover:bg-indigo-700 transition flex items-center gap-2">
@@ -103,49 +103,49 @@
                         <div class="space-y-4">
                             {{-- Branch --}}
                             <div>
-                                <x-input-label for="branch_id" value="Cabang" />
-                                <select name="branch_id" id="branch_id" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                                <x-inputs.label for="branch_id" value="Cabang" />
+                                <x-inputs.select name="branch_id" id="branch_id" class="block mt-1 w-full" required>
                                     @foreach($branches as $branch)
                                         <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                     @endforeach
-                                </select>
+                                </x-inputs.select>
                             </div>
 
                             {{-- Package --}}
                             <div>
-                                <x-input-label for="package_id" value="Paket Belajar" />
-                                <select name="package_id" id="package_id" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                                <x-inputs.label for="package_id" value="Paket Belajar" />
+                                <x-inputs.select name="package_id" id="package_id" class="block mt-1 w-full" required>
                                     @foreach($packages as $package)
                                         <option value="{{ $package->id }}">{{ $package->name }} ({{ $package->branch->code ?? 'All' }})</option>
                                     @endforeach
-                                </select>
+                                </x-inputs.select>
                             </div>
 
                             {{-- Day --}}
                             <div>
-                                <x-input-label for="day_of_week" value="Hari" />
-                                <select name="day_of_week" id="day_of_week" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                                <x-inputs.label for="day_of_week" value="Hari" />
+                                <x-inputs.select name="day_of_week" id="day_of_week" class="block mt-1 w-full" required>
                                     @foreach(['monday'=>'Senin', 'tuesday'=>'Selasa', 'wednesday'=>'Rabu', 'thursday'=>'Kamis', 'friday'=>'Jumat', 'saturday'=>'Sabtu', 'sunday'=>'Minggu'] as $val => $txt)
                                         <option value="{{ $val }}">{{ $txt }}</option>
                                     @endforeach
-                                </select>
+                                </x-inputs.select>
                             </div>
 
                             {{-- Time --}}
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <x-input-label for="start_time" value="Jam Mulai" />
+                                    <x-inputs.label for="start_time" value="Jam Mulai" />
                                     <input type="time" name="start_time" id="start_time" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
                                 </div>
                                 <div>
-                                    <x-input-label for="end_time" value="Jam Selesai" />
+                                    <x-inputs.label for="end_time" value="Jam Selesai" />
                                     <input type="time" name="end_time" id="end_time" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
                                 </div>
                             </div>
 
                             {{-- Quota --}}
                             <div>
-                                <x-input-label for="quota" value="Kuota Siswa (Opsional)" />
+                                <x-inputs.label for="quota" value="Kuota Siswa (Opsional)" />
                                 <input type="number" name="quota" value="20" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             </div>
                         </div>

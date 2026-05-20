@@ -6,10 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    {{-- SEO Meta Tags --}}
+    <meta name="description" content="{{ $settings['site_description'] ?? 'L-G Learning - Bimbingan Belajar Terbaik untuk SD, SMP, dan SMA. Metode personal, tutor berpengalaman, dan hasil terbukti.' }}">
+    <meta name="keywords" content="bimbel, les privat, bimbingan belajar, lg learning, les matematika, les fisika, les kimia, persiapan utbk, snbt, masuk ptn">
+    <meta name="author" content="L-G Learning">
+    <meta property="og:title" content="{{ isset($title) ? $title . ' - ' . config('app.name', 'L-G Learning') : config('app.name', 'L-G Learning') }}">
+    <meta property="og:description" content="{{ $settings['site_description'] ?? 'Raih prestasi akademik terbaik bersama L-G Learning.' }}">
+    
     @php
         $siteSettingsLogo = \App\Models\SiteSetting::get('site_logo');
         $siteFavicon = $siteSettingsLogo ? asset('storage/' . $siteSettingsLogo) : asset('img/image.png');
     @endphp
+    
+    <meta property="og:image" content="{{ $siteFavicon }}">
+    <meta property="og:image:width" content="300">
+    <meta property="og:image:height" content="300">
+    <meta property="og:type" content="website">
     <link rel="icon" href="{{ $siteFavicon }}">
     <title>{{ isset($title) ? $title . ' - ' . config('app.name', 'L-G Learning') : config('app.name', 'L-G Learning') . ' - Bimbel Terbaik' }}</title>
 
@@ -19,9 +31,46 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        [x-cloak] { display: none !important; }
+        .loader-dots div { animation-timing-function: cubic-bezier(0, 1, 1, 0); }
+        .loader-dots div:nth-child(1) { left: 8px; animation: loader-dots1 0.6s infinite; }
+        .loader-dots div:nth-child(2) { left: 8px; animation: loader-dots2 0.6s infinite; }
+        .loader-dots div:nth-child(3) { left: 32px; animation: loader-dots2 0.6s infinite; }
+        .loader-dots div:nth-child(4) { left: 56px; animation: loader-dots3 0.6s infinite; }
+        @keyframes loader-dots1 { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        @keyframes loader-dots3 { 0% { transform: scale(1); } 100% { transform: scale(0); } }
+        @keyframes loader-dots2 { 0% { transform: translate(0, 0); } 100% { transform: translate(24px, 0); } }
+    </style>
 </head>
 
-<body class="font-sans antialiased text-gray-800 bg-white selection:bg-orange-100 selection:text-orange-600">
+<body class="font-sans antialiased text-gray-800 bg-white selection:bg-orange-100 selection:text-orange-600"
+      x-data="{ isLoading: true }"
+      x-init="window.addEventListener('load', () => { setTimeout(() => isLoading = false, 800); })">
+
+    {{-- Global Loader --}}
+    <div x-show="isLoading" 
+         x-transition:leave="transition ease-in duration-500"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 z-[100] flex items-center justify-center bg-white">
+         <div class="text-center">
+            <div class="relative w-20 h-20 mx-auto mb-4">
+                 @php
+                    $isUrl = str_contains($siteFavicon, 'http');
+                 @endphp
+                <img src="{{ $siteFavicon }}" class="w-full h-full object-contain animate-bounce">
+                <div class="absolute inset-0 bg-white/30 backdrop-blur-sm hidden"></div>
+            </div>
+            <div class="loader-dots block relative w-20 h-5 mx-auto">
+                <div class="absolute top-0 w-3 h-3 rounded-full bg-orange-500"></div>
+                <div class="absolute top-0 w-3 h-3 rounded-full bg-orange-500"></div>
+                <div class="absolute top-0 w-3 h-3 rounded-full bg-orange-500"></div>
+                <div class="absolute top-0 w-3 h-3 rounded-full bg-orange-500"></div>
+            </div>
+         </div>
+    </div>
     @props(['settings' => []])
 
     {{-- NAVBAR --}}
@@ -75,15 +124,15 @@
                     @auth
                         @if(Auth::user()->isCentralAdmin() || Auth::user()->branch_id)
                         <a href="{{ Auth::user()->dashboard_url }}">
-                            <x-primary-button class="!bg-orange-500 hover:!bg-orange-600 !shadow-orange-200">
+                            <x-buttons.primary class="!bg-orange-500 hover:!bg-orange-600 !shadow-orange-200">
                                 Dashboard
-                            </x-primary-button>
+                            </x-buttons.primary>
                         </a>
                         @else
                         <a href="{{ route('profile.edit') }}">
-                            <x-primary-button class="!bg-orange-500 hover:!bg-orange-600 !shadow-orange-200">
+                            <x-buttons.primary class="!bg-orange-500 hover:!bg-orange-600 !shadow-orange-200">
                                 Dashboard
-                            </x-primary-button>
+                            </x-buttons.primary>
                         </a>
                         @endif
                     @else
@@ -91,7 +140,7 @@
                         class="text-sm font-bold text-gray-700 hover:text-orange-600 transition px-4 py-2">
                         Masuk
                     </a>
-                    <a href="{{ route('register') }}">
+                    <a href="/paket">
                         <button
                             class="px-5 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-bold hover:bg-gray-800 transition shadow-lg shadow-gray-200 hover:-translate-y-0.5 transform duration-200">
                             Daftar Sekarang
@@ -267,7 +316,7 @@
             <span class="hidden md:block absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-1 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition whitespace-nowrap pointer-events-none">
                 Bagikan
             </span>
-            <a href="https://wa.me/?text={{ urlencode('Cek website ini: ' . url()->current()) }}" 
+            <a href="https://wa.me/?text={{ urlencode('Halo! 👋 Saya menemukan website bimbingan belajar L-G Learning yang bagus banget. Cek infonya di sini ya: ' . url()->current()) }}" 
                target="_blank"
                class="flex items-center justify-center w-12 h-12 md:w-14 md:h-14 bg-white text-green-600 rounded-full shadow-lg border border-gray-100 hover:bg-green-50 hover:scale-110 transition transform group-hover:rotate-12 animate-bounce-slow" style="animation-delay: 1.5s;">
                 <svg class="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
@@ -297,7 +346,7 @@
         }
     </style>
 
-    <x-toast></x-toast>
+    <x-ui.toast></x-ui.toast>
 </body>
 
 </html>

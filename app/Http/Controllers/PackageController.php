@@ -36,7 +36,7 @@ class PackageController extends Controller
         $grades = \App\Models\PackageCategory::pluck('name', 'id');
 
         if ($request->ajax()) {
-            return view('admin.package._list', compact('packages', 'grades'))->render();
+            return view('admin.package.partials.table', compact('packages', 'grades'))->render();
         }
 
         return view('admin.package.index', compact('packages', 'grades'));
@@ -64,7 +64,7 @@ class PackageController extends Controller
                 'category'      => $request->category, 
                 // 'grade'         => $request->grade, // Removed
                 'price'         => $request->price,
-                'duration'      => $request->duration * 30, // Convert Bulan ke Hari
+                'duration'      => $request->duration, // Frontend already handles unit conversion
                 'session_count' => $request->session_count,
                 'description'   => $request->description,
                 'benefits'      => $request->benefits,
@@ -99,9 +99,9 @@ class PackageController extends Controller
                 $data['image'] = $request->file('image')->store('packages', 'public');
             }
 
-            // Convert Durasi (Bulan -> Hari)
+            // Duration is already in days from frontend
             if (isset($data['duration'])) {
-                $data['duration'] = $data['duration'] * 30;
+                $data['duration'] = $data['duration'];
             }
 
             $package->update($data);
@@ -126,5 +126,28 @@ class PackageController extends Controller
         $package->delete();
 
         return redirect()->route('admin.packages.index')->with('success', 'Paket berhasil dihapus!');
+    }
+
+    public function show(Request $request, Package $package)
+    {
+        // Load related data
+        $package->load(['branch', 'packageCategory', 'tutors.user']);
+        
+        $query = $package->students()
+            ->with(['branch']); // Eager load branch if needed
+
+        // Filter Status
+        if ($request->has('status') && $request->status != '') {
+             $query->where('status', $request->status);
+        }
+
+        // Calculate Total Savings for this view (Filtered)
+        $totalSavings = (clone $query)->sum('savings_balance');
+
+        $students = $query->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('admin.package.show', compact('package', 'students', 'totalSavings'));
     }
 }

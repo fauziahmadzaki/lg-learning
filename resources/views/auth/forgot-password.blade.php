@@ -64,7 +64,7 @@
                 </div>
 
                 <!-- Session Status -->
-                <x-auth-session-status class="mb-4" :status="session('status')" />
+                <x-ui.auth-session-status class="mb-4" :status="session('status')" />
 
                 <form method="POST" action="{{ route('password.email') }}" class="space-y-6">
                     @csrf
@@ -77,7 +77,7 @@
                                 class="appearance-none block w-full px-4 py-3.5 border border-gray-200 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent sm:text-sm transition-all duration-200 bg-gray-50 hover:bg-white focus:bg-white"
                                 placeholder="nama@email.com">
                         </div>
-                        <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                        <x-inputs.error :messages="$errors->get('email')" class="mt-2" />
                     </div>
 
                     <div class="pt-2">

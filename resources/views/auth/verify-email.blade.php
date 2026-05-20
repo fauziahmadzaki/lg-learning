@@ -14,9 +14,9 @@
             @csrf
 
             <div>
-                <x-primary-button>
+                <x-buttons.primary>
                     {{ __('Kirim Ulang Email Verifikasi') }}
-                </x-primary-button>
+                </x-buttons.primary>
             </div>
         </form>
 

@@ -7,7 +7,9 @@ use App\Models\Package;
 use App\Models\Student;
 use App\Models\Tutor;
 use Illuminate\Http\Request;
+use App\Services\ActivityLogger; // <--- MANUAL LOGGING
 use Illuminate\Support\Facades\DB;
+
 
 class LandingController extends Controller
 {
@@ -62,7 +64,7 @@ class LandingController extends Controller
         }
         
         // Restore missing data fetching
-        $packages = \App\Models\Package::with('branch')->get();
+        $packages = \App\Models\Package::with(['branch', 'packageCategory'])->get();
         $tutors = \App\Models\Tutor::with('user')->limit(4)->get(); 
         
         // Carousel Slides
@@ -157,7 +159,7 @@ class LandingController extends Controller
             'school'     => 'nullable|string',
             'grade'      => 'nullable|string',
             'address'    => 'nullable|string',
-            'billing_cycle' => 'required|in:weekly,monthly,full',
+            'billing_cycle' => 'required|in:daily,weekly,monthly,full',
         ]);
 
         $package = Package::findOrFail($request->package_id);
@@ -180,13 +182,15 @@ class LandingController extends Controller
         ]);
 
         // 2. Calculate Amount
-        $amount = $package->price; // Default Monthly
-        if ($request->billing_cycle === 'weekly') {
-            $amount = $package->price / 4; // Simple logic
-        } elseif ($request->billing_cycle === 'full') {
-            $months = ceil($package->duration / 30);
-            $amount = $package->price * ($months > 0 ? $months : 1);
-        }
+        $isDailyRate = $package->duration < 30;
+
+        $amount = match($request->billing_cycle) {
+            'daily'   => $isDailyRate ? $package->price : ceil($package->price / 30),
+            'weekly'  => $isDailyRate ? ($package->price * 7) : ceil($package->price / 4),
+            'monthly' => $isDailyRate ? ($package->price * 30) : $package->price,
+            'full'    => $isDailyRate ? ($package->price * $package->duration) : ($package->price * ceil($package->duration / 30)),
+            default   => $package->price,
+        };
 
         // 3. Create Transaction (Pending)
         $transaction = \App\Models\Transaction::create([
@@ -245,6 +249,9 @@ class LandingController extends Controller
             return back()->with('error', 'Gagal membuat tagihan pembayaran: ' . $result['message']);
         }
 
+        // Log Manual
+        ActivityLogger::log("Siswa baru mendaftar (Pending Payment): {$student->name} - Paket {$package->name}", $student);
+
         // Redirect ke Url Xendit
         return redirect($result['redirect_url']);
     }
@@ -273,6 +280,9 @@ class LandingController extends Controller
                     // Activate Student Logic
                     // Pass transaction to ensure idempotent next_billing_date calculation
                     $studentService->processPaymentSuccess($transaction->student, $transaction);
+                    
+                    // Log Manual
+                    ActivityLogger::log("Pembayaran Berhasil (Xendit Check): {$transaction->student->name} melunasi tagihan {$transaction->invoice_code}", $transaction->student);
                     
                     session()->flash('success', 'Status Pembayaran Berhasil Diperbarui!');
                 }

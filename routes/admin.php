@@ -18,12 +18,17 @@ Route::middleware(['auth', 'verified', 'central.admin'])
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('cabang', BranchController::class)->names('branches')->parameters([
         'cabang' => 'branch',
-    ]);
+    ])->except(['show']);
+    
+    // Custom Show Route (Detail)
+    Route::get('cabang/{branch}/detail', [BranchController::class, 'show'])->name('branches.show');
     Route::resource('tutor', TutorController::class)->names('tutors');
     Route::resource('paket', PackageController::class)->names('packages')->parameters([
         'paket' => 'package'
     ]);
-    Route::resource('paket-kategori', \App\Http\Controllers\PackageCategoryController::class)->names('package-categories');
+    Route::resource('paket-kategori', \App\Http\Controllers\PackageCategoryController::class)->names('package-categories')->parameters([
+        'paket-kategori' => 'packageCategory'
+    ]);
     Route::resource('siswa', StudentController::class)->names('students')->parameters([
         'siswa' => 'student'
     ]);
@@ -31,6 +36,9 @@ Route::middleware(['auth', 'verified', 'central.admin'])
     Route::post('/siswa/{student}/bill', [StudentController::class, 'storeBill'])->name('students.bill.store');
     Route::post('/siswa/{student}/pay-manual', [StudentController::class, 'storeManualPayment'])->name('students.pay.manual');
     Route::post('/siswa/{student}/bill/{bill}/pay', [StudentController::class, 'payBillManually'])->name('students.bills.pay_manual');
+    // Tabungan (Savings)
+    Route::post('/siswa/{student}/savings/deposit', [StudentController::class, 'storeDeposit'])->name('students.savings.deposit');
+    Route::post('/siswa/{student}/savings/withdraw', [StudentController::class, 'storeWithdraw'])->name('students.savings.withdraw');
     Route::resource('/transaksi', TransactionController::class)->names('transactions')->parameters([
         'transaksi' => 'transaction'
     ]);
@@ -53,4 +61,7 @@ Route::middleware(['auth', 'verified', 'central.admin'])
     // Site Settings (Pengaturan Website)
     Route::get('/settings', [\App\Http\Controllers\SiteSettingController::class, 'index'])->name('settings.index');
     Route::put('/settings', [\App\Http\Controllers\SiteSettingController::class, 'update'])->name('settings.update');
+
+    // Manual Book / Panduan Sistem
+    Route::get('/panduan', [\App\Http\Controllers\ManualBookController::class, 'index'])->name('manual.index');
 });

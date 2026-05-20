@@ -18,14 +18,14 @@
                 {{-- Grade Filter --}}
                 <div>
                     <label class="block text-xs font-medium text-gray-700 mb-1">Kelas / Tingkatan</label>
-                    <select name="grade" class="w-full rounded-lg border-gray-300 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <x-inputs.select name="grade" class="w-full text-sm">
                         <option value="">Semua Kelas</option>
                         @foreach($grades as $grade)
                             <option value="{{ $grade }}" @selected(request('grade') == $grade)>
                                 {{ $grade }}
                             </option>
                         @endforeach
-                    </select>
+                    </x-inputs.select>
                 </div>
 
                 {{-- Buttons --}}
@@ -49,62 +49,44 @@
                 <h3 class="font-bold text-gray-800">Data Siswa</h3>
                 <span class="text-xs text-gray-500">Total: {{ $students->total() }} Siswa</span>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-gray-600">
-                    <thead class="bg-gray-50 text-xs uppercase font-bold text-gray-500">
-                        <tr>
-                            <th class="px-6 py-3">Nama Siswa</th>
-                            <th class="px-6 py-3">Sekolah</th>
-                            <th class="px-6 py-3">Kelas</th>
-                            <th class="px-6 py-3">Cabang</th>
-                            <th class="px-6 py-3">Paket</th>
-                            <th class="px-6 py-3">Status</th>
-                            <th class="px-6 py-3">Bergabung</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @forelse($students as $student)
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4 font-medium text-gray-900">
-                                {{ $student->name }}
-                                <div class="text-xs text-gray-400">{{ $student->email }}</div>
-                            </td>
-                            <td class="px-6 py-4">{{ $student->school }}</td>
-                            <td class="px-6 py-4">{{ $student->grade }}</td>
-                            <td class="px-6 py-4 text-gray-600">
-                                {{ $student->branch?->name ?? 'Tanpa Cabang' }}
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-xs">{{ $student->package?->name ?? '-' }}</span>
-                            </td>
-                            <td class="px-6 py-4">
-                                @if($student->status == 'active')
-                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold">Aktif</span>
-                                @elseif($student->status == 'inactive')
-                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-bold">Tidak Aktif</span>
-                                @elseif($student->status == 'pending')
-                                    <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-bold">Pending</span>
-                                @else
-                                    <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-bold">{{ ucfirst($student->status) }}</span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 text-xs text-gray-500">
-                                {{ $student->created_at->format('d M Y') }}
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="7" class="px-6 py-10 text-center text-gray-400">
-                                Tidak ada data siswa ditemukan.
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            <div class="px-6 py-4 border-t border-gray-100">
-                {{ $students->links() }}
-            </div>
+            <x-ui.table :headers="['Nama Siswa', 'Sekolah', 'Kelas', 'Cabang', 'Paket', 'Status', 'Bergabung']" :paginator="$students">
+    @forelse($students as $student)
+    <x-ui.tr>
+        <x-ui.td class="font-medium text-gray-900">
+            {{ $student->name }}
+            <div class="text-xs text-gray-400">{{ $student->email }}</div>
+        </x-ui.td>
+        <x-ui.td>{{ $student->school }}</x-ui.td>
+        <x-ui.td>{{ $student->grade }}</x-ui.td>
+        <x-ui.td class="text-gray-600">
+            {{ $student->branch?->name ?? 'Tanpa Cabang' }}
+        </x-ui.td>
+        <x-ui.td>
+            <span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-xs">{{ $student->package?->name ?? '-' }}</span>
+        </x-ui.td>
+        <x-ui.td>
+            @if($student->status == 'active')
+                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold">Aktif</span>
+            @elseif($student->status == 'inactive')
+                <span class="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-bold">Tidak Aktif</span>
+            @elseif($student->status == 'pending')
+                <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-bold">Pending</span>
+            @else
+                <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-bold">{{ ucfirst($student->status) }}</span>
+            @endif
+        </x-ui.td>
+        <x-ui.td class="text-xs text-gray-500">
+            {{ $student->created_at->format('d M Y') }}
+        </x-ui.td>
+    </x-ui.tr>
+    @empty
+    <x-ui.tr>
+        <x-ui.td colspan="7" class="text-center py-10 text-gray-400">
+            Tidak ada data siswa ditemukan.
+        </x-ui.td>
+    </x-ui.tr>
+    @endforelse
+</x-ui.table>
         </div>
     </div>
 </x-app-layout>

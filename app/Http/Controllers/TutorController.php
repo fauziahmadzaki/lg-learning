@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Tutor;
 use App\Models\Branch;
+use App\Services\ActivityLogger; // <--- MANUAL LOGGING
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -48,18 +49,18 @@ class TutorController extends Controller
         $allJobs = Tutor::pluck('jobs')->collapse()->unique()->values()->sort();
 
         if ($request->ajax()) {
-            return view('admin.tutor._list', compact('tutors'))->render();
+            return view('admin.tutor.partials.list', compact('tutors'))->render();
         }
 
         return view('admin.tutor.index', compact('tutors', 'branches', 'allJobs'));
     }
 
     public function create()
-{
-    $branches = Branch::all(); // Ambil semua cabang
-    $packages = \App\Models\Package::all(); // Load semua paket untuk opsi
-    return view('admin.tutor.create', compact('branches', 'packages'));
-}
+    {
+        $branches = Branch::all(); // Ambil semua cabang
+        $packages = \App\Models\Package::with('branch')->get(); // Load semua paket dengan cabang untuk opsi
+        return view('admin.tutor.create', compact('branches', 'packages'));
+    }
 
     public function store(StoreTutorRequest $request)
     {
@@ -96,13 +97,19 @@ class TutorController extends Controller
             }
         });
     
+
+
+        // Log Manual - Harus di luar transaction atau ambil data dari request karena $tutor scope terbatas di closure (kecuali di return)
+        // Kita bisa log user name dari request
+        ActivityLogger::log("Admin mendaftarkan tutor baru: {$request->name}");
+    
         return redirect()->route('admin.tutors.index')->with('success', 'Tutor berhasil ditambahkan!');
     }
 
     public function edit(Tutor $tutor)
     {
         $branches = Branch::all();
-        $packages = \App\Models\Package::all();
+        $packages = \App\Models\Package::with('branch')->get();
         $tutor->load('packages'); // Eager load relasi existing
         return view('admin.tutor.edit', compact('tutor', 'branches', 'packages'));
     }
@@ -155,6 +162,10 @@ class TutorController extends Controller
             }
         });
 
+
+
+    ActivityLogger::log("Admin memperbarui data tutor: {$tutor->user->name}", $tutor);
+
     return redirect()->route('admin.tutors.index')->with('success', 'Data tutor diperbarui!');
     }
 
@@ -169,7 +180,20 @@ class TutorController extends Controller
             $tutor->user->delete();
         });
 
+
+
+        $name = $tutor->user->name ?? 'Unknown';
+        ActivityLogger::log("Admin menghapus tutor: {$name}", $tutor);
+
         return redirect()->route('admin.tutors.index')->with('success', 'Tutor dihapus!');
+    }
+
+    public function show(Tutor $tutor)
+    {
+        // Load relasi yang diperlukan
+        $tutor->load(['user', 'branch', 'packages.branch']);
+
+        return view('admin.tutor.show', compact('tutor'));
     }
 
 }

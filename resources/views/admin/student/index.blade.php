@@ -75,54 +75,51 @@ $breadcrumbs = [
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     
                     {{-- Filter Cabang --}}
-                    <select x-model="branchId" @change="performSearch()" 
-                        class="block w-full rounded-lg border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
+                    <x-inputs.select x-model="branchId" @change="performSearch()" class="block w-full rounded-lg text-sm shadow-sm">
                         <option value="">Semua Cabang</option>
                         @foreach($branches as $branch)
                             <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                         @endforeach
-                    </select>
+                    </x-inputs.select>
 
                     {{-- Filter Grade --}}
-                    <select x-model="grade" @change="performSearch()"
-                        class="block w-full rounded-lg border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
+                    <x-inputs.select x-model="grade" @change="performSearch()" class="block w-full rounded-lg text-sm shadow-sm">
                         <option value="">Semua Tingkatan</option>
                         @foreach($grades as $g)
                             <option value="{{ $g }}">{{ $g }}</option>
                         @endforeach
-                    </select>
+                    </x-inputs.select>
 
                     {{-- Filter Paket --}}
-                    <select x-model="packageId" @change="performSearch()"
-                        class="block w-full rounded-lg border-gray-300 text-sm focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
+                    <x-inputs.select x-model="packageId" @change="performSearch()" class="block w-full rounded-lg text-sm shadow-sm">
                         <option value="">Semua Paket</option>
                         @foreach($packages as $pkg)
                             <option value="{{ $pkg->id }}">{{ $pkg->name }}</option>
                         @endforeach
-                    </select>
+                    </x-inputs.select>
                 </div>
 
             </div>
 
             {{-- Button --}}
             <a href="{{ route('admin.students.create') }}">
-                <x-primary-button class="flex items-center gap-2">
+                <x-buttons.primary class="flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
                     Tambah Siswa
-                </x-primary-button>
+                </x-buttons.primary>
             </a>
         </div>
 
         {{-- Container Tabel (Load Partial) --}}
         <div id="student-list-container">
-            @include('admin.student._list')
+            @include('admin.student.partials.table')
         </div>
 
         {{-- Modal Hapus --}}
-        <x-modal name="confirm-student-deletion" focusable>
+        <x-ui.modal name="confirm-student-deletion" focusable>
             <form method="post" :action="deleteUrl" class="p-6">
                 @csrf
                 @method('DELETE')
@@ -141,11 +138,11 @@ $breadcrumbs = [
                     pembayaran juga akan terhapus permanen.
                 </p>
                 <div class="mt-6 flex justify-end gap-3">
-                    <x-secondary-button x-on:click="$dispatch('close')">Batal</x-secondary-button>
-                    <x-danger-button>Ya, Hapus</x-danger-button>
+                    <x-buttons.secondary x-on:click="$dispatch('close')">Batal</x-buttons.secondary>
+                    <x-buttons.danger>Ya, Hapus</x-buttons.danger>
                 </div>
             </form>
-        </x-modal>
+        </x-ui.modal>
 
     </div>
 </x-app-layout>
