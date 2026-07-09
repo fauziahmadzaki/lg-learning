@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\Facades\URL;
+use App\Models\Transaction;
+use App\Observers\TransactionObserver;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -35,6 +37,6 @@ class AppServiceProvider extends ServiceProvider
             'create' => 'tambah',
         ]);
 
-
+        Transaction::observe(TransactionObserver::class);
     }
 }

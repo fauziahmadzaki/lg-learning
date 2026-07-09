@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Branch;
 
 use App\Http\Controllers\Controller;
+use App\Traits\HandlesBranchScope;
 use App\Models\Branch;
 use App\Models\Package;
 use App\Http\Requests\StorePackageRequest;
@@ -13,6 +14,8 @@ use Illuminate\Http\Request;
 
 class PackageController extends Controller
 {
+    use HandlesBranchScope;
+
     public function index(Request $request, Branch $branch)
     {
         $search = $request->input('search');
@@ -23,14 +26,12 @@ class PackageController extends Controller
                 return $query->where(function($q) use ($search) {
                      $q->where('name', 'like', "%{$search}%")
                        ->orWhere('category', 'like', "%{$search}%")
-                       ->orWhereHas('packageCategory', function($qc) use ($search){
-                            $qc->where('name', 'like', "%{$search}%");
-                       });
+                       ->orWhereHas('packageCategory', fn($qc) => $qc->where('name', 'like', "%{$search}%"));
                 });
             })
             ->latest()
-            ->paginate(10); // Use pagination for branch view
-    
+            ->paginate(10);
+
         $grades = \App\Models\PackageCategory::pluck('name', 'id');
 
         if ($request->ajax()) {
@@ -42,8 +43,10 @@ class PackageController extends Controller
 
     public function create(Branch $branch)
     {
-        $categories = \App\Models\PackageCategory::all();
-        return view('branch.package.create', compact('branch', 'categories'));
+        return view('branch.package.create', [
+            'branch'     => $branch,
+            'categories' => \App\Models\PackageCategory::all(),
+        ]);
     }
 
     public function store(StorePackageRequest $request, Branch $branch)
@@ -55,17 +58,16 @@ class PackageController extends Controller
             }
 
             Package::create([
-                'branch_id'     => $branch->id, // Force Branch ID
+                'branch_id'          => $branch->id,
                 'package_category_id' => $request->package_category_id,
-                'name'          => $request->name,
-                'category'      => $request->category, 
-                // 'grade'         => $request->grade,
-                'price'         => $request->price,
-                'duration'      => $request->duration * 30, // Convert Bulan ke Hari
-                'session_count' => $request->session_count,
-                'description'   => $request->description,
-                'benefits'      => $request->benefits,
-                'image'         => $imagePath,
+                'name'               => $request->name,
+                'category'           => $request->category,
+                'price'              => $request->price,
+                'duration'           => $request->duration,
+                'session_count'      => $request->session_count,
+                'description'        => $request->description,
+                'benefits'           => $request->benefits,
+                'image'              => $imagePath,
             ]);
         });
 
@@ -74,25 +76,22 @@ class PackageController extends Controller
 
     public function edit(Branch $branch, Package $package)
     {
-        if ($package->branch_id !== $branch->id) {
-            abort(403);
-        }
-        
-        $categories = \App\Models\PackageCategory::all();
+        $this->authorizeBranch($branch, $package);
 
-        return view('branch.package.edit', compact('package', 'branch', 'categories'));
+        return view('branch.package.edit', [
+            'package'    => $package,
+            'branch'     => $branch,
+            'categories' => \App\Models\PackageCategory::all(),
+        ]);
     }
 
     public function update(UpdatePackageRequest $request, Branch $branch, Package $package)
     {
-        if ($package->branch_id !== $branch->id) {
-            abort(403);
-        }
+        $this->authorizeBranch($branch, $package);
 
         DB::transaction(function () use ($request, $package) {
-            $data = $request->validated(); 
-            
-            // Remove branch_id from data if present to prevent moving packages
+            $data = $request->validated();
+
             unset($data['branch_id']);
 
             if ($request->hasFile('image')) {
@@ -102,10 +101,7 @@ class PackageController extends Controller
                 $data['image'] = $request->file('image')->store('packages', 'public');
             }
 
-            // Convert Durasi (Bulan -> Hari)
-            if (isset($data['duration'])) {
-                $data['duration'] = $data['duration'] * 30;
-            }
+            // duration already in days from form hidden input
 
             $package->update($data);
         });
@@ -115,9 +111,7 @@ class PackageController extends Controller
 
     public function destroy(Branch $branch, Package $package)
     {
-        if ($package->branch_id !== $branch->id) {
-            abort(403);
-        }
+        $this->authorizeBranch($branch, $package);
 
         if ($package->image && Storage::disk('public')->exists($package->image)) {
             Storage::disk('public')->delete($package->image);

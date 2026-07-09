@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Branch;
 
 use App\Http\Controllers\Controller;
+use App\Traits\HandlesBranchScope;
 use App\Models\Branch;
+use App\Models\ClassSchedule;
 use App\Models\Package;
 use App\Models\Student;
 use App\Models\Transaction;
@@ -12,37 +14,27 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
+    use HandlesBranchScope;
+
     public function index(Branch $branch)
     {
-        // Stats
         $totalStudents = Student::where('branch_id', $branch->id)->count();
         $activePackages = Package::where('branch_id', $branch->id)->count();
-        
-        // Income This Month
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
-        
-        $monthlyIncome = Transaction::whereHas('student', function($q) use ($branch) {
-                $q->where('branch_id', $branch->id);
-            })
+
+        $monthlyIncome = Transaction::whereHas('student', fn($q) => $q->where('branch_id', $branch->id))
             ->where('status', 'PAID')
-            ->whereMonth('paid_at', $currentMonth)
-            ->whereYear('paid_at', $currentYear)
+            ->whereMonth('paid_at', now()->month)
+            ->whereYear('paid_at', now()->year)
             ->sum('total_amount');
 
-        // Active Classes (Packages)
         $packages = Package::where('branch_id', $branch->id)
-            ->withCount(['students as active_students_count' => function($q) {
-                $q->where('status', 'active');
-            }])
+            ->withCount(['students as active_students_count' => fn($q) => $q->where('status', 'active')])
             ->latest()
-            ->limit(6) // Show top 6 active classes
+            ->limit(6)
             ->get();
 
-        // Schedules Today
-        $today = strtolower(now()->format('l'));
-        $todaysSchedules = \App\Models\ClassSchedule::where('branch_id', $branch->id)
-            ->where('day_of_week', $today)
+        $todaysSchedules = ClassSchedule::where('branch_id', $branch->id)
+            ->where('day_of_week', strtolower(now()->format('l')))
             ->with(['package.tutors.user'])
             ->orderBy('start_time')
             ->limit(5)
@@ -54,9 +46,7 @@ class DashboardController extends Controller
     public function courses(Branch $branch)
     {
         $packages = Package::where('branch_id', $branch->id)
-            ->withCount(['students as student_count' => function ($query) {
-                $query->where('status', 'active');
-            }])
+            ->withCount(['students as student_count' => fn($q) => $q->where('status', 'active')])
             ->latest()
             ->paginate(12);
 
@@ -65,21 +55,12 @@ class DashboardController extends Controller
 
     public function courseShow(Request $request, Branch $branch, Package $package)
     {
-        if($package->branch_id !== $branch->id) {
-            abort(404);
-        }
+        $this->authorizeBranch($branch, $package);
 
         $query = $package->students()
-            ->where('branch_id', $branch->id);
+            ->where('branch_id', $branch->id)
+            ->when($request->filled('status'), fn($q) => $q->where('status', $request->status));
 
-        // Filter Status (Optional)
-        if ($request->has('status') && $request->status != '') {
-             $query->where('status', $request->status);
-        }
-        // Jika tidak ada filter status, default tampilkan SEMUA (Active, Inactive, Pending, Finished) 
-        // Sesuai request user: "defaultnya semua tampil aktif tidak aktif"
-        
-        // Calculate Total Savings for this view (Filtered)
         $totalSavings = (clone $query)->sum('savings_balance');
 
         $students = $query->orderBy('name')
@@ -91,18 +72,14 @@ class DashboardController extends Controller
 
     public function reports(Branch $branch)
     {
-        // Forward to the new ReportController to handle stale route cache
         return app(ReportController::class)->index(request(), $branch);
     }
 
 
     public function profile(Branch $branch)
     {
-        $user = auth()->user();
-        $tutor = \App\Models\Tutor::where('user_id', $user->id)->first();
+        $tutor = \App\Models\Tutor::where('user_id', auth()->id())->first();
 
-        // Jika user bukan tutor, mungkin redirect atau tampilkan error
-        // Tapi request spesifik untuk role tutor.
         if (!$tutor) {
            return redirect()->route('branch.dashboard', $branch)->with('error', 'Profil tutor tidak ditemukan.');
         }
@@ -110,12 +87,11 @@ class DashboardController extends Controller
         $tutor->load(['user', 'branch', 'packages.branch']);
 
         return view('branch.profile', compact('branch', 'tutor'));
-        return view('branch.profile', compact('branch', 'tutor'));
     }
 
     public function schedules(Branch $branch)
     {
-        $schedules = \App\Models\ClassSchedule::where('branch_id', $branch->id)
+        $schedules = ClassSchedule::where('branch_id', $branch->id)
             ->with(['package.tutors.user'])
             ->orderByRaw("FIELD(day_of_week, 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')")
             ->orderBy('start_time')

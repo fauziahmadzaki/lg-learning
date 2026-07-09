@@ -8,8 +8,10 @@ use App\Models\Branch;
 use App\Models\Package;
 use App\Models\Student;
 use App\Models\Transaction;
+use App\Services\BillingDateService;
 use App\Services\BillingService;
-use App\Services\StudentService;
+use App\Services\PackagePricingService;
+use App\Services\PaymentService;
 use App\Services\TransactionService;
 use App\Services\WhatsApp\WhatsAppServiceInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,7 +21,6 @@ class BillingServiceTest extends TestCase
     use RefreshDatabase;
 
     private BillingService $billingService;
-    private StudentService|\PHPUnit\Framework\MockObject\MockObject $studentService;
     private TransactionService|\PHPUnit\Framework\MockObject\MockObject $transactionService;
     private WhatsAppServiceInterface|\PHPUnit\Framework\MockObject\MockObject $whatsappService;
 
@@ -27,18 +28,22 @@ class BillingServiceTest extends TestCase
     {
         parent::setUp();
 
-        $this->studentService = $this->createMock(StudentService::class);
-
         $this->transactionService = $this->createMock(TransactionService::class);
         $this->transactionService->method('createInvoice')
             ->willReturn(['success' => true, 'redirect_url' => 'https://xendit.test/inv']);
 
         $this->whatsappService = $this->createMock(WhatsAppServiceInterface::class);
 
+        $pricing = new PackagePricingService;
+        $billingDate = new BillingDateService($pricing);
+        $paymentService = new PaymentService($pricing, $billingDate, $this->whatsappService);
+
         $this->billingService = new BillingService(
-            $this->studentService,
+            $paymentService,
             $this->transactionService,
-            $this->whatsappService
+            $this->whatsappService,
+            $pricing,
+            $billingDate,
         );
     }
 
@@ -134,14 +139,6 @@ class BillingServiceTest extends TestCase
             'next_billing_date' => now()->addDay()->format('Y-m-d'),
         ]);
 
-        $this->studentService->expects($this->once())
-            ->method('processPaymentSuccess')
-            ->with(
-                $this->isInstanceOf(Student::class),
-                $this->callback(fn($tx) => $tx !== null && $tx instanceof Transaction),
-                false
-            );
-
         $result = $this->billingService->processManualPayment($student);
 
         $this->assertTrue($result['success']);
@@ -159,29 +156,18 @@ class BillingServiceTest extends TestCase
         $this->assertEquals($student->next_billing_date->format('Y-m-d'), $bill->due_date->format('Y-m-d'));
     }
 
-    public function test_manual_payment_passes_real_transaction_to_process_payment_success(): void
+    public function test_manual_payment_advances_next_billing_date(): void
     {
         $student = $this->createActiveStudent([
             'next_billing_date' => now()->addDay()->format('Y-m-d'),
         ]);
 
-        $actualTx = null;
-        $this->studentService->expects($this->once())
-            ->method('processPaymentSuccess')
-            ->with(
-                $this->isInstanceOf(Student::class),
-                $this->callback(function ($tx) use (&$actualTx) {
-                    $actualTx = $tx;
-                    return $tx !== null && $tx instanceof Transaction;
-                }),
-                false
-            );
-
         $this->billingService->processManualPayment($student);
 
-        $this->assertNotNull($actualTx, 'processPaymentSuccess harus menerima Transaction object, bukan null');
-        $this->assertEquals('PAID', $actualTx->status);
-        $this->assertEquals($student->id, $actualTx->student_id);
+        $student->refresh();
+        $expectedNextDate = now()->addDay()->addMonth()->format('Y-m-d');
+        $this->assertEquals($expectedNextDate, $student->next_billing_date->format('Y-m-d'),
+            'next_billing_date harus maju satu bulan setelah pembayaran');
     }
 
     // ─── createNextBill Tests ──────────────────────────────────
@@ -258,10 +244,16 @@ class BillingServiceTest extends TestCase
         $this->transactionService->method('createInvoice')
             ->willReturn(['success' => false, 'message' => 'Xendit API error']);
 
+        $pricing = new PackagePricingService;
+        $billingDate = new BillingDateService($pricing);
+        $paymentService = new PaymentService($pricing, $billingDate, $this->whatsappService);
+
         $this->billingService = new BillingService(
-            $this->studentService,
+            $paymentService,
             $this->transactionService,
-            $this->whatsappService
+            $this->whatsappService,
+            $pricing,
+            $billingDate,
         );
 
         $result = $this->billingService->createNextBill($student);

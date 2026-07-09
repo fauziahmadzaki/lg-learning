@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\Student;
 use App\Models\Bill;
+use App\Services\PackagePricingService;
+use App\Services\BillingDateService;
 use App\Services\TransactionService;
 use App\Services\WhatsApp\WhatsAppServiceInterface;
 use Illuminate\Support\Facades\Log;
@@ -73,27 +75,14 @@ class GenerateRecurringBills extends Command
                     continue;
                 }
 
-                // CHECK: Apakah paket sudah selesai?
-                if ($student->join_date) {
-                    $endDate = $student->join_date->copy()->addDays($package->duration);
-                    
-                    // --- DYNAMIC TOLERANCE LOGIC ---
-                    // Prevent creating a full bill if remaining duration is negligible.
-                    // Rule: Tolerance is 20% of the cycle.
-                    // Monthly (30) -> 6 days. Weekly (7) -> 2 days. Daily -> 0.
-                    $cycleDays = match($student->billing_cycle) {
-                        'monthly' => 30,
-                        'weekly'  => 7,
-                        'daily'   => 1,
-                        default   => 30
-                    };
-                    
-                    $toleranceDays = $cycleDays === 1 ? 0 : ceil($cycleDays * 0.2);
-                    $cutoffDate = $endDate->copy()->subDays($toleranceDays);
+                $billingDate = app(BillingDateService::class);
+                $pricing = app(PackagePricingService::class);
 
-                    // If Next Billing Date passed the Cutoff (meaning remaining days < Tolerance)
-                    // Mark as Finished.
-                    if ($student->next_billing_date->greaterThanOrEqualTo($cutoffDate)) {
+                if ($student->join_date) {
+                    $endDate = $billingDate->getEndDate($student->join_date, $package);
+                    $toleranceDays = $pricing->getToleranceDays($student->billing_cycle);
+
+                    if ($billingDate->isPeriodOver($student->next_billing_date, $endDate, $student->billing_cycle)) {
                         $this->info("Student {$student->name} package finishing (End: {$endDate->format('Y-m-d')}, Tolerasi: {$toleranceDays} hari). Marking as finished.");
                         
                         $student->update([
@@ -106,8 +95,7 @@ class GenerateRecurringBills extends Command
                     }
                 }
 
-                // Kalkulasi Amount (Standardized via StudentService)
-                $amount = app(\App\Services\StudentService::class)->calculateAmount($package, $student->billing_cycle);
+                $amount = $pricing->calculateAmount($package, $student->billing_cycle);
 
                 // 1. Buat Bill
                 $bill = Bill::create([
