@@ -424,7 +424,7 @@ class StudentService
 
         $student->update([
             'status' => $status,
-            'next_billing_date' => $finalNextDate
+            'next_billing_date' => $status === 'inactive' ? null : $finalNextDate
         ]);
 
         // SEND WHATSAPP NOTIFICATION

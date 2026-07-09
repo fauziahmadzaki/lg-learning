@@ -12,7 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement("ALTER TABLE students MODIFY COLUMN billing_cycle ENUM('daily', 'weekly', 'monthly', 'full') NOT NULL DEFAULT 'monthly'");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE students MODIFY COLUMN billing_cycle ENUM('daily', 'weekly', 'monthly', 'full') NOT NULL DEFAULT 'monthly'");
+        }
     }
 
     /**
@@ -20,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("ALTER TABLE students MODIFY COLUMN billing_cycle ENUM('full', 'monthly', 'weekly') NOT NULL DEFAULT 'monthly'");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE students MODIFY COLUMN billing_cycle ENUM('full', 'monthly', 'weekly') NOT NULL DEFAULT 'monthly'");
+        }
     }
 };

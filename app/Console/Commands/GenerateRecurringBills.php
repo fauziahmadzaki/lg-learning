@@ -46,10 +46,18 @@ class GenerateRecurringBills extends Command
         foreach ($students as $student) {
             DB::beginTransaction();
             try {
+                // Re-read student dengan row lock untuk cegah race condition
+                $student = Student::where('id', $student->id)->lockForUpdate()->first();
+                if (!$student || $student->status !== 'active') {
+                    DB::rollBack();
+                    continue;
+                }
+
                 // Double check biar gak duplikat tagihan di hari yang sama/ periode sama?
                 // Idealnya check Bill terakhir student ini, apakah due_date nya sama dengan next_billing_date si student?
                 $existingBill = Bill::where('student_id', $student->id)
                                     ->whereDate('due_date', $student->next_billing_date)
+                                    ->lockForUpdate()
                                     ->first();
 
                 if ($existingBill) {
@@ -80,7 +88,7 @@ class GenerateRecurringBills extends Command
                         default   => 30
                     };
                     
-                    $toleranceDays = ceil($cycleDays * 0.2);
+                    $toleranceDays = $cycleDays === 1 ? 0 : ceil($cycleDays * 0.2);
                     $cutoffDate = $endDate->copy()->subDays($toleranceDays);
 
                     // If Next Billing Date passed the Cutoff (meaning remaining days < Tolerance)
@@ -89,7 +97,8 @@ class GenerateRecurringBills extends Command
                         $this->info("Student {$student->name} package finishing (End: {$endDate->format('Y-m-d')}, Tolerasi: {$toleranceDays} hari). Marking as finished.");
                         
                         $student->update([
-                            'status' => 'inactive'
+                            'status' => 'inactive',
+                            'next_billing_date' => null
                         ]);
                         
                         DB::commit();
