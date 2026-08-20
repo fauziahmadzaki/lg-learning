@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Branch;
+use App\Models\LearningResult;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -59,5 +60,18 @@ class Student extends Model
     public function getPortalLinkAttribute()
     {
         return url('/portal/' . $this->access_token);
+    }
+
+    // Relasi: Siswa punya banyak Hasil Belajar
+    public function learningResults()
+    {
+        return $this->hasMany(LearningResult::class)->orderBy('session_date', 'desc');
+    }
+
+    // Accessor: Rata-rata nilai
+    public function getAverageScoreAttribute(): float|null
+    {
+        $avg = $this->learningResults()->whereNotNull('score')->avg('score');
+        return $avg ? round($avg, 1) : null;
     }
 }

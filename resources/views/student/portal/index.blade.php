@@ -69,7 +69,7 @@
                 <div class="flex p-1 bg-white rounded-xl shadow-sm border border-gray-200">
                     <button @click="activeTab = 'bills'" 
                         :class="activeTab === 'bills' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-700'"
-                        class="flex-1 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                        class="flex-1 py-2 text-xs font-bold rounded-lg transition-all duration-200">
                         Tagihan
                          @php $unpaidCount = $student->bills->where('status', '!=', 'PAID')->count(); @endphp
                         @if($unpaidCount > 0)
@@ -78,12 +78,17 @@
                     </button>
                     <button @click="activeTab = 'history'" 
                         :class="activeTab === 'history' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-700'"
-                        class="flex-1 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                        class="flex-1 py-2 text-xs font-bold rounded-lg transition-all duration-200">
                         Riwayat
+                    </button>
+                    <button @click="activeTab = 'results'" 
+                        :class="activeTab === 'results' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-700'"
+                        class="flex-1 py-2 text-xs font-bold rounded-lg transition-all duration-200">
+                        Belajar
                     </button>
                     <button @click="activeTab = 'profile'" 
                         :class="activeTab === 'profile' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-500 hover:text-gray-700'"
-                        class="flex-1 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                        class="flex-1 py-2 text-xs font-bold rounded-lg transition-all duration-200">
                         Profil
                     </button>
                 </div>
@@ -206,6 +211,89 @@
                              </div>
                         @endforeach
                      </div>
+                </div>
+
+                {{-- Content: Hasil Belajar --}}
+                <div x-show="activeTab === 'results'" x-transition.opacity style="display: none;">
+
+                    {{-- Summary Bar --}}
+                    @php
+                        $totalSesi   = $student->learningResults->count();
+                        $hadirCount  = $student->learningResults->where('attendance', 'hadir')->count();
+                        $avgScore    = $student->learningResults->whereNotNull('score')->avg('score');
+                    @endphp
+
+                    @if($totalSesi > 0)
+                        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-4">
+                            <div class="flex justify-around text-center">
+                                <div>
+                                    <p class="text-2xl font-black text-indigo-600">{{ $totalSesi }}</p>
+                                    <p class="text-xs text-gray-400 mt-0.5">Total Sesi</p>
+                                </div>
+                                <div class="border-l border-gray-100"></div>
+                                <div>
+                                    <p class="text-2xl font-black text-green-600">{{ $hadirCount }}</p>
+                                    <p class="text-xs text-gray-400 mt-0.5">Hadir</p>
+                                </div>
+                                <div class="border-l border-gray-100"></div>
+                                <div>
+                                    <p class="text-2xl font-black text-purple-600">{{ $avgScore ? number_format($avgScore, 1) : '-' }}</p>
+                                    <p class="text-xs text-gray-400 mt-0.5">Rata-rata</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            @foreach($student->learningResults as $result)
+                                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2 flex-wrap mb-1">
+                                                <span class="text-xs text-gray-400">Sesi #{{ $result->session_number }} &bull; {{ $result->session_date->format('d M Y') }}</span>
+                                                @php
+                                                    $badgeColor = match($result->attendance) {
+                                                        'hadir' => 'bg-green-100 text-green-700',
+                                                        'izin'  => 'bg-yellow-100 text-yellow-700',
+                                                        'alfa'  => 'bg-red-100 text-red-700',
+                                                        default => 'bg-gray-100 text-gray-700',
+                                                    };
+                                                @endphp
+                                                <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full {{ $badgeColor }}">
+                                                    {{ ucfirst($result->attendance) }}
+                                                </span>
+                                            </div>
+                                            <p class="font-bold text-gray-900">{{ $result->topic }}</p>
+                                            @if($result->notes)
+                                                <p class="text-sm text-gray-500 mt-1">{{ $result->notes }}</p>
+                                            @endif
+                                            @if($result->homework)
+                                                <p class="text-xs text-indigo-600 mt-1.5 flex items-center gap-1">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                                    PR: {{ $result->homework }}
+                                                </p>
+                                            @endif
+                                        </div>
+                                        @if(!is_null($result->score))
+                                            @php $scoreColor = $result->score >= 85 ? 'text-green-600' : ($result->score >= 70 ? 'text-yellow-500' : 'text-red-500'); @endphp
+                                            <div class="text-center ml-3">
+                                                <span class="text-2xl font-black {{ $scoreColor }}">{{ $result->score }}</span>
+                                                <p class="text-[10px] text-gray-400 leading-none">/100</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="bg-white p-8 rounded-xl shadow-sm text-center border border-gray-100">
+                            <div class="w-12 h-12 bg-indigo-50 text-indigo-400 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            </div>
+                            <h3 class="font-bold text-gray-700">Belum Ada Catatan</h3>
+                            <p class="text-sm text-gray-400 mt-1">Hasil belajar akan muncul di sini setelah sesi pertama.</p>
+                        </div>
+                    @endif
+
                 </div>
 
                 {{-- Content: Profile --}}

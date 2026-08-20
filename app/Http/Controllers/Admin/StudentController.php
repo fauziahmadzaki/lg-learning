@@ -78,6 +78,7 @@ class StudentController extends Controller
             'package',
             'bills' => fn($q) => $q->orderBy('due_date', 'desc'),
             'transactions' => fn($q) => $q->latest(),
+            'learningResults' => fn($q) => $q->with('tutor')->orderBy('session_date', 'desc'),
         ]);
 
         return view('admin.student.show', [

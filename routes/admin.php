@@ -43,6 +43,14 @@ Route::middleware(['auth', 'verified', 'central.admin'])
     // Tabungan (Savings)
     Route::post('/siswa/{student}/savings/deposit', [StudentController::class, 'storeDeposit'])->name('students.savings.deposit');
     Route::post('/siswa/{student}/savings/withdraw', [StudentController::class, 'storeWithdraw'])->name('students.savings.withdraw');
+
+    // Hasil Belajar
+    Route::get('/siswa/{student}/hasil-belajar/tambah', [\App\Http\Controllers\LearningResultController::class, 'create'])->name('learning-results.create');
+    Route::post('/siswa/{student}/hasil-belajar', [\App\Http\Controllers\LearningResultController::class, 'store'])->name('learning-results.store');
+    Route::get('/hasil-belajar/{learningResult}/edit', [\App\Http\Controllers\LearningResultController::class, 'edit'])->name('learning-results.edit');
+    Route::put('/hasil-belajar/{learningResult}', [\App\Http\Controllers\LearningResultController::class, 'update'])->name('learning-results.update');
+    Route::delete('/hasil-belajar/{learningResult}', [\App\Http\Controllers\LearningResultController::class, 'destroy'])->name('learning-results.destroy');
+
     Route::resource('/transaksi', TransactionController::class)->names('transactions')->parameters([
         'transaksi' => 'transaction'
     ]);

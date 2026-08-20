@@ -437,6 +437,15 @@ $breadcrumbs = [
                              <div x-show="activeTab === 'savings'"
                                 class="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600"></div>
                         </button>
+
+                        {{-- Tab Hasil Belajar --}}
+                        <button @click="activeTab = 'results'"
+                            class="flex-1 py-4 text-sm font-bold text-center transition focus:outline-none relative"
+                            :class="activeTab === 'results' ? 'text-indigo-600 bg-white' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'">
+                            Hasil Belajar
+                            <div x-show="activeTab === 'results'"
+                                class="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-600"></div>
+                        </button>
                     </div>
 
                     {{-- 2. Content Tab: TAGIHAN (BILLS) --}}
@@ -742,7 +751,103 @@ $breadcrumbs = [
                 </div>
                 </div>
 
+                {{-- 5. Content Tab: HASIL BELAJAR --}}
+                <div x-show="activeTab === 'results'" x-transition.opacity class="p-6" style="display: none;">
+
+                    {{-- Header + Tombol Tambah --}}
+                    <div class="flex items-center justify-between mb-5">
+                        <div>
+                            <h3 class="font-bold text-gray-800">Catatan Hasil Belajar</h3>
+                            @php $totalSesi = $student->learningResults->count(); @endphp
+                            @if($totalSesi > 0)
+                                @php
+                                    $avgScore = $student->learningResults->whereNotNull('score')->avg('score');
+                                    $hadirCount = $student->learningResults->where('attendance', 'hadir')->count();
+                                @endphp
+                                <p class="text-sm text-gray-500 mt-0.5">
+                                    {{ $totalSesi }} sesi &bull;
+                                    Hadir {{ $hadirCount }}x &bull;
+                                    Rata-rata: <span class="font-semibold text-indigo-600">{{ $avgScore ? number_format($avgScore, 1) : '-' }}</span>
+                                </p>
+                            @endif
+                        </div>
+                        <a href="{{ route('admin.learning-results.create', $student) }}"
+                            class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Input Sesi Baru
+                        </a>
+                    </div>
+
+                    @if($student->learningResults->count() > 0)
+                        <div class="space-y-3">
+                            @foreach($student->learningResults as $result)
+                                <div class="bg-gray-50 rounded-xl border border-gray-200 p-4 hover:border-indigo-200 hover:bg-indigo-50/30 transition">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <span class="text-xs font-bold text-gray-400 uppercase">Sesi #{{ $result->session_number }}</span>
+                                                <span class="text-xs text-gray-400">&bull; {{ $result->session_date->translatedFormat('d M Y') }}</span>
+                                                @if($result->tutor)
+                                                    <span class="text-xs text-gray-400">&bull; {{ $result->tutor->name }}</span>
+                                                @endif
+                                                @php
+                                                    $badgeClasses = match($result->attendance) {
+                                                        'hadir' => 'bg-green-100 text-green-700',
+                                                        'izin'  => 'bg-yellow-100 text-yellow-700',
+                                                        'alfa'  => 'bg-red-100 text-red-700',
+                                                        default => 'bg-gray-100 text-gray-700',
+                                                    };
+                                                @endphp
+                                                <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full {{ $badgeClasses }}">
+                                                    {{ ucfirst($result->attendance) }}
+                                                </span>
+                                            </div>
+                                            <p class="font-semibold text-gray-900 mt-1">{{ $result->topic }}</p>
+                                            @if($result->notes)
+                                                <p class="text-sm text-gray-500 mt-0.5">{{ $result->notes }}</p>
+                                            @endif
+                                            @if($result->homework)
+                                                <p class="text-xs text-indigo-600 mt-1 flex items-center gap-1">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                                    PR: {{ $result->homework }}
+                                                </p>
+                                            @endif
+                                        </div>
+                                        <div class="flex items-center gap-3 ml-4">
+                                            @if(!is_null($result->score))
+                                                @php $scoreColor = $result->score >= 85 ? 'text-green-600' : ($result->score >= 70 ? 'text-yellow-600' : 'text-red-600'); @endphp
+                                                <div class="text-center">
+                                                    <span class="text-2xl font-black {{ $scoreColor }}">{{ $result->score }}</span>
+                                                    <p class="text-[10px] text-gray-400 leading-none">/100</p>
+                                                </div>
+                                            @else
+                                                <span class="text-xs text-gray-300 italic">–</span>
+                                            @endif
+                                            <a href="{{ route('admin.learning-results.edit', $result) }}"
+                                                class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="flex flex-col items-center justify-center py-12 text-center">
+                            <div class="bg-indigo-50 p-4 rounded-full mb-3">
+                                <svg class="w-8 h-8 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-gray-700 font-medium">Belum Ada Catatan Belajar</h3>
+                            <p class="text-gray-400 text-sm mt-1">Klik tombol "Input Sesi Baru" untuk menambahkan.</p>
+                        </div>
+                    @endif
+
+                </div>
+
             </div>
+
         </div>
     </div>
 </x-app-layout>

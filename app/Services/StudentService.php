@@ -339,7 +339,7 @@ class StudentService
     public function getPortalData(string $token): Student
     {
         return Student::where('access_token', $token)
-            ->with(['bills' => fn($q) => $q->latest(), 'transactions' => fn($q) => $q->latest(), 'package', 'branch'])
+            ->with(['bills' => fn($q) => $q->latest(), 'transactions' => fn($q) => $q->latest(), 'learningResults', 'package', 'branch'])
             ->firstOrFail();
     }
 
