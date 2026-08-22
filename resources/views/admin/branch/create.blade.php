@@ -22,10 +22,6 @@ $breadcrumbs = [
                         </p>
                     </header>
 
-                    <form id="send-verification" method="post" action="{{ route('verification.send') }}">
-                        @csrf
-                    </form>
-
                     <form method="post" action="{{ route('admin.branches.store') }}" class="mt-6 space-y-6">
                         @csrf
                         @method('post')

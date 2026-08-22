@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\Student;
 use App\Models\Bill;
+use App\Services\PackagePricingService;
+use App\Services\BillingDateService;
 use App\Services\TransactionService;
 use App\Services\WhatsApp\WhatsAppServiceInterface;
 use Illuminate\Support\Facades\Log;
@@ -46,10 +48,18 @@ class GenerateRecurringBills extends Command
         foreach ($students as $student) {
             DB::beginTransaction();
             try {
+                // Re-read student dengan row lock untuk cegah race condition
+                $student = Student::where('id', $student->id)->lockForUpdate()->first();
+                if (!$student || $student->status !== 'active') {
+                    DB::rollBack();
+                    continue;
+                }
+
                 // Double check biar gak duplikat tagihan di hari yang sama/ periode sama?
                 // Idealnya check Bill terakhir student ini, apakah due_date nya sama dengan next_billing_date si student?
                 $existingBill = Bill::where('student_id', $student->id)
                                     ->whereDate('due_date', $student->next_billing_date)
+                                    ->lockForUpdate()
                                     ->first();
 
                 if ($existingBill) {
@@ -65,31 +75,19 @@ class GenerateRecurringBills extends Command
                     continue;
                 }
 
-                // CHECK: Apakah paket sudah selesai?
-                if ($student->join_date) {
-                    $endDate = $student->join_date->copy()->addDays($package->duration);
-                    
-                    // --- DYNAMIC TOLERANCE LOGIC ---
-                    // Prevent creating a full bill if remaining duration is negligible.
-                    // Rule: Tolerance is 20% of the cycle.
-                    // Monthly (30) -> 6 days. Weekly (7) -> 2 days. Daily -> 0.
-                    $cycleDays = match($student->billing_cycle) {
-                        'monthly' => 30,
-                        'weekly'  => 7,
-                        'daily'   => 1,
-                        default   => 30
-                    };
-                    
-                    $toleranceDays = ceil($cycleDays * 0.2);
-                    $cutoffDate = $endDate->copy()->subDays($toleranceDays);
+                $billingDate = app(BillingDateService::class);
+                $pricing = app(PackagePricingService::class);
 
-                    // If Next Billing Date passed the Cutoff (meaning remaining days < Tolerance)
-                    // Mark as Finished.
-                    if ($student->next_billing_date->greaterThanOrEqualTo($cutoffDate)) {
+                if ($student->join_date) {
+                    $endDate = $billingDate->getEndDate($student->join_date, $package);
+                    $toleranceDays = $pricing->getToleranceDays($student->billing_cycle);
+
+                    if ($billingDate->isPeriodOver($student->next_billing_date, $endDate, $student->billing_cycle)) {
                         $this->info("Student {$student->name} package finishing (End: {$endDate->format('Y-m-d')}, Tolerasi: {$toleranceDays} hari). Marking as finished.");
                         
                         $student->update([
-                            'status' => 'inactive'
+                            'status' => 'inactive',
+                            'next_billing_date' => null
                         ]);
                         
                         DB::commit();
@@ -97,8 +95,7 @@ class GenerateRecurringBills extends Command
                     }
                 }
 
-                // Kalkulasi Amount (Standardized via StudentService)
-                $amount = app(\App\Services\StudentService::class)->calculateAmount($package, $student->billing_cycle);
+                $amount = $pricing->calculateAmount($package, $student->billing_cycle);
 
                 // 1. Buat Bill
                 $bill = Bill::create([

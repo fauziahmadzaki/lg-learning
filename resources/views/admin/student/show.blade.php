@@ -304,7 +304,9 @@ $breadcrumbs = [
 
                                     {{-- MODAL 2: PAY MANUAL (CASH / RECORD LUNAS) --}}
                                     <x-ui.modal name="pay-manual-modal" focusable>
-                                        <form method="POST" action="{{ route('admin.students.pay.manual', $student) }}" class="p-6">
+                                        <form method="POST" action="{{ route('admin.students.pay.manual', $student) }}" class="p-6"
+                                              x-data="{ submitting: false }"
+                                              x-on:submit="submitting = true">
                                             @csrf
 
                                             <h2 class="text-lg font-medium text-gray-900">
@@ -331,8 +333,15 @@ $breadcrumbs = [
                                                     Batal
                                                 </x-buttons.secondary>
 
-                                                <x-buttons.primary class="bg-green-600 hover:bg-green-700 focus:ring-green-500">
-                                                    konfirmasi Pembayaran Tunai
+                                                <x-buttons.primary x-bind:disabled="submitting" class="bg-green-600 hover:bg-green-700 focus:ring-green-500">
+                                                    <span x-show="!submitting">Konfirmasi Pembayaran Tunai</span>
+                                                    <span x-show="submitting" class="flex items-center gap-2">
+                                                        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                        </svg>
+                                                        Memproses...
+                                                    </span>
                                                 </x-buttons.primary>
                                             </div>
                                         </form>
@@ -473,7 +482,9 @@ $breadcrumbs = [
 
                 {{-- MODAL LUNASKAN PER TAGIHAN --}}
                 <x-ui.modal name="pay-bill-{{ $bill->id }}" focusable>
-                    <form method="POST" action="{{ route('admin.students.bills.pay_manual', [$student, $bill]) }}" class="p-6 text-left">
+                    <form method="POST" action="{{ route('admin.students.bills.pay_manual', [$student, $bill]) }}" class="p-6 text-left"
+                          x-data="{ submitting: false }"
+                          x-on:submit="submitting = true">
                         @csrf
                         
                         <h2 class="text-lg font-medium text-gray-900">
@@ -500,8 +511,15 @@ $breadcrumbs = [
                                 Batal
                             </x-buttons.secondary>
 
-                            <x-buttons.primary class="bg-indigo-600 hover:bg-indigo-700">
-                                Ya, Lunaskan Sekarang
+                            <x-buttons.primary x-bind:disabled="submitting" class="bg-indigo-600 hover:bg-indigo-700">
+                                <span x-show="!submitting">Ya, Lunaskan Sekarang</span>
+                                <span x-show="submitting" class="flex items-center gap-2">
+                                    <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Memproses...
+                                </span>
                             </x-buttons.primary>
                         </div>
                     </form>

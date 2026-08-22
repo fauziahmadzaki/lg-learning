@@ -11,6 +11,35 @@ use Illuminate\Support\Facades\DB;
 
 class StudentService
 {
+    public function __construct(
+        private PackagePricingService $pricing,
+        private BillingDateService $billingDate,
+    ) {}
+
+    public function searchQuery(array $filters)
+    {
+        return Student::query()
+            ->with(['branch', 'package'])
+            ->when($filters['search'] ?? null, fn($q, $v) => $q->where(function($sq) use ($v) {
+                $sq->where('name', 'like', "%{$v}%")
+                  ->orWhere('school', 'like', "%{$v}%")
+                  ->orWhere('email', 'like', "%{$v}%");
+            }))
+            ->when($filters['branch_id'] ?? null, fn($q, $v) => $q->where('branch_id', $v))
+            ->when($filters['grade'] ?? null, fn($q, $v) => $q->where('grade', $v))
+            ->when($filters['package_id'] ?? null, fn($q, $v) => $q->where('package_id', $v))
+            ->latest();
+    }
+
+    public function getFilterData(): array
+    {
+        return [
+            'branches' => \App\Models\Branch::all(),
+            'packages' => Package::with('branch')->get(),
+            'grades'   => \App\Models\PackageCategory::pluck('name', 'name'),
+        ];
+    }
+
     public function registerStudent(array $data, int $packageId): Student
     {
         return DB::transaction(function () use ($data, $packageId) {
@@ -30,7 +59,7 @@ class StudentService
             $student = Student::create($data);
 
             // 2. Logic Tagihan (Disesuaikan dengan Input Harga: Per Hari (<30) atau Per Bulan (>=30))
-            $amount = $this->calculateAmount($package, $data['billing_cycle']);
+            $amount = $this->pricing->calculateAmount($package, $data['billing_cycle']);
 
             // A. KASUS PENDING (Buat 1 Tagihan + Invoice Xendit)
             if ($data['status'] === 'pending') {
@@ -38,16 +67,7 @@ class StudentService
                 
                 // Set Next Billing Date to NEXT PERIOD (Month 2) immediately
                 // preventing duplicate bill generation for Month 1
-                $nextPeriod = $dueDate->copy();
-                if ($data['billing_cycle'] == 'daily') {
-                    $nextPeriod->addDay();
-                } elseif ($data['billing_cycle'] == 'weekly') {
-                    $nextPeriod->addWeek();
-                } elseif ($data['billing_cycle'] == 'monthly') {
-                    $nextPeriod->addMonth();
-                } elseif ($data['billing_cycle'] == 'full') {
-                    $nextPeriod->addDays($package->duration);
-                }
+                $nextPeriod = $this->billingDate->advanceNextBillingDate($dueDate, $data['billing_cycle'], $package->duration);
 
                 $student->update(['next_billing_date' => $nextPeriod]);
 
@@ -149,16 +169,7 @@ class StudentService
                     $bill->update(['transaction_id' => $transaction->id]);
                     $billCount++;
 
-                    // Advance Date
-                    if ($data['billing_cycle'] == 'daily') {
-                        $currentDate->addDay();
-                    } elseif ($data['billing_cycle'] == 'weekly') {
-                        $currentDate->addWeek();
-                    } elseif ($data['billing_cycle'] == 'monthly') {
-                        $currentDate->addMonth();
-                    } elseif ($data['billing_cycle'] == 'full') {
-                        $currentDate->addDays($package->duration);
-                    }
+                    $currentDate = $this->billingDate->advanceNextBillingDate($currentDate, $data['billing_cycle'], $package->duration);
 
                     // BREAK IF PACKGE FINISHED (Prevent Infinite Loop)
                     if ($currentDate->gte($endDate)) {
@@ -275,7 +286,7 @@ class StudentService
                     $package = $student->package; // Sudah updated relation
                     
                     // Recalculate Amount
-                    $newAmount = $this->calculateAmount($package, $student->billing_cycle);
+                    $newAmount = $this->pricing->calculateAmount($package, $student->billing_cycle);
                     
                     // Update Bill
                     $pendingBill->update([
@@ -325,155 +336,16 @@ class StudentService
         });
     }
 
-    /**
-     * Helper to calculate billing amount based on package and cycle.
-     */
-    public function calculateAmount(Package $package, string $cycle): float
+    public function getPortalData(string $token): Student
     {
-        $isDailyRate = $package->duration < 30;
-        
-        return match($cycle) {
-            'daily'   => $isDailyRate ? $package->price : ceil($package->price / 30),
-            'weekly'  => $isDailyRate ? ($package->price * 7) : ceil($package->price / 4),
-            'monthly' => $isDailyRate ? ($package->price * 30) : $package->price,
-            'full'    => $isDailyRate ? ($package->price * $package->duration) : ($package->price * ceil($package->duration / 30)),
-            default   => 0,
-        };
+        return Student::where('access_token', $token)
+            ->with(['bills' => fn($q) => $q->latest(), 'transactions' => fn($q) => $q->latest(), 'package', 'branch'])
+            ->firstOrFail();
     }
 
-    /**
-     * Handle logic when a payment is successful (Manual or Xendit).
-     * 1. Advance next_billing_date
-     * 2. Check if package finished
-     * 3. Update status
-     * 4. Send WhatsApp (Optional)
-     */
-    public function processPaymentSuccess(Student $student, /* ?Transaction */ $transaction = null, bool $sendNotification = true): void
+    public function calculateAmount(Package $package, string $cycle): float
     {
-        $package = $student->package;
-        if (!$package) return;
-
-        // Determine Base Date for calculation
-        // Default to current next_billing_date logic
-        $baseDate = $student->next_billing_date ?? $student->join_date ?? now();
-
-        // IDEMPOTENCY FIX:
-        // Try to derive base date from the Bill associated with this Transaction.
-        // This ensures that paying "Bill of Jan 20" ALWAYS results in "Next Bill = Feb 20",
-        // regardless of how many times this function runs (Race Condition Proof).
-        if ($transaction) {
-            // Load bills if not loaded
-            if (!$transaction->relationLoaded('bills')) {
-                $transaction->load('bills');
-            }
-            
-            $bill = $transaction->bills->first();
-            if ($bill) {
-                // Base date is the bill's due date
-                $baseDate = $bill->due_date->copy();
-            }
-        }
-
-        // Calculate Next Pending Date
-        $nextDate = $baseDate->copy();
-
-        // Advance Logic
-        if ($student->billing_cycle === 'daily') {
-            $nextDate->addDay();
-        } elseif ($student->billing_cycle === 'weekly') {
-            $nextDate->addWeek();
-        } elseif ($student->billing_cycle === 'monthly') {
-            $nextDate->addMonth();
-        } elseif ($student->billing_cycle === 'full') {
-            $nextDate->addDays($package->duration);
-        }
-
-        // Logic check for Pending (Registration)
-        // If we used Bill Date (Dec 20), Next is Jan 20.
-        // If Register logic set next to Jan 20 already.
-        // Jan 20 = Jan 20. Update is fine.
-        
-        // Safety: Only update if nextDate is > current stored date
-        // (Prevent reverting if transactions come out of order, though unlikely for sequential bills)
-        $currentStoredDate = $student->next_billing_date;
-        
-        // Special Case: Initial Registration where we Pre-Advanced to Month 2.
-        // If paying Dec 20 Bill. Next = Jan 20.
-        // Current Stored = Jan 20.
-        // Result: Jan 20. No change. Correct.
-
-        $finalNextDate = $nextDate;
-        if ($currentStoredDate && $currentStoredDate->gt($nextDate)) {
-             $finalNextDate = $currentStoredDate;
-        }
-
-        // 2. Check Finish Condition
-        // End Date = Join Date + Duration
-        $endDate = null;
-        if ($student->join_date) {
-            $endDate = $student->join_date->copy()->addDays($package->duration);
-        }
-
-        // Status Logic
-        $status = 'active';
-
-        // Jika next billing sudah melewati atau sama dengan end date, berarti selesai
-        if ($endDate && $finalNextDate->gte($endDate)) {
-            $status = 'inactive'; // Package finished 
-        }
-
-        $student->update([
-            'status' => $status,
-            'next_billing_date' => $finalNextDate
-        ]);
-
-        // SEND WHATSAPP NOTIFICATION
-        if ($sendNotification) {
-            try {
-                if ($student->parent_phone || $student->name) { 
-                    $invoiceUrl = $transaction ? $transaction->payment_url : '-';
-                    // If payment url is '#' (manual), maybe use route
-                    if ($transaction && $transaction->payment_url == '#') {
-                        $invoiceUrl = route('landing.payment.show', ['invoice_code' => $transaction->invoice_code, 'status' => 'success']);
-                    }
-
-                    $waService = app(\App\Services\WhatsApp\WhatsAppServiceInterface::class);
-                    $target = $student->parent_phone; 
-                    
-                    $portalLink = $student->portal_link;
-                    
-                    $scheduleLink = route('schedules.index');
-
-                    $msgPayment = "✅ *PEMBAYARAN DITERIMA!* ✅\n\n"
-                        . "Halo Orang Tua *{$student->name}*,\n"
-                        . "Pembayaran untuk paket *{$package->name}* periode *{$baseDate->format('d M Y')}* telah berhasil.\n\n"
-                        . "✅ Status: *LUNAS*\n"
-                        . "🔗 Invoice: {$invoiceUrl}\n\n"
-                        . "Bukti pembayaran & jadwal belajar dapat dilihat di Portal Siswa:\n"
-                        . "👉 Portal: {$portalLink}\n"
-                        . "📅 Jadwal: {$scheduleLink}\n\n"
-                        . "Terima kasih! 🙏";
-
-                    if ($target) {
-                        $waService->sendMessage($target, $msgPayment);
-                    }
-
-                    // 2. Course Finished
-                    if ($status === 'inactive') {
-                        $msgFinish = "Selamat {$student->name}!\n\n"
-                            . "Anda telah menyelesaikan program {$package->name}.\n"
-                            . "Terima kasih telah belajar bersama LG Learning.\n"
-                            . "Akses sertifikat/raport di portal: {$portalLink}";
-                        
-                        if ($target) {
-                            $waService->sendMessage($target, $msgFinish);
-                        }
-                    }
-                }
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error("Failed to send WA in Service: " . $e->getMessage());
-            }
-        }
+        return $this->pricing->calculateAmount($package, $cycle);
     }
 
     /**
@@ -485,37 +357,20 @@ class StudentService
             return false;
         }
 
-        $endDate = $student->join_date->copy();
-        
-        // Logic Weekly/Monthly
-        if ($student->billing_cycle === 'weekly') {
-             $weeks = floor($student->package->duration / 7);
-             $weeks = ($weeks < 1) ? 1 : $weeks;
-             $endDate->addWeeks($weeks);
-        } else {
-             $endDate->addDays($student->package->duration);
-        }
-
         if ($student->status === 'finished') {
             return true;
         }
 
-        // --- DYNAMIC TOLERANCE LOGIC (Match GenerateRecurringBills) ---
-        $cycleDays = match($student->billing_cycle) {
-            'monthly' => 30,
-            'weekly'  => 7,
-            'daily'   => 1,
-            default   => 30
-        };
-        $toleranceDays = ceil($cycleDays * 0.2);
-        $cutoffDate = $endDate->copy()->subDays($toleranceDays);
-
-        if ($student->next_billing_date && $student->next_billing_date->greaterThanOrEqualTo($cutoffDate)) {
-            return true;
-        } elseif (is_null($student->next_billing_date) && $student->status !== 'pending') {
+        if (is_null($student->next_billing_date) && $student->status !== 'pending') {
             return true;
         }
 
-        return false;
+        $endDate = $this->billingDate->getEndDate($student->join_date, $student->package);
+
+        if (!$student->next_billing_date) {
+            return false;
+        }
+
+        return $this->billingDate->isPeriodOver($student->next_billing_date, $endDate, $student->billing_cycle);
     }
 }

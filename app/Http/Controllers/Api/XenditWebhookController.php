@@ -70,13 +70,9 @@ class XenditWebhookController extends Controller
                 'paid_at'        => parse_xendit_date($data['paid_at']), // Perlu helper parsing tanggal
             ]);
 
-            // B. Update Status Siswa & Next Billing Date (Via Service)
             $student = Student::find($transaction->student_id);
             if ($student) {
-                // Dependency Injection manual atau via constructor. Disini manual agar minim perubahan
-                $studentService = app(\App\Services\StudentService::class);
-                // Pass transaction for idempotency
-                $studentService->processPaymentSuccess($student, $transaction);
+                app(\App\Services\PaymentService::class)->processPaymentSuccess($student, $transaction);
                 Log::info('Xendit Webhook: Student Updated', ['student_id' => $student->id]);
             } else {
                 Log::warning('Xendit Webhook: Student not found for transaction', ['student_id' => $transaction->student_id]);

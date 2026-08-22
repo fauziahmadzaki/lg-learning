@@ -1,14 +1,18 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\TutorController;
-use App\Http\Controllers\BranchController;
-use App\Http\Controllers\PackageController;
-use App\Http\Controllers\StudentController;
-use App\Http\Controllers\TransactionController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\Admin\TutorController;
+use App\Http\Controllers\Admin\BranchController;
+use App\Http\Controllers\Admin\PackageController;
+use App\Http\Controllers\Admin\StudentController;
+use App\Http\Controllers\Admin\TransactionController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\PackageCategoryController;
+use App\Http\Controllers\Admin\ContentController;
+use App\Http\Controllers\Admin\SiteSettingController;
+use App\Http\Controllers\Admin\ManualBookController;
 
 Route::middleware(['auth', 'verified', 'central.admin'])
     ->prefix('admin')
@@ -26,7 +30,7 @@ Route::middleware(['auth', 'verified', 'central.admin'])
     Route::resource('paket', PackageController::class)->names('packages')->parameters([
         'paket' => 'package'
     ]);
-    Route::resource('paket-kategori', \App\Http\Controllers\PackageCategoryController::class)->names('package-categories')->parameters([
+    Route::resource('paket-kategori', PackageCategoryController::class)->names('package-categories')->parameters([
         'paket-kategori' => 'packageCategory'
     ]);
     Route::resource('siswa', StudentController::class)->names('students')->parameters([
@@ -56,12 +60,12 @@ Route::middleware(['auth', 'verified', 'central.admin'])
             ->name('activity-logs.index');
 
     // Gallery & Content
-    Route::resource('contents', \App\Http\Controllers\ContentController::class);
+    Route::resource('contents', ContentController::class);
 
     // Site Settings (Pengaturan Website)
-    Route::get('/settings', [\App\Http\Controllers\SiteSettingController::class, 'index'])->name('settings.index');
-    Route::put('/settings', [\App\Http\Controllers\SiteSettingController::class, 'update'])->name('settings.update');
+    Route::get('/settings', [SiteSettingController::class, 'index'])->name('settings.index');
+    Route::put('/settings', [SiteSettingController::class, 'update'])->name('settings.update');
 
     // Manual Book / Panduan Sistem
-    Route::get('/panduan', [\App\Http\Controllers\ManualBookController::class, 'index'])->name('manual.index');
+    Route::get('/panduan', [ManualBookController::class, 'index'])->name('manual.index');
 });

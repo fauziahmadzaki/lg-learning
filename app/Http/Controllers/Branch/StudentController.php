@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Branch;
 
 use App\Http\Controllers\Controller;
+use App\Traits\HandlesBranchScope;
 use App\Models\Branch;
 use App\Models\Student;
 use App\Models\Package;
@@ -10,11 +11,12 @@ use Illuminate\Http\Request;
 use App\Services\StudentService;
 use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
-use App\Services\ActivityLogger; // <--- MANUAL LOGGING
+use App\Services\ActivityLogger;
 use Carbon\Carbon;
 
 class StudentController extends Controller
 {
+    use HandlesBranchScope;
     public function index(Request $request, Branch $branch)
     {
         $search = $request->input('search');
@@ -51,10 +53,8 @@ class StudentController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        // Data for Filters
-        // Only packages from this branch
-        $packages = Package::where('branch_id', $branch->id)->get();
-        $grades = \App\Models\PackageCategory::pluck('name', 'name');
+        $packages = $this->branchPackages($branch);
+        $grades = $this->getGrades();
 
         if ($request->ajax()) {
             return view('branch.student.partials.table', compact('students', 'branch'))->render();
@@ -65,10 +65,11 @@ class StudentController extends Controller
 
     public function create(Branch $branch)
     {
-        // Only packages from this branch
-        $packages = Package::where('branch_id', $branch->id)->with('branch')->get();
-        $grades = \App\Models\PackageCategory::pluck('name', 'name');
-        return view('branch.student.create', compact('branch', 'packages', 'grades'));
+        return view('branch.student.create', [
+            'branch'   => $branch,
+            'packages' => $this->branchPackages($branch),
+            'grades'   => $this->getGrades(),
+        ]);
     }
 
     public function store(StoreStudentRequest $request, Branch $branch, StudentService $studentService)
@@ -97,30 +98,24 @@ class StudentController extends Controller
 
     public function edit(Branch $branch, Student $student)
     {
-        if ($student->branch_id !== $branch->id) {
-            abort(403);
-        }
+        $this->authorizeBranch($branch, $student);
 
-        $packages = Package::where('branch_id', $branch->id)->with('branch')->get();
-        $grades = \App\Models\PackageCategory::pluck('name', 'name');
-        return view('branch.student.edit', compact('branch', 'student', 'packages', 'grades'));
+        return view('branch.student.edit', [
+            'branch'  => $branch,
+            'student' => $student,
+            'packages' => $this->branchPackages($branch),
+            'grades'  => $this->getGrades(),
+        ]);
     }
 
     public function update(UpdateStudentRequest $request, Branch $branch, Student $student, StudentService $studentService)
     {
-        if ($student->branch_id !== $branch->id) {
-            abort(403);
-        }
+        $this->authorizeBranch($branch, $student);
 
         $studentData = $request->safe()->except(['package_id', 'billing_cycle']);
         
-        $studentService->updateStudent(
-            $student, 
-            $studentData, 
-            [] // No package update here to keep simple, modify if needed
-        );
+        $studentService->updateStudent($student, $studentData, []);
 
-        // Log Manual
         ActivityLogger::log("Admin cabang ({$branch->name}) memperbarui data siswa: {$student->name}", $student);
 
         return redirect()->route('branch.students.index', $branch)
@@ -129,24 +124,19 @@ class StudentController extends Controller
 
     public function show(Branch $branch, Student $student, StudentService $studentService)
     {
-        if ($student->branch_id !== $branch->id) {
-            abort(403);
-        }
+        $this->authorizeBranch($branch, $student);
 
         $student->load([
             'package',
-            'bills' => function($query) {
-                $query->orderBy('due_date', 'desc');
-            },
-            'transactions' => function($query) {
-                $query->latest(); 
-            }
+            'bills' => fn($q) => $q->orderBy('due_date', 'desc'),
+            'transactions' => fn($q) => $q->latest(),
         ]);
 
-        // Check if Period Over
-        $isPeriodOver = $studentService->isPeriodOver($student);
-
-        return view('branch.student.show', compact('branch', 'student', 'isPeriodOver'));
+        return view('branch.student.show', [
+            'branch'      => $branch,
+            'student'     => $student,
+            'isPeriodOver' => $studentService->isPeriodOver($student),
+        ]);
     }
 
     /**
@@ -154,112 +144,77 @@ class StudentController extends Controller
      */
     public function storeBill(Request $request, Branch $branch, Student $student, \App\Services\BillingService $billingService)
     {
-        if ($student->branch_id !== $branch->id) {
-            abort(403);
-        }
+        $this->authorizeBranch($branch, $student);
         
-        $senderName = "Cabang {$branch->name}";
-        $result = $billingService->createNextBill($student, $senderName);
+        $result = $billingService->createNextBill($student, "Cabang {$branch->name}");
 
         if ($result['success']) {
             ActivityLogger::log("Admin cabang ({$branch->name}) membuat tagihan manual untuk siswa: {$student->name}", $student);
-            return back()->with('success', $result['message']);
-        } else {
-            return back()->with('error', $result['message']);
         }
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
-    /**
-     * Fitur: Branch Manual Payment
-     */
     public function storeManualPayment(Request $request, Branch $branch, Student $student, \App\Services\BillingService $billingService)
     {
-        if ($student->branch_id !== $branch->id) {
-            abort(403);
-        }
+        $this->authorizeBranch($branch, $student);
 
-        $senderName = "Cabang {$branch->name}";
-        $result = $billingService->processManualPayment($student, $senderName);
+        $result = $billingService->processManualPayment($student, "Cabang {$branch->name}");
 
         if ($result['success']) {
             ActivityLogger::log("Admin cabang ({$branch->name}) melakukan pembayaran manual untuk siswa: {$student->name}", $student);
-            return back()->with('success', $result['message']);
-        } else {
-            return back()->with('error', $result['message']);
         }
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
-    /**
-     * Fitur: Lunaskan Tagihan Tertentu (Bypass Xendit / Bayar Tunai)
-     */
     public function payBillManually(Request $request, Branch $branch, Student $student, \App\Models\Bill $bill, \App\Services\BillingService $billingService)
     {
-        // Validasi
-        if ($student->branch_id !== $branch->id) { abort(403); }
+        $this->authorizeBranch($branch, $student);
         
-        $senderName = "Cabang {$branch->name}";
-        $result = $billingService->payExistingBillManually($student, $bill, $senderName);
+        $result = $billingService->payExistingBillManually($student, $bill, "Cabang {$branch->name}");
 
         if ($result['success']) {
             $invoice = $bill->transaction->invoice_code ?? '-';
             ActivityLogger::log("Admin cabang ({$branch->name}) melunasi tagihan (Invoice: {$invoice}) untuk siswa: {$student->name}", $student);
-            return back()->with('success', $result['message']);
-        } else {
-            return back()->with('error', $result['message']);
         }
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
-    /**
-     * Fitur: Tabungan (Deposit) - Branch
-     */
     public function storeDeposit(Request $request, Branch $branch, Student $student, \App\Services\SavingService $savingService)
     {
-        if ($student->branch_id !== $branch->id) { abort(403); }
+        $this->authorizeBranch($branch, $student);
 
         $validated = $request->validate([
             'amount' => 'required|numeric|min:1000',
             'description' => 'nullable|string'
         ]);
 
-        $senderName = "Cabang {$branch->name}";
-        $result = $savingService->deposit($student, $validated['amount'], $validated['description'], $senderName);
+        $result = $savingService->deposit($student, $validated['amount'], $validated['description'], "Cabang {$branch->name}");
 
-        if ($result['success']) {
-            return back()->with('success', $result['message']);
-        } else {
-            return back()->with('error', $result['message']);
-        }
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
-    /**
-     * Fitur: Tabungan (Withdraw) - Branch
-     */
     public function storeWithdraw(Request $request, Branch $branch, Student $student, \App\Services\SavingService $savingService)
     {
-        if ($student->branch_id !== $branch->id) { abort(403); }
+        $this->authorizeBranch($branch, $student);
 
         $validated = $request->validate([
             'amount' => 'required|numeric|min:1000',
             'description' => 'nullable|string'
         ]);
 
-        $senderName = "Cabang {$branch->name}";
-        $result = $savingService->withdraw($student, $validated['amount'], $validated['description'], $senderName);
+        $result = $savingService->withdraw($student, $validated['amount'], $validated['description'], "Cabang {$branch->name}");
 
-        if ($result['success']) {
-            return back()->with('success', $result['message']);
-        } else {
-            return back()->with('error', $result['message']);
-        }
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
     public function destroy(Branch $branch, Student $student)
     {
-        if ($student->branch_id !== $branch->id) {
-            abort(403);
-        }
-        $name = $student->name;
-        ActivityLogger::log("Admin cabang ({$branch->name}) menghapus siswa: {$name}", $student);
+        $this->authorizeBranch($branch, $student);
+
+        ActivityLogger::log("Admin cabang ({$branch->name}) menghapus siswa: {$student->name}", $student);
         $student->delete();
         return redirect()->route('branch.students.index', $branch)->with('success', 'Data siswa berhasil dihapus');
     }
