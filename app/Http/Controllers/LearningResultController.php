@@ -18,7 +18,7 @@ class LearningResultController extends Controller
      */
     public function create(Student $student)
     {
-        $tutors = Tutor::orderBy('name')->get();
+        $tutors = Tutor::with('user')->get()->sortBy('name')->values();
 
         // Auto-isi session_number berikutnya
         $nextSession = $student->learningResults()->max('session_number') + 1;
@@ -53,7 +53,7 @@ class LearningResultController extends Controller
      */
     public function edit(LearningResult $learningResult)
     {
-        $tutors  = Tutor::orderBy('name')->get();
+        $tutors  = Tutor::with('user')->get()->sortBy('name')->values();
         $student = $learningResult->student;
 
         return view('admin.learning-result.edit', compact('learningResult', 'tutors', 'student'));

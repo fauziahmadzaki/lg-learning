@@ -14,7 +14,6 @@ class StoreLearningResultRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'student_id'     => ['required', 'exists:students,id'],
             'tutor_id'       => ['nullable', 'exists:tutors,id'],
             'session_date'   => ['required', 'date'],
             'session_number' => ['required', 'integer', 'min:1'],
@@ -29,7 +28,6 @@ class StoreLearningResultRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'student_id'     => 'siswa',
             'tutor_id'       => 'tutor',
             'session_date'   => 'tanggal sesi',
             'session_number' => 'pertemuan ke-',

@@ -23,6 +23,10 @@ $breadcrumbs = [
                     class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium transition">
                     &larr; Kembali
                 </a>
+                <a href="{{ route('admin.learning-results.create', $student) }}"
+                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium shadow-lg shadow-green-200 transition">
+                    + Input Sesi Baru
+                </a>
                 <a href="{{ route('admin.students.edit', $student) }}"
                     class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium shadow-lg shadow-indigo-200 transition">
                     Edit Data
@@ -749,10 +753,9 @@ $breadcrumbs = [
                     </x-ui.modal>
 
                 </div>
-                </div>
 
-                {{-- 5. Content Tab: HASIL BELAJAR --}}
-                <div x-show="activeTab === 'results'" x-transition.opacity class="p-6" style="display: none;">
+            {{-- 5. Content Tab: HASIL BELAJAR --}}
+                <div x-show="activeTab === 'results'" x-transition.opacity class="p-6">
 
                     {{-- Header + Tombol Tambah --}}
                     <div class="flex items-center justify-between mb-5">
@@ -850,4 +853,5 @@ $breadcrumbs = [
 
         </div>
     </div>
+</div>
 </x-app-layout>

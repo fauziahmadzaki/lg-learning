@@ -214,7 +214,7 @@
                 </div>
 
                 {{-- Content: Hasil Belajar --}}
-                <div x-show="activeTab === 'results'" x-transition.opacity style="display: none;">
+                <div x-show="activeTab === 'results'" x-transition.opacity>
 
                     {{-- Summary Bar --}}
                     @php

@@ -42,4 +42,9 @@ class Tutor extends Model
     {
         return $this->belongsToMany(Package::class);
     }
+
+    public function getNameAttribute()
+    {
+        return $this->user?->name;
+    }
 }

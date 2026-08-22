@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 
+use App\Models\Student;
 use Illuminate\Http\Request;
 use App\Services\ActivityLogger;
 use App\Services\StudentService;
